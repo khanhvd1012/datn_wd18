@@ -1,7 +1,66 @@
+
 {
   "products": [
-    { "id": 1, "name": "Dây sạc", "price": 200000 },
-    { "id": 2, "name": "Ốp trong suốt", "price": 400000 }
+    { 
+      "id": 11,
+      "name": "Dán skin Galaxy Z Fold 6 mặt lưng full viền",
+      "img":"https://phukienchinhhang.com.vn/Uploads/medium_dan-ppf-full-man-hinh-galaxy-z-flip-6-mat-gap-ngoai-chinh-hang-tot-nhat.jpg",
+      "price": 200000 
+    },
+    { 
+      "id": 10,
+      "name": "Dán PPF full màn hình Huawei Mate 40",
+      "img":"https://phukienchinhhang.com.vn/Uploads/medium_cap-sac-samsung-type-c-to-type-c-5a-chinh-hang-zin-gia-re.jpg",
+      "price": 200000 
+    },
+    { 
+      "id": 9,
+      "name": "Dán skin Galaxy Z Fold 6 mặt lưng full viền",
+      "img":"https://phukienchinhhang.com.vn/Uploads/medium_dan-full-man-hinh-iphone-14-plus-pro-pro-max-ppf-pskin-chong-xuoc-tot-nhat-.jpg",
+      "price": 200000 
+    },
+    { 
+      "id": 8,
+      "name": "Dán PPF full màn hình Huawei Mate 40",
+      "img":"https://phukienchinhhang.com.vn/Uploads/medium_dan-ppf-full-man-hinh-galaxy-z-flip-6-mat-gap-ngoai-chinh-hang-tot-nhat.jpg",
+      "price": 200000 
+    },
+    { 
+      "id": 7,
+      "name": "Dán skin Galaxy Z Fold 6 mặt lưng full viền",
+      "img":"https://phukienchinhhang.com.vn/Uploads/medium_dan-full-man-hinh-iphone-14-plus-pro-pro-max-ppf-pskin-chong-xuoc-tot-nhat-.jpg",
+      "price": 200000 
+    },
+    { 
+      "id": 6,
+      "name": "Dán PPF full màn hình Huawei Mate 40",
+      "img":"https://phukienchinhhang.com.vn/Uploads/medium_dan-ppf-full-man-hinh-galaxy-z-flip-6-mat-gap-ngoai-chinh-hang-tot-nhat.jpg",
+      "price": 200000 
+    },
+    { 
+      "id": 5,
+      "name": "Dán full màn hình iPhone 14 | Plus | Pro",
+      "img":"https://phukienchinhhang.com.vn/Uploads/medium_cap-sac-samsung-type-c-to-type-c-5a-chinh-hang-zin-gia-re.jpg",
+      "price": 200000 
+    },
+    { 
+      "id": 4,
+      "name": "Dán full màn hình iPhone 14 | Plus | Pro",
+      "img":"https://phukienchinhhang.com.vn/Uploads/medium_dan-ppf-full-man-hinh-galaxy-z-flip-6-mat-gap-ngoai-chinh-hang-tot-nhat.jpg",
+      "price": 200000 
+    },
+    { 
+      "id": 3,
+      "name": "Dán skin Galaxy Z Fold 6 mặt lưng full viền",
+      "img":"https://phukienchinhhang.com.vn/Uploads/medium_cap-sac-samsung-type-c-to-type-c-5a-chinh-hang-zin-gia-re.jpg",
+      "price": 200000 
+    },
+    { 
+      "id": 2,
+      "name": "Dán full màn hình iPhone 14 | Plus | Pro",
+      "img":"https://phukienchinhhang.com.vn/Uploads/medium_dan-ppf-full-man-hinh-galaxy-z-flip-6-mat-gap-ngoai-chinh-hang-tot-nhat.jpg",
+      "price": 200000 
+    }
   ],
   "users": [
     { "id": 1, "username": "admin", "role": "ADMIN" }

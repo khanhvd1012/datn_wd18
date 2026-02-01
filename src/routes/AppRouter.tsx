@@ -10,6 +10,7 @@ import Dashboard from '../pages/admin/Dashboard'
 import AdminProducts from '../pages/admin/AdminProducts'
 import Users from '../pages/admin/Users'
 import NotFound from '../pages/NotFound'
+import ProductDetail from '../pages/product/ProductDetail'
 
 const AppRouter = () => {
   return (
@@ -21,6 +22,7 @@ const AppRouter = () => {
         <Route path="cart" element={<Cart />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
+        <Route path="product/:id" element={<ProductDetail />} />
       </Route>
 
       {/* ADMIN */}

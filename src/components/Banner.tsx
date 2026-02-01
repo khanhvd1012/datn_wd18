@@ -15,7 +15,7 @@
 
     const Banner = () => {
     return (
-        <div style={{ background:"#26262e" }}>
+        <div style={{ background:"#26262e", borderBottom: "1px solid #c5ba9d" }}>
             <Box sx={{ display: "flex", mt: 2, gap: 2 }}>
         {/* Sidebar */}
         <Box
