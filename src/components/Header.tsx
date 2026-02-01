@@ -38,7 +38,7 @@
                 backgroundColor: "#fff",
                 borderRadius: 3,
                 px: 3,
-                width: 400,
+                width: 600,
                 mx : 4
             }}
             >
