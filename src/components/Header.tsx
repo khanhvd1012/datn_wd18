@@ -67,7 +67,11 @@
                 Đăng nhập
             </Button>
 
-            <IconButton sx={{ color: "#ff9800" }}>
+            <IconButton
+                component={Link}
+                to="/cart"
+                sx={{ color: "#ded2ac" }}
+                >
                 <ShoppingCartIcon />
             </IconButton>
             </Box>
