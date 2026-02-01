@@ -1,0 +1,9 @@
+{
+  "products": [
+    { "id": 1, "name": "Dây sạc", "price": 200000 },
+    { "id": 2, "name": "Ốp trong suốt", "price": 400000 }
+  ],
+  "users": [
+    { "id": 1, "username": "admin", "role": "ADMIN" }
+  ]
+}
