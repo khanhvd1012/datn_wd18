@@ -1,6 +1,7 @@
 import React from 'react'
 import { Typography,Button } from '@mui/material'
 import Banner from '../../components/Banner'
+import Footer from '../../components/Footer'
 const Home = () => {
   return (
     <div>
@@ -13,6 +14,7 @@ const Home = () => {
         Click me
       </Button>
       <img src="" alt="" />
+      <Footer/>
     </div>
   )
 }
