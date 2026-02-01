@@ -1,5 +1,4 @@
 import { Box, Grid, Typography, Divider } from "@mui/material";
-import logobocongthuong from "../img/logo_bocong-Thuong.png"
 const iconStyle = {
   width: 28,
   height: 28,
@@ -129,7 +128,7 @@ const Footer = () => {
               25/04/2011
             </Typography>
 
-            <Typography fontSize={13}>Thiết kế web: Vging</Typography>
+            <Typography fontSize={13}>Thiết kế web: Tlak</Typography>
           </Box>
 
           {/* Right */}
