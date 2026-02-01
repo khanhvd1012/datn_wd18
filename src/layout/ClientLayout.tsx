@@ -6,7 +6,7 @@ const ClientLayout = () => {
   return (
     <>
       <Header />
-      <Banner />
+      
 
       <main style={{ padding: 20 }}>
         <Outlet />

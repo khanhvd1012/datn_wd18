@@ -1,5 +1,8 @@
     import { Box, List, ListItemButton, ListItemText } from "@mui/material";
-
+    import mainBanner0 from "../img/vi-vn-iphone-16-pro-1.jpg";
+    import mainBanner1 from "../img/dien-thoai-iphone-16-pro-1.webp";
+    import mainBanner2 from "../img/ban-phu-kien-dien-thoai-co-lai-khong.jpg";
+    import mainBanner3 from "../img/mau-content-phu-kien-dien-thoai-4.png";
     const categories = [
     "Phụ kiện Iphone",
     "Phụ kiện Samsung",
@@ -12,7 +15,8 @@
 
     const Banner = () => {
     return (
-        <Box sx={{ display: "flex", mt: 2, gap: 2 }}>
+        <div style={{ background:"#26262e" }}>
+            <Box sx={{ display: "flex", mt: 2, gap: 2 }}>
         {/* Sidebar */}
         <Box
             sx={{
@@ -36,18 +40,19 @@
         {/* Main banner */}
         <Box sx={{ flex: 1 }}>
             <img
-            src="/banner-main.png"
+            src={mainBanner0}
             alt="banner"
-            style={{ width: "100%", borderRadius: 6 }}
+            style={{ width: "100%", borderRadius: 7,height:"370px" }}
             />
         </Box>
 
         {/* Right banners */}
         <Box sx={{ width: 260, display: "flex", flexDirection: "column", gap: 2 }}>
-            <img src="/banner-1.png" style={{ width: "100%" }} />
-            <img src="/banner-2.png" style={{ width: "100%" }} />
+            <img src={mainBanner1} style={{ width: "100%" ,height:"178px",objectFit:"cover"}} />
+            <img src={mainBanner2} style={{ width: "100%" ,height:"175px",objectFit:"cover"}} />
         </Box>
         </Box>
+        </div>
     );
     };
 
