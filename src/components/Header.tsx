@@ -11,24 +11,31 @@ import SearchIcon from "@mui/icons-material/Search";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import PhoneIcon from "@mui/icons-material/Phone";
 import { Link } from "react-router-dom";
-
+import logo3 from "../img/logo3.png";
 const Header = () => {
   return (
     <AppBar position="static" sx={{ backgroundColor: "#222" }}>
       <Toolbar sx={{ justifyContent: "space-between" }}>
         {/* Logo */}
-        <Typography
+        <Box
           component={Link}
           to="/"
           sx={{
-            color: "#ff9800",
-            fontWeight: "bold",
-            fontSize: 33,
+            display: "flex",
+            alignItems: "center",
             textDecoration: "none"
           }}
         >
-          LOGO
-        </Typography>
+          <img
+            src={logo3}    
+            alt="Logo"
+            style={{
+              height: 48,    
+              objectFit: "contain"
+            }}
+          />
+        </Box>
+
 
         {/* Search */}
         <Box

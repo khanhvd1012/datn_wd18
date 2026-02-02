@@ -17,6 +17,9 @@ import mainBanner4 from "../img/ac166ae798c54cb4a000c21118458dc0.webp";
 import mainBanner5 from "../img/black.jpg";
 import mainBanner6 from "../img/a93517d958abd6f58fba.jpg";
 import mainBanner7 from "../img/5f096f672215ac4bf504.jpg";
+import mainBanner8 from "../img/bl1.jpeg";
+import mainBanner9 from "../img/bl2.jpg";
+import mainBanner10 from "../img/bl3.jpg";
 
 const categories = [
   "Phụ kiện Iphone",
@@ -28,7 +31,7 @@ const categories = [
   "Đồng hồ thông minh"
 ];
 
-const banners = [mainBanner4, mainBanner1, mainBanner5];
+const banners = [mainBanner4, mainBanner9, mainBanner10];
 
 const Banner = () => {
   const [index, setIndex] = useState(0);
