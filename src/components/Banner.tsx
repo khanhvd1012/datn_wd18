@@ -3,8 +3,10 @@ import {
   List, 
   ListItemButton, 
   ListItemText, 
-  IconButton 
+  IconButton,
+  Link
 } from "@mui/material";
+
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { useState, useEffect } from "react";
@@ -22,14 +24,36 @@ import mainBanner9 from "../img/bl2.jpg";
 import mainBanner10 from "../img/bl3.jpg";
 
 const categories = [
-  "Phụ kiện Iphone",
-  "Phụ kiện Samsung",
-  "Phụ kiện Huawei",
-  "Phụ kiện Xiaomi",
-  "Phụ kiện Oppo",
-  "Tai nghe Bluetooth",
-  "Đồng hồ thông minh"
+  {
+    title: "Phụ kiện Iphone",
+    children: ["Iphone XS", "Iphone 11", "Iphone 12", "Iphone 14", "Iphone 15"]
+  },
+  {
+    title: "Phụ kiện Samsung",
+    children: ["Samsung s22", "Samsung s23", "Samsung s24"]
+  },
+  {
+    title: "Phụ kiện Huawei",
+    children: ["Huawei 3", "Huawei 4"]
+  },
+  {
+    title: "Phụ kiện Xiaomi",
+    children: ["Xiaomi 10", "Xiaomi 12", "Xiaomi 13"]
+  },
+  {
+    title: "Phụ kiện Oppo",
+    children: ["Oppo A5", "Oppo A7", "Oppo A9"]
+  },
+  {
+    title: "Tai nghe Bluetooth",
+    children: ["AirPods", "Sony", "JBL"]
+  },
+  {
+    title: "Đồng hồ thông minh",
+    children: ["Apple Watch", "Samsung Watch", "Xiaomi Watch"]
+  }
 ];
+
 
 const banners = [mainBanner4, mainBanner9, mainBanner10];
 
@@ -58,18 +82,83 @@ const Banner = () => {
       <Box sx={{ display: "flex", mt: 2, gap: 2 }}>
 
         {/* Sidebar */}
-        <Box sx={{ width: 250, backgroundColor: "#101011", color: "#fff" }}>
+        <Box
+          sx={{
+            width: 250,
+            backgroundColor: "#101011",
+            color: "#fff",
+            position: "relative"
+          }}
+        >
           <Box sx={{ backgroundColor: "#ff9800", p: 1, fontWeight: "bold" }}>
             DANH MỤC SẢN PHẨM
           </Box>
-          <List>
-            {categories.map((item, index) => (
-              <ListItemButton key={index}>
-                <ListItemText primary={item} />
-              </ListItemButton>
+
+          <List sx={{ p: 0 }}>
+            {categories.map((cat, idx) => (
+              <Box
+                key={idx}
+                sx={{
+                  position: "relative",
+                  "&:hover .submenu": {
+                    display: "block"
+                  }
+                }}
+              >
+                {/* Menuchaa */}
+                <ListItemButton
+                  component={Link}
+                  href="#"
+                  sx={{
+                    borderBottom: "1px solid #1e1e1e",
+                    textDecoration: "none",
+                    color: "#fff",
+                    "&:hover": { backgroundColor: "#1c1c1c" }
+                  }}
+                >
+                  <ListItemText primary={cat.title} />
+                </ListItemButton>
+
+                {/* Sub mmenu */}
+                <Box
+                  className="submenu"
+                  sx={{
+                    display: "none",
+                    position: "absolute",
+                    top: 0,
+                    left: "100%",
+                    width: 300,
+                    backgroundColor: "#1b1b1b",
+                    boxShadow: "0 0 10px rgba(0,0,0,0.6)",
+                    zIndex: 10
+                  }}
+                >
+                  {cat.children.map((item, i) => (
+                    <Box
+                      key={i}
+                      component={Link}
+                      href="#"
+                      sx={{
+                        display: "block",
+                        px: 2,
+                        py: 1,
+                        textDecoration: "none",
+                        color: "#fff",
+                        "&:hover": {
+                          backgroundColor: "#ff9800",
+                          color: "#000"
+                        }
+                      }}
+                    >
+                      {item}
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
             ))}
           </List>
         </Box>
+
 
         {/* Main banner slider */}
         <Box
