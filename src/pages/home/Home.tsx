@@ -4,12 +4,14 @@ import Footer from '../../components/Footer'
 
 import { Box, Fab } from '@mui/material'
 import ChatIcon from '@mui/icons-material/Chat'
+import ProductList from '../product/ProductList'
 
 const Home = () => {
   return (
     <>
       <Banner />
       <FeaturedProducts />
+      <ProductList/>
       <Footer />
 
       {/* Zalo Floating Button */}

@@ -49,8 +49,11 @@ const FeaturedProducts = () => {
       </Box>
 
       {/* Product grid */}
-      <Grid container spacing={1}>
-        {products.map((item) => (
+      <Grid
+        container
+        spacing={1}
+      >
+        {products.slice(0,10).map((item) => ( //
           <Grid item xs={12} sm={6} md={3} key={item.id}>
             <Link
               to={`/product/${item.id}`}
@@ -109,6 +112,7 @@ const FeaturedProducts = () => {
           </Grid>
         ))}
       </Grid>
+
 
     </Box>
   );
