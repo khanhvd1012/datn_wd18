@@ -60,7 +60,7 @@ const banners = [mainBanner4, mainBanner9, mainBanner10];
 const Banner = () => {
   const [index, setIndex] = useState(0);
 
-  // 👉 Auto slide
+  //  Auto slide
   useEffect(() => {
     const timer = setInterval(() => {
       setIndex((prev) => (prev + 1) % banners.length);
@@ -128,6 +128,7 @@ const Banner = () => {
                     top: 0,
                     left: "100%",
                     width: 300,
+                    borderRadius: 1.6,
                     backgroundColor: "#1b1b1b",
                     boxShadow: "0 0 10px rgba(0,0,0,0.6)",
                     zIndex: 10
@@ -146,7 +147,8 @@ const Banner = () => {
                         color: "#fff",
                         "&:hover": {
                           backgroundColor: "#ff9800",
-                          color: "#000"
+                          color: "#000",
+                          borderRadius: "4px"
                         }
                       }}
                     >
@@ -165,7 +167,7 @@ const Banner = () => {
           sx={{
             width: "700px",
             overflow: "hidden",
-            borderRadius: 2, // bo tròn nhẹ
+            borderRadius: 2, 
             position: "relative",
             backgroundColor: "#000",
             display: "flex",
