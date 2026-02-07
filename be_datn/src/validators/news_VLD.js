@@ -24,11 +24,11 @@ const newsSchema = Joi.object({
     images: Joi.array().optional(),
 
     existingImages: Joi.alternatives()
-            .try(
-                Joi.array().items(Joi.string()),
-                Joi.string()
-            )
-            .optional(),
+        .try(
+            Joi.array().items(Joi.string()),
+            Joi.string()
+        )
+        .optional(),
 });
 
 export const validateNews = async (req, res, next) => {

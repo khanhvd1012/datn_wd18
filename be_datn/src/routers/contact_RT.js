@@ -5,8 +5,8 @@ import { validateContact } from "../validators/contact_VLD.js";
 const contactRouter = Router();
 
 // Gửi liên hệ: không bắt buộc phải đăng nhập
-contactRouter.post("/",  validateContact, createContact);
-contactRouter.get("/",  getAllContacts)
+contactRouter.post("/", validateContact, createContact);
+contactRouter.get("/", getAllContacts)
 contactRouter.delete("/:id", deleteContact);
 
 export default contactRouter;
