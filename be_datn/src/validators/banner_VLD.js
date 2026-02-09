@@ -20,7 +20,7 @@ export const bannerSchema = Joi.object({
             "any.required": "Tiêu đề là bắt buộc"
         }),
     image: Joi.string().optional(),
-    
+
     status: Joi.boolean().messages({
         "boolean.base": "Trạng thái phải là true hoặc false"
     }),

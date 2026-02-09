@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { createBrand, getAllBrands, getBrandById, updateBrand, deleteBrand } from "../controllers/brand_CTL";
-import { validateBrand } from "../validators/brand_VLD";
-import upload from "../middleware/upload_MID";
+import { createBrand, getAllBrands, getBrandById, updateBrand, deleteBrand } from "../controllers/brand_CTL.js";
+import { validateBrand } from "../validators/brand_VLD.js";
+import upload from "../middleware/upload_MID.js";
 
 const brandRouter = Router();
 
