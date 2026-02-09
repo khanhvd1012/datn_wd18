@@ -1,20 +1,15 @@
-import { Outlet, Link } from "react-router-dom";
+import { Outlet } from "react-router-dom";
+import Header from "../components/Header";
 
 const ClientLayout = () => {
   return (
     <>
-      <header>
-        <Link to="/">Home</Link> |{" "}
-        <Link to="/products">Products</Link> |{" "}
-        <Link to="/cart">Cart</Link> |{" "}
-        <Link to="/login">Login</Link>
-      </header>
+      <Header />
+      
 
-      <main>
+      <main style={{ padding: 20 }}>
         <Outlet />
       </main>
-
-      <footer>© 2026 FE_DATN</footer>
     </>
   );
 };

@@ -4,12 +4,13 @@ import ProductList from '../pages/product/ProductList'
 import Cart from '../pages/cart/Cart'
 import Login from '../pages/auth/Login'
 import Register from '../pages/auth/Register'
-import Dashboard from '../pages/admin/Dashboard'
 import Users from '../pages/admin/Users'
 import NotFound from '../pages/NotFound'
 import ProductDetail from '../pages/product/ProductDetail'
 import ClientLayout from '../layouts/ClientLayout'
 import AdminLayout from '../layouts/AdminLayout'
+import AdminProducts from '../pages/admin/Products'
+import { Dashboard } from '@mui/icons-material'
 
 const AppRouter = () => {
   return (
@@ -27,6 +28,7 @@ const AppRouter = () => {
       {/* ADMIN */}
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<Dashboard />} />
+        <Route path="products" element={<AdminProducts />} />
         <Route path="users" element={<Users />} />
       </Route>
 
