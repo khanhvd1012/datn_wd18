@@ -8,15 +8,12 @@ import {
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { useState, useEffect } from "react";
-
-import mainBanner0 from "../img/vi-vn-iphone-16-pro-1.jpg";
-import mainBanner1 from "../img/dien-thoai-iphone-16-pro-1.webp";
-import mainBanner2 from "../img/ban-phu-kien-dien-thoai-co-lai-khong.jpg";
-import mainBanner3 from "../img/mau-content-phu-kien-dien-thoai-4.png";
-import mainBanner4 from "../img/ac166ae798c54cb4a000c21118458dc0.webp";
-import mainBanner5 from "../img/black.jpg";
+import mainBanner4 from "../img/ban-phu-kien-dien-thoai-co-lai-khong.jpg";
 import mainBanner6 from "../img/a93517d958abd6f58fba.jpg";
 import mainBanner7 from "../img/5f096f672215ac4bf504.jpg";
+import mainBanner8 from "../img/bl1.jpeg";
+import mainBanner9 from "../img/bl2.jpg";
+import mainBanner10 from "../img/bl3.jpg";
 
 const categories = [
   "Phụ kiện Iphone",
@@ -28,7 +25,7 @@ const categories = [
   "Đồng hồ thông minh"
 ];
 
-const banners = [mainBanner4, mainBanner1, mainBanner5];
+const banners = [mainBanner4, mainBanner10, mainBanner9];
 
 const Banner = () => {
   const [index, setIndex] = useState(0);
@@ -73,7 +70,7 @@ const Banner = () => {
           sx={{
             width: "700px",
             overflow: "hidden",
-            borderRadius: 2, // bo tròn nhẹ
+            borderRadius: 2, 
             position: "relative",
             backgroundColor: "#000",
             display: "flex",
@@ -97,7 +94,7 @@ const Banner = () => {
                 sx={{
                   width: "700px",
                   height: "400px",
-                  objectFit: "contain",
+                  objectFit: "auto",
                   flexShrink: 0,
                 }}
               />
