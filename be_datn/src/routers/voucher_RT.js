@@ -10,16 +10,16 @@ import {
     toggleVoucherStatus
 } from "../controllers/voucher_CTL.js";
 import { validateVoucher } from "../validators/voucher_VLD.js";
-
+import { checkPermission } from "../middleware/checkPermission.js";
 const voucherRouter = Router();
 
-voucherRouter.get("/", getAllVouchers);
-voucherRouter.get("/code/:code", getVoucherByCode);
-voucherRouter.get("/:id", getVoucherById);
-voucherRouter.post("/", validateVoucher, createVoucher);
-voucherRouter.put("/:id", validateVoucher, updateVoucher);
-voucherRouter.delete("/:id", deleteVoucher);
-voucherRouter.put("/:id/use", useVoucher);
-voucherRouter.put("/:id/toggle-status", toggleVoucherStatus);
+voucherRouter.get("/", checkPermission,getAllVouchers);
+voucherRouter.get("/code/:code", checkPermission,getVoucherByCode);
+voucherRouter.get("/:id", checkPermission,getVoucherById);
+voucherRouter.post("/", checkPermission,validateVoucher, createVoucher);
+voucherRouter.put("/:id", checkPermission,validateVoucher, updateVoucher);
+voucherRouter.delete("/:id", checkPermission,deleteVoucher);
+voucherRouter.put("/:id/use", checkPermission,useVoucher);
+voucherRouter.put("/:id/toggle-status", checkPermission,toggleVoucherStatus);
 
 export default voucherRouter;
