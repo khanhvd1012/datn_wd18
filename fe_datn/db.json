@@ -1,1 +1,89 @@
-{}
+{
+  "products": [
+    {
+      "id": 11,
+      "name": "Dán skin Galaxy Z Fold 6 mặt lưng full viền",
+      "img": "https://phukienchinhhang.com.vn/Uploads/medium_dan-ppf-full-man-hinh-galaxy-z-flip-6-mat-gap-ngoai-chinh-hang-tot-nhat.jpg",
+      "price": 200000,
+      "description": "Thiết kế đeo thông minh dù sử dụng trong thời gian dài cũng không gây đau tai"
+    },
+    {
+      "id": 10,
+      "name": "Dán PPF full màn hình Huawei Mate 40",
+      "img": "https://phukienchinhhang.com.vn/Uploads/medium_cap-sac-samsung-type-c-to-type-c-5a-chinh-hang-zin-gia-re.jpg",
+      "price": 200000,
+      "description": "Thiết kế đeo thông minh dù sử dụng trong thời gian dài cũng không gây đau tai"
+    },
+    {
+      "id": 9,
+      "name": "Dán skin Galaxy Z Fold 6 mặt lưng full viền",
+      "img": "https://phukienchinhhang.com.vn/Uploads/medium_dan-full-man-hinh-iphone-14-plus-pro-pro-max-ppf-pskin-chong-xuoc-tot-nhat-.jpg",
+      "price": 200000,
+      "description": "Thiết kế đeo thông minh dù sử dụng trong thời gian dài cũng không gây đau tai"
+    },
+    {
+      "id": 8,
+      "name": "Dán PPF full màn hình Huawei Mate 40",
+      "img": "https://phukienchinhhang.com.vn/Uploads/medium_dan-ppf-full-man-hinh-galaxy-z-flip-6-mat-gap-ngoai-chinh-hang-tot-nhat.jpg",
+      "price": 200000,
+      "description": "Thiết kế đeo thông minh dù sử dụng trong thời gian dài cũng không gây đau tai"
+    },
+    {
+      "id": 7,
+      "name": "Dán skin Galaxy Z Fold 6 mặt lưng full viền",
+      "img": "https://phukienchinhhang.com.vn/Uploads/medium_dan-full-man-hinh-iphone-14-plus-pro-pro-max-ppf-pskin-chong-xuoc-tot-nhat-.jpg",
+      "price": 200000,
+      "description": "Thiết kế đeo thông minh dù sử dụng trong thời gian dài cũng không gây đau tai"
+    },
+    {
+      "id": 6,
+      "name": "Dán PPF full màn hình Huawei Mate 40",
+      "img": "https://phukienchinhhang.com.vn/Uploads/medium_dan-ppf-full-man-hinh-galaxy-z-flip-6-mat-gap-ngoai-chinh-hang-tot-nhat.jpg",
+      "price": 200000,
+      "description": "Thiết kế đeo thông minh dù sử dụng trong thời gian dài cũng không gây đau tai"
+    },
+    {
+      "id": 5,
+      "name": "Dán full màn hình iPhone 14 | Plus | Pro",
+      "img": "https://phukienchinhhang.com.vn/Uploads/medium_cap-sac-samsung-type-c-to-type-c-5a-chinh-hang-zin-gia-re.jpg",
+      "price": 200000,
+      "description": "Thiết kế đeo thông minh dù sử dụng trong thời gian dài cũng không gây đau tai"
+    },
+    {
+      "id": 4,
+      "name": "Dán full màn hình iPhone 14 | Plus | Pro",
+      "img": "https://phukienchinhhang.com.vn/Uploads/medium_dan-ppf-full-man-hinh-galaxy-z-flip-6-mat-gap-ngoai-chinh-hang-tot-nhat.jpg",
+      "price": 200000,
+      "description": "Thiết kế đeo thông minh dù sử dụng trong thời gian dài cũng không gây đau tai"
+    },
+    {
+      "id": 3,
+      "name": "Dán skin Galaxy Z Fold 6 mặt lưng full viền",
+      "img": "https://phukienchinhhang.com.vn/Uploads/medium_cap-sac-samsung-type-c-to-type-c-5a-chinh-hang-zin-gia-re.jpg",
+      "price": 200000,
+      "description": "Thiết kế đeo thông minh dù sử dụng trong thời gian dài cũng không gây đau tai"
+    },
+    {
+      "id": 2,
+      "name": "Dán full màn hình iPhone 14 | Plus | Pro",
+      "img": "https://phukienchinhhang.com.vn/Uploads/medium_dan-ppf-full-man-hinh-galaxy-z-flip-6-mat-gap-ngoai-chinh-hang-tot-nhat.jpg",
+      "price": 200000,
+      "description": "Thiết kế đeo thông minh dù sử dụng trong thời gian dài cũng không gây đau tai"
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "email": "admin@gmail.com",
+      "password": "123456",
+      "role": "ADMIN"
+    },
+    {
+      "name": "hải",
+      "email": "yenwy@gmail.comm",
+      "password": "123456",
+      "id": 2
+    }
+  ],
+  "cart": []
+}

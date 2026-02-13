@@ -7,9 +7,13 @@ import {
   Paper,
   Link,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import Footer from "../../components/Footer";
 
 const Login = () => {
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -27,14 +31,12 @@ const Login = () => {
   const validate = () => {
     const newErrors = {};
 
-    // Email
     if (!form.email) {
       newErrors.email = "Email không được để trống";
     } else if (!/\S+@\S+\.\S+/.test(form.email)) {
       newErrors.email = "Email không đúng định dạng";
     }
 
-    // Password
     if (!form.password) {
       newErrors.password = "Mật khẩu không được để trống";
     } else if (form.password.length < 6) {
@@ -45,12 +47,26 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (validate()) {
-      console.log("Login data:", form);
-      // TODO: gọi API đăng nhập
+    if (!validate()) return;
+
+    try {
+      const res = await axios.get(
+        `http://localhost:3000/users?email=${form.email}&password=${form.password}`
+      );
+
+      if (res.data.length > 0) {
+        localStorage.setItem("user", JSON.stringify(res.data[0]));
+        alert("Đăng nhập thành công!");
+        navigate("/");
+      } else {
+        alert("Sai email hoặc mật khẩu!");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Không kết nối được server!");
     }
   };
 

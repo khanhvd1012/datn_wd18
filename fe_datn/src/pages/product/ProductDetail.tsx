@@ -6,12 +6,11 @@ import {
   Box,
   Typography,
   Button,
-  Rating,
   TextField,
   Breadcrumbs,
   Link,
 } from '@mui/material'
-import { ShoppingCart, Heart } from 'lucide-react'
+import { ShoppingCart } from 'lucide-react'
 import Footer from '../../components/Footer'
 import { useParams } from 'react-router-dom'
 
@@ -19,7 +18,7 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1)
   const [product, setProduct] = useState(null)
 
-  const { id } = useParams() 
+  const { id } = useParams()
 
   useEffect(() => {
     axios
@@ -28,13 +27,35 @@ const ProductDetail = () => {
         const foundProduct = res.data.find(
           (item) => String(item.id) === String(id)
         )
-
         setProduct(foundProduct)
       })
       .catch((err) => {
         console.error('Lỗi lấy sản phẩm:', err)
       })
   }, [id])
+
+  // 🔥 Thêm vào giỏ hàng (KHÔNG thông báo)
+  const handleAddToCart = () => {
+    if (!product) return
+
+    const storedCart = localStorage.getItem('cart')
+    const cart = storedCart ? JSON.parse(storedCart) : []
+
+    const existingIndex = cart.findIndex(
+      (item) => String(item.id) === String(product.id)
+    )
+
+    if (existingIndex !== -1) {
+      cart[existingIndex].quantity += quantity
+    } else {
+      cart.push({
+        ...product,
+        quantity: quantity,
+      })
+    }
+
+    localStorage.setItem('cart', JSON.stringify(cart))
+  }
 
   if (!product) {
     return (
@@ -46,33 +67,30 @@ const ProductDetail = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 1 }}>
-      {/* Breadcrumb */}
-        <Breadcrumbs sx={{ mb: 1, px: 1, py: 1, borderRadius: 2, fontSize: 18 }}>
-          <Link
-            href="/"
-            underline="hover"
-            sx={{
-              fontWeight: 600,
-              color: '#e5d76f',
-              '&:hover': { color: '#f87e7e' },
-            }}
-          >
-            Trang chủ
-          </Link>
+      <Breadcrumbs sx={{ mb: 1, px: 1, py: 1, borderRadius: 2, fontSize: 18 }}>
+        <Link
+          href="/"
+          underline="hover"
+          sx={{
+            fontWeight: 600,
+            color: '#e5d76f',
+            '&:hover': { color: '#f87e7e' },
+          }}
+        >
+          Trang chủ
+        </Link>
 
-          <Typography
-            sx={{
-              fontWeight: 600,
-              color: '#717171',
-            }}
-          >
-            {product.name}
-          </Typography>
-        </Breadcrumbs>
-
+        <Typography
+          sx={{
+            fontWeight: 600,
+            color: '#717171',
+          }}
+        >
+          {product.name}
+        </Typography>
+      </Breadcrumbs>
 
       <Grid container spacing={4}>
-        {/* Image */}
         <Grid item xs={12} md={6}>
           <Box sx={{ mb: 2 }}>
             <img
@@ -88,7 +106,6 @@ const ProductDetail = () => {
           </Box>
         </Grid>
 
-        {/* Info */}
         <Grid item xs={12} md={6}>
           <Typography variant="h4" sx={{ mb: 2, fontWeight: 'bold' }}>
             {product.name}
@@ -112,14 +129,10 @@ const ProductDetail = () => {
             sx={{
               width: 110,
               mb: 3,
-
-              /* Số bên trong */
               '& input': {
                 color: '#fff',
                 textAlign: 'center',
               },
-
-              /* Label "Số lượng" */
               '& .MuiInputLabel-root': {
                 color: '#fff',
               },
@@ -129,13 +142,12 @@ const ProductDetail = () => {
             }}
           />
 
-
-
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Button
               variant="contained"
               sx={{ backgroundColor: '#ff6b35', flex: 1 }}
               startIcon={<ShoppingCart size={20} />}
+              onClick={handleAddToCart}
             >
               Thêm vào giỏ
             </Button>

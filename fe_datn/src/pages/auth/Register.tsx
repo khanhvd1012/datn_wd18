@@ -7,9 +7,13 @@ import {
   Paper,
   Link,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import Footer from "../../components/Footer";
 
 const Register = () => {
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -55,12 +59,38 @@ const Register = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (validate()) {
-      console.log("Register data:", form);
-      // TODO: gọi API đăng ký
+    if (!validate()) return;
+
+    try {
+      // 1️⃣ Kiểm tra email đã tồn tại chưa
+      const checkUser = await axios.get(
+        `http://localhost:3000/users?email=${form.email}`
+      );
+
+      if (checkUser.data.length > 0) {
+        alert("Email đã tồn tại!");
+        return;
+      }
+
+      // 2️⃣ Tạo user mới
+      const newUser = {
+        name: form.name,
+        email: form.email,
+        password: form.password,
+      };
+
+      await axios.post("http://localhost:3000/users", newUser);
+
+      alert("Đăng ký thành công!");
+
+      navigate("/login");
+
+    } catch (error) {
+      console.error(error);
+      alert("Lỗi đăng ký! Kiểm tra json-server.");
     }
   };
 
@@ -87,90 +117,82 @@ const Register = () => {
             border: "1px solid rgba(255,255,255,0.35)",
           }}
         >
-          <Box sx={{ pr: 4 }}>
-            <Typography variant="h5" mb={3} fontWeight="bold">
-              ĐĂNG KÝ
+          <Typography variant="h5" mb={3} fontWeight="bold">
+            ĐĂNG KÝ
+          </Typography>
+
+          <TextField
+            fullWidth
+            label="Họ và tên"
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            margin="normal"
+            error={!!errors.name}
+            helperText={errors.name}
+          />
+
+          <TextField
+            fullWidth
+            label="Email"
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            margin="normal"
+            error={!!errors.email}
+            helperText={errors.email}
+          />
+
+          <TextField
+            fullWidth
+            label="Mật khẩu"
+            type="password"
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+            margin="normal"
+            error={!!errors.password}
+            helperText={errors.password}
+          />
+
+          <TextField
+            fullWidth
+            label="Xác nhận mật khẩu"
+            type="password"
+            name="confirmPassword"
+            value={form.confirmPassword}
+            onChange={handleChange}
+            margin="normal"
+            error={!!errors.confirmPassword}
+            helperText={errors.confirmPassword}
+          />
+
+          <Button
+            fullWidth
+            sx={{
+              mt: 3,
+              py: 1.2,
+              backgroundColor: "#e65100",
+              fontWeight: "bold",
+              "&:hover": { backgroundColor: "#ef6c00" },
+            }}
+            variant="contained"
+            onClick={handleSubmit}
+          >
+            ĐĂNG KÝ
+          </Button>
+
+          <Box mt={2}>
+            <Typography variant="body2">
+              Đã có tài khoản?{" "}
+              <Link
+                component="button"
+                onClick={() => navigate("/login")}
+                underline="hover"
+              >
+                Đăng nhập
+              </Link>
             </Typography>
-
-            <TextField
-              fullWidth
-              label="Họ và tên"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              margin="normal"
-              error={!!errors.name}
-              helperText={errors.name}
-              InputLabelProps={{ style: { color: "#aaa" } }}
-              InputProps={{ style: { color: "#fff" } }}
-            />
-
-            <TextField
-              fullWidth
-              label="Email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              margin="normal"
-              error={!!errors.email}
-              helperText={errors.email}
-              InputLabelProps={{ style: { color: "#aaa" } }}
-              InputProps={{ style: { color: "#fff" } }}
-            />
-
-            <TextField
-              fullWidth
-              label="Mật khẩu"
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              margin="normal"
-              error={!!errors.password}
-              helperText={errors.password}
-              InputLabelProps={{ style: { color: "#aaa" } }}
-              InputProps={{ style: { color: "#fff" } }}
-            />
-
-            <TextField
-              fullWidth
-              label="Xác nhận mật khẩu"
-              type="password"
-              name="confirmPassword"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              margin="normal"
-              error={!!errors.confirmPassword}
-              helperText={errors.confirmPassword}
-              InputLabelProps={{ style: { color: "#aaa" } }}
-              InputProps={{ style: { color: "#fff" } }}
-            />
-
-            <Button
-              fullWidth
-              sx={{
-                mt: 3,
-                py: 1.2,
-                backgroundColor: "#e65100",
-                fontWeight: "bold",
-                "&:hover": {
-                  backgroundColor: "#ef6c00",
-                },
-              }}
-              variant="contained"
-              onClick={handleSubmit}
-            >
-              ĐĂNG KÝ
-            </Button>
-
-            <Box mt={2}>
-              <Typography variant="body2">
-                Đã có tài khoản?{" "}
-                <Link href="/login" color="#90caf9" underline="hover">
-                  Đăng nhập
-                </Link>
-              </Typography>
-            </Box>
           </Box>
         </Paper>
       </Box>

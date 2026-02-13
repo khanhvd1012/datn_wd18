@@ -10,32 +10,44 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import PhoneIcon from "@mui/icons-material/Phone";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import logo3 from "../img/logo3.png";
+
 const Header = () => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(
+    JSON.parse(localStorage.getItem("user"))
+  );
+
+  // 🔥 Khi chuyển trang sẽ cập nhật lại user
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    setUser(storedUser ? JSON.parse(storedUser) : null);
+  }, [window.location.pathname]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    navigate("/");
+  };
+
   return (
     <AppBar position="static" sx={{ backgroundColor: "#222" }}>
       <Toolbar sx={{ justifyContent: "space-between" }}>
+
         {/* Logo */}
         <Box
           component={Link}
           to="/"
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            textDecoration: "none"
-          }}
+          sx={{ display: "flex", alignItems: "center", textDecoration: "none" }}
         >
           <img
-            src={logo3}    
+            src={logo3}
             alt="Logo"
-            style={{
-              height: 48,    
-              objectFit: "contain"
-            }}
+            style={{ height: 48, objectFit: "contain" }}
           />
         </Box>
-
 
         {/* Search */}
         <Box
@@ -59,41 +71,47 @@ const Header = () => {
         </Box>
 
         {/* Right */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 6 }}>
-          
-          {/* Phone with animation + link */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 4 }}>
+
           <Box
             component="a"
             href="tel:0987654321"
             sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5,
-                textDecoration: "none",
-                color: "#fff",
-                "&:hover": {
-                color: "#ffffca",
-                },
+              display: "flex",
+              alignItems: "center",
+              gap: 0.5,
+              textDecoration: "none",
+              color: "#fff"
             }}
-            >
-            <PhoneIcon
-                sx={{
-                color: "#ff9800",
-                animation: "pulse 2.5s infinite ease-in-out",
-                }}
-            />
-            <Typography fontSize={14}>0987.65.4321</Typography>
-            </Box>
-
-
-          <Button
-            component={Link}
-            to="/login"
-            variant="outlined"
-            sx={{ color: "#fff", borderColor: "#ff9800" }}
           >
-            Đăng nhập
-          </Button>
+            <PhoneIcon sx={{ color: "#ff9800" }} />
+            <Typography fontSize={14}>0987.65.4321</Typography>
+          </Box>
+
+          {user ? (
+            <>
+              <Typography sx={{ color: "#fff" }}>
+                Xin chào, {user.name || user.email}
+              </Typography>
+
+              <Button
+                variant="outlined"
+                sx={{ color: "#ff9800", borderColor: "#ff9800" }}
+                onClick={handleLogout}
+              >
+                Đăng xuất
+              </Button>
+            </>
+          ) : (
+            <Button
+              component={Link}
+              to="/login"
+              variant="outlined"
+              sx={{ color: "#fff", borderColor: "#ff9800" }}
+            >
+              Đăng nhập
+            </Button>
+          )}
 
           <IconButton
             component={Link}
@@ -104,17 +122,6 @@ const Header = () => {
           </IconButton>
         </Box>
       </Toolbar>
-
-      {/* Animation */}
-      <style>
-        {`
-          @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.08); }
-            100% { transform: scale(1); }
-          }
-        `}
-      </style>
     </AppBar>
   );
 };
