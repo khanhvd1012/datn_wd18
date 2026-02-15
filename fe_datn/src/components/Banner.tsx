@@ -48,12 +48,12 @@ const Banner = () => {
   };
 
   return (
-    <div style={{ background: "#26262e", borderBottom: "1px solid #c5ba9d" }}>
+    <div style={{ background: "", borderBottom: "1px " }}>
       <Box sx={{ display: "flex", mt: 2, gap: 2 }}>
 
         {/* Sidebar */}
-        <Box sx={{ width: 250, backgroundColor: "#101011", color: "#fff" }}>
-          <Box sx={{ backgroundColor: "#ff9800", p: 1, fontWeight: "bold" }}>
+        <Box sx={{ width: 250,height: "388px",borderBottomRightRadius:5, backgroundColor: "", color: "#fff" }}>
+          <Box sx={{ backgroundColor: "#ff9800", p: 1, fontWeight: "bold",}}>
             DANH MỤC SẢN PHẨM
           </Box>
           <List>
@@ -69,6 +69,7 @@ const Banner = () => {
         <Box
           sx={{
             width: "700px",
+            height: "385px",
             overflow: "hidden",
             borderRadius: 2, 
             position: "relative",
@@ -150,7 +151,7 @@ const Banner = () => {
                 src={mainBanner6}
                 style={{
                 width: "100%",
-                height: "190px",
+                height: "187px",
                 objectFit: "cover",
                 borderRadius: 6,
                 animation: "floatY 4s ease-in-out infinite 1.5s",
@@ -168,7 +169,7 @@ const Banner = () => {
             0% { transform: translateY(0); }
             25% { transform: translateY(0px); }
             50% { transform: translateY(0); }
-            75% { transform: translateY(4px); }
+            75% { transform: translateY(3px); }
             100% { transform: translateY(0); }
         }
         `}

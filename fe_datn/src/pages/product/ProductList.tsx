@@ -33,7 +33,7 @@ const ProductList = () => {
     price.toLocaleString("vi-VN") + "đ";
 
   return (
-    <Box sx={{ backgroundColor: "#111", p: 2 ,position: "relative",mt:1}}>
+    <Box sx={{ backgroundColor: "", p: 2 ,position: "relative",mt:1}}>
       {/* ===== HEADER ===== */}
       <Box
       sx={{

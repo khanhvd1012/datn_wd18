@@ -30,7 +30,7 @@ const FeaturedProducts = () => {
     price.toLocaleString("vi-VN") + " đ";
 
   return (
-    <Box sx={{ backgroundColor: "#111", p: 1.2 }}>
+    <Box sx={{ backgroundColor: "", p: 1.2, borderTop: "1px solid #c5ba9d" }}>
       {/* Header */}
       <Box sx={{ display: "flex", alignItems: "center", mb: 1.5 }}>
         <Box
@@ -65,7 +65,7 @@ const FeaturedProducts = () => {
             >
               <Card
                 sx={{
-                  backgroundColor: "#1a1a1a",
+                  backgroundColor: "#201e1e",
                   border: "1px solid #2a2a2a",
                   height: "400px",
                   width: "236px",
