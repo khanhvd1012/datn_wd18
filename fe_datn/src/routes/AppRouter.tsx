@@ -10,7 +10,7 @@ import ClientLayout from '../layouts/ClientLayout'
 import AdminLayout from '../layouts/AdminLayout'
 import AdminProducts from '../pages/admin/Products'
 import { Dashboard } from '@mui/icons-material'
-// import ProductDetail from '../pages/product/ProductDetail'
+import ProductDetail from '../pages/product/ProductDetail'
 
 const AppRouter = () => {
   return (
@@ -22,7 +22,7 @@ const AppRouter = () => {
         <Route path="cart" element={<Cart />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
-        {/* <Route path="product/:id" element={<ProductDetail />} /> */}
+        <Route path="product/:id" element={<ProductDetail />} />
       </Route>
 
       {/* ADMIN */}
