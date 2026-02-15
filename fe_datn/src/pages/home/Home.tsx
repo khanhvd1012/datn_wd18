@@ -9,7 +9,7 @@ import FeatureBar from '../../components/FeatureBar'
 
 const Home = () => {
   return (
-    <>
+    <div style={{ background: "#242323" }}>
       <Banner />
       <FeatureBar/>
       <FeaturedProducts />
@@ -60,7 +60,7 @@ const Home = () => {
           <ChatIcon sx={{ fontSize: 32 }} />
         </Fab>
       </Box>
-    </>
+    </div>
   )
 }
 

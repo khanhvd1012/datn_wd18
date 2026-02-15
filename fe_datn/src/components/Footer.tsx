@@ -23,7 +23,7 @@ const Footer = () => {
         sx={{
           backgroundColor: "#1e1e1e",
           color: "#ccc",
-          mt: 6
+          mt: 6 
         }}
       >
         <Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 3, md: 4 }, py: 5 }}>
