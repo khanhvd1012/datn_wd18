@@ -8,10 +8,13 @@ import {
   IconButton,
 } from '@mui/material'
 import { Plus, Minus, Trash2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 const Cart = () => {
   const [cart, setCart] = useState([])
+  const navigate = useNavigate()
 
+  // ================= FETCH CART =================
   const fetchCart = async () => {
     try {
       const res = await axios.get('http://localhost:3000/cart')
@@ -25,6 +28,7 @@ const Cart = () => {
     fetchCart()
   }, [])
 
+  // ================= UPDATE QUANTITY =================
   const updateQuantity = async (id, newQuantity) => {
     if (newQuantity < 1) return
 
@@ -32,19 +36,30 @@ const Cart = () => {
       await axios.patch(`http://localhost:3000/cart/${id}`, {
         quantity: newQuantity,
       })
-      fetchCart()
+
+      setCart((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, quantity: newQuantity } : item
+        )
+      )
     } catch (error) {
       console.error('Lỗi cập nhật số lượng:', error)
     }
   }
 
+  // ================= REMOVE ITEM =================
   const removeItem = async (id) => {
     try {
       await axios.delete(`http://localhost:3000/cart/${id}`)
-      fetchCart()
+      setCart((prev) => prev.filter((item) => item.id !== id))
     } catch (error) {
       console.error('Lỗi xoá sản phẩm:', error)
     }
+  }
+
+  // ================= GO TO CHECKOUT =================
+  const handleCheckout = () => {
+    navigate('/checkout')
   }
 
   const totalPrice = cart.reduce(
@@ -124,6 +139,7 @@ const Cart = () => {
             variant="contained"
             color="error"
             sx={{ mt: 2 }}
+            onClick={handleCheckout}
           >
             Thanh toán
           </Button>

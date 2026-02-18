@@ -12,7 +12,7 @@ import Users from '../pages/admin/Users'
 import NotFound from '../pages/NotFound'
 import ProductDetail from '../pages/product/ProductDetail'
 import News from '../pages/news/News'
-
+import Checkout from '../pages/Checkout' // ✅ THÊM DÒNG NÀY
 
 const AppRouter = () => {
   return (
@@ -26,6 +26,7 @@ const AppRouter = () => {
         <Route path="register" element={<Register />} />
         <Route path="product/:id" element={<ProductDetail />} />
         <Route path="news" element={<News />} />
+        <Route path="checkout" element={<Checkout />} /> {/* ✅ sửa path */}
       </Route>
 
       {/* ADMIN */}

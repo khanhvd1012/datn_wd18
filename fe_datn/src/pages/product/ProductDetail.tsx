@@ -12,49 +12,72 @@ import {
 } from '@mui/material'
 import { ShoppingCart } from 'lucide-react'
 import Footer from '../../components/Footer'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
+
+interface Product {
+  id: number
+  name: string
+  img: string
+  price: number
+  description: string
+}
 
 const ProductDetail = () => {
-  const [quantity, setQuantity] = useState(1)
-  const [product, setProduct] = useState(null)
+  const [quantity, setQuantity] = useState<number>(1)
+  const [product, setProduct] = useState<Product | null>(null)
 
   const { id } = useParams()
+  const navigate = useNavigate()
 
+  // ================= LẤY SẢN PHẨM =================
   useEffect(() => {
     axios
-      .get('http://localhost:3000/products')
-      .then((res) => {
-        const foundProduct = res.data.find(
-          (item) => String(item.id) === String(id)
-        )
-        setProduct(foundProduct)
-      })
-      .catch((err) => {
-        console.error('Lỗi lấy sản phẩm:', err)
-      })
+      .get(`http://localhost:3000/products/${id}`)
+      .then((res) => setProduct(res.data))
+      .catch((err) => console.error(err))
   }, [id])
 
-  // 🔥 Thêm vào giỏ hàng (KHÔNG thông báo)
-  const handleAddToCart = () => {
+  // ================= THÊM VÀO CART =================
+  const addToCart = async () => {
     if (!product) return
 
-    const storedCart = localStorage.getItem('cart')
-    const cart = storedCart ? JSON.parse(storedCart) : []
+    try {
+      const res = await axios.get(
+        `http://localhost:3000/cart?productId=${product.id}`
+      )
 
-    const existingIndex = cart.findIndex(
-      (item) => String(item.id) === String(product.id)
-    )
+      if (res.data.length > 0) {
+        const existing = res.data[0]
 
-    if (existingIndex !== -1) {
-      cart[existingIndex].quantity += quantity
-    } else {
-      cart.push({
-        ...product,
-        quantity: quantity,
-      })
+        await axios.patch(
+          `http://localhost:3000/cart/${existing.id}`,
+          {
+            quantity: existing.quantity + quantity,
+          }
+        )
+      } else {
+        await axios.post('http://localhost:3000/cart', {
+          productId: product.id,
+          name: product.name,
+          img: product.img,
+          price: product.price,
+          quantity,
+        })
+      }
+    } catch (error) {
+      console.error('Lỗi thêm giỏ hàng:', error)
     }
+  }
 
-    localStorage.setItem('cart', JSON.stringify(cart))
+  // ================= BUTTON HANDLERS =================
+  const handleAddToCart = async () => {
+    await addToCart()
+    navigate('/cart') // 👉 chuyển sang giỏ hàng
+  }
+
+  const handleBuyNow = async () => {
+    await addToCart()
+    navigate('/checkout') // 👉 chuyển sang trang thanh toán
   }
 
   if (!product) {
@@ -66,56 +89,38 @@ const ProductDetail = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 1 }}>
-      <Breadcrumbs sx={{ mb: 1, px: 1, py: 1, borderRadius: 2, fontSize: 18 }}>
-        <Link
-          href="/"
-          underline="hover"
-          sx={{
-            fontWeight: 600,
-            color: '#e5d76f',
-            '&:hover': { color: '#f87e7e' },
-          }}
-        >
+    <Container maxWidth="lg" sx={{ py: 3 }}>
+      <Breadcrumbs sx={{ mb: 2 }}>
+        <Link href="/" underline="hover">
           Trang chủ
         </Link>
-
-        <Typography
-          sx={{
-            fontWeight: 600,
-            color: '#717171',
-          }}
-        >
-          {product.name}
-        </Typography>
+        <Typography>{product.name}</Typography>
       </Breadcrumbs>
 
       <Grid container spacing={4}>
         <Grid item xs={12} md={6}>
-          <Box sx={{ mb: 2 }}>
-            <img
-              src={product.img}
-              alt={product.name}
-              style={{
-                width: '400px',
-                height: '400px',
-                objectFit: 'cover',
-                borderRadius: 8,
-              }}
-            />
-          </Box>
+          <img
+            src={product.img}
+            alt={product.name}
+            style={{
+              width: '400px',
+              height: '400px',
+              objectFit: 'cover',
+              borderRadius: 8,
+            }}
+          />
         </Grid>
 
         <Grid item xs={12} md={6}>
-          <Typography variant="h4" sx={{ mb: 2, fontWeight: 'bold' }}>
+          <Typography variant="h4" sx={{ mb: 2 }}>
             {product.name}
           </Typography>
 
           <Typography
             variant="h5"
-            sx={{ color: '#ff0000', mb: 2, fontWeight: 'bold' }}
+            sx={{ color: '#ff0000', mb: 2 }}
           >
-            {product.price?.toLocaleString()}₫
+            {product.price.toLocaleString()}₫
           </Typography>
 
           <TextField
@@ -126,26 +131,17 @@ const ProductDetail = () => {
               setQuantity(Math.max(1, Number(e.target.value)))
             }
             inputProps={{ min: 1 }}
-            sx={{
-              width: 110,
-              mb: 3,
-              '& input': {
-                color: '#fff',
-                textAlign: 'center',
-              },
-              '& .MuiInputLabel-root': {
-                color: '#fff',
-              },
-              '& .MuiInputLabel-root.Mui-focused': {
-                color: '#fff',
-              },
-            }}
+            sx={{ width: 120, mb: 3 }}
           />
 
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Button
               variant="contained"
-              sx={{ backgroundColor: '#ff6b35', flex: 1 }}
+              sx={{
+                flex: 1,
+                backgroundColor: '#ff6b35',
+                '&:hover': { backgroundColor: '#e65c2f' },
+              }}
               startIcon={<ShoppingCart size={20} />}
               onClick={handleAddToCart}
             >
@@ -154,7 +150,12 @@ const ProductDetail = () => {
 
             <Button
               variant="contained"
-              sx={{ backgroundColor: '#d32f2f', flex: 1 }}
+              sx={{
+                flex: 1,
+                backgroundColor: '#d32f2f',
+                '&:hover': { backgroundColor: '#b71c1c' },
+              }}
+              onClick={handleBuyNow}
             >
               Mua ngay
             </Button>
