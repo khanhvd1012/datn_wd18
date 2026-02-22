@@ -9,8 +9,9 @@ import NotFound from '../pages/NotFound'
 import ClientLayout from '../layouts/ClientLayout'
 import AdminLayout from '../layouts/AdminLayout'
 import AdminProducts from '../pages/admin/Products'
-import { Dashboard } from '@mui/icons-material'
 import ProductDetail from '../pages/product/ProductDetail'
+import Categories from '../pages/admin/Categories'
+import Dashboardd from '../pages/admin/Dashboard'
 
 const AppRouter = () => {
   return (
@@ -27,9 +28,10 @@ const AppRouter = () => {
 
       {/* ADMIN */}
       <Route path="/admin" element={<AdminLayout />}>
-        <Route index element={<Dashboard />} />
+        <Route index element={<Dashboardd />} />
         <Route path="products" element={<AdminProducts />} />
         <Route path="users" element={<Users />} />
+        <Route path="categories" element={<Categories />} />
       </Route>
 
       {/* NOT FOUND */}

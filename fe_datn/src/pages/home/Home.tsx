@@ -9,7 +9,7 @@ import FeatureBar from '../../components/FeatureBar'
 
 const Home = () => {
   return (
-    <div style={{ background: "#242323" }}>
+    <div style={{ background: "#2b2b2b" }}>
       <Banner />
       <FeatureBar/>
       <FeaturedProducts />
