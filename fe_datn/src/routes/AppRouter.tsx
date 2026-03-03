@@ -12,12 +12,11 @@ import Users from '../pages/admin/Users'
 import NotFound from '../pages/NotFound'
 import ProductDetail from '../pages/product/ProductDetail'
 import News from '../pages/news/News'
-import Checkout from '../pages/Checkout' // ✅ THÊM DÒNG NÀY
+import Checkout from '../pages/Checkout'
 
 const AppRouter = () => {
   return (
     <Routes>
-      {/* CLIENT */}
       <Route path="/" element={<ClientLayout />}>
         <Route index element={<Home />} />
         <Route path="products" element={<ProductList />} />
@@ -26,17 +25,15 @@ const AppRouter = () => {
         <Route path="register" element={<Register />} />
         <Route path="product/:id" element={<ProductDetail />} />
         <Route path="news" element={<News />} />
-        <Route path="checkout" element={<Checkout />} /> {/* ✅ sửa path */}
+        <Route path="checkout" element={<Checkout />} />
       </Route>
 
-      {/* ADMIN */}
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<Dashboard />} />
         <Route path="products" element={<AdminProducts />} />
         <Route path="users" element={<Users />} />
       </Route>
 
-      {/* NOT FOUND */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   )

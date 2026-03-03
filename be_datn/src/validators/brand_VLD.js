@@ -2,7 +2,7 @@ import Joi from 'joi';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import brand_MD from '../models/brand_MD';
+import brand_MD from '../models/brand_MD.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

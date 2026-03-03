@@ -5,26 +5,30 @@ import {
   Typography,
   InputBase,
   IconButton,
-  Button
+  Button,
+  Badge
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import PhoneIcon from "@mui/icons-material/Phone";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import logo3 from "../img/logo3.png";
 
 const Header = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(
-    JSON.parse(localStorage.getItem("user"))
-  );
+  const location = useLocation();
 
-  // 🔥 Khi chuyển trang sẽ cập nhật lại user
+  const [user, setUser] = useState<any>(null);
+  const [cartCount, setCartCount] = useState(0);
+
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     setUser(storedUser ? JSON.parse(storedUser) : null);
-  }, [window.location.pathname]);
+
+    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    setCartCount(cart.length);
+  }, [location]);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -33,95 +37,136 @@ const Header = () => {
   };
 
   return (
-    <AppBar position="static" sx={{ backgroundColor: "#222" }}>
-      <Toolbar sx={{ justifyContent: "space-between" }}>
+    <AppBar
+      position="sticky"
+      elevation={0}
+      sx={{
+        backgroundColor: "#222",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
+      }}
+    >
+      {/* KHUNG 1280PX CHUẨN */}
+      <Box
+        sx={{
+          maxWidth: 1280,
+          width: "100%",
+          mx: "auto",
+          px: 2,
+        }}
+      >
+        <Toolbar sx={{ justifyContent: "space-between", py: 1.2 }}>
 
-        {/* Logo */}
-        <Box
-          component={Link}
-          to="/"
-          sx={{ display: "flex", alignItems: "center", textDecoration: "none" }}
-        >
-          <img
-            src={logo3}
-            alt="Logo"
-            style={{ height: 48, objectFit: "contain" }}
-          />
-        </Box>
-
-        {/* Search */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            backgroundColor: "#fff",
-            borderRadius: 3,
-            px: 3,
-            width: 600,
-            mx: 4
-          }}
-        >
-          <InputBase
-            placeholder="Nhập mã hoặc tên sản phẩm cần tìm?"
-            sx={{ flex: 1 }}
-          />
-          <IconButton>
-            <SearchIcon />
-          </IconButton>
-        </Box>
-
-        {/* Right */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 4 }}>
-
-          <Box
-            component="a"
-            href="tel:0987654321"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 0.5,
-              textDecoration: "none",
-              color: "#fff"
-            }}
-          >
-            <PhoneIcon sx={{ color: "#ff9800" }} />
-            <Typography fontSize={14}>0987.65.4321</Typography>
+          {/* Logo */}
+          <Box component={Link} to="/" sx={{ display: "flex" }}>
+            <img src={logo3} alt="Logo" style={{ height: 52 }} />
           </Box>
 
-          {user ? (
-            <>
-              <Typography sx={{ color: "#fff" }}>
-                Xin chào, {user.name || user.email}
-              </Typography>
-
-              <Button
-                variant="outlined"
-                sx={{ color: "#ff9800", borderColor: "#ff9800" }}
-                onClick={handleLogout}
-              >
-                Đăng xuất
-              </Button>
-            </>
-          ) : (
-            <Button
-              component={Link}
-              to="/login"
-              variant="outlined"
-              sx={{ color: "#fff", borderColor: "#ff9800" }}
-            >
-              Đăng nhập
-            </Button>
-          )}
-
-          <IconButton
-            component={Link}
-            to="/cart"
-            sx={{ color: "#ded2ac" }}
+          {/* Search */}
+          <Box
+            sx={{
+              flex: 1,
+              mx: 6,
+              display: "flex",
+              alignItems: "center",
+              backgroundColor: "#fff",
+              borderRadius: "30px",
+              px: 3,
+              height: 48,
+            }}
           >
-            <ShoppingCartIcon />
-          </IconButton>
-        </Box>
-      </Toolbar>
+            <InputBase
+              placeholder="Nhập mã hoặc tên sản phẩm cần tìm..."
+              sx={{ flex: 1 }}
+            />
+            <IconButton
+              sx={{
+                backgroundColor: "#ff9800",
+                color: "#fff",
+                width: 36,
+                height: 36,
+                "&:hover": {
+                  backgroundColor: "#e68900",
+                },
+              }}
+            >
+              <SearchIcon fontSize="small" />
+            </IconButton>
+          </Box>
+
+          {/* Right */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+            <Box
+              component="a"
+              href="tel:0987654321"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                color: "#fff",
+                textDecoration: "none",
+                "&:hover": { color: "#ff9800" },
+              }}
+            >
+              <PhoneIcon />
+              <Typography fontSize={14}>
+                0987.65.4321
+              </Typography>
+            </Box>
+
+            {user ? (
+              <>
+                <Typography sx={{ color: "#fff" }}>
+                  Xin chào, {user.name || user.email}
+                </Typography>
+                <Button
+                  variant="contained"
+                  onClick={handleLogout}
+                  sx={{
+                    backgroundColor: "#ff9800",
+                    borderRadius: 20,
+                    px: 3,
+                    "&:hover": { backgroundColor: "#e68900" },
+                  }}
+                >
+                  Đăng xuất
+                </Button>
+              </>
+            ) : (
+              <Button
+                component={Link}
+                to="/login"
+                variant="contained"
+                sx={{
+                  backgroundColor: "#ff9800",
+                  borderRadius: 20,
+                  px: 3,
+                  "&:hover": { backgroundColor: "#e68900" },
+                }}
+              >
+                Đăng nhập
+              </Button>
+            )}
+
+            <IconButton
+              component={Link}
+              to="/cart"
+              sx={{ color: "#fff" }}
+            >
+              <Badge
+                badgeContent={cartCount}
+                sx={{
+                  "& .MuiBadge-badge": {
+                    backgroundColor: "#ff9800",
+                    color: "#fff",
+                  },
+                }}
+              >
+                <ShoppingCartIcon />
+              </Badge>
+            </IconButton>
+          </Box>
+        </Toolbar>
+      </Box>
     </AppBar>
   );
 };

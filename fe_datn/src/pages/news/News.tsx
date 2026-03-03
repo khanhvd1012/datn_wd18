@@ -4,7 +4,6 @@ import {
   Typography,
   Grid,
   Card,
-  CardMedia,
   CardContent,
   Button,
   Stack,
@@ -14,66 +13,75 @@ import { Link } from "react-router-dom";
 
 const News = () => {
   return (
-    <Box sx={{ backgroundColor: "#f5f5f5", py: 5 }}>
+    <Box sx={{ backgroundColor: "#f3f4f6", py: 6 }}>
       <Container maxWidth="lg">
         {/* Title */}
         <Typography
           variant="h4"
           fontWeight={700}
-          mb={4}
+          mb={5}
           textAlign="center"
         >
           Tin tức công nghệ
         </Typography>
 
         <Grid container spacing={4}>
-          {/* Main News */}
+          {/* Main Content */}
           <Grid item xs={12} md={8}>
-            <Grid container spacing={3}>
+            <Grid container spacing={4}>
               {newsData.map((item) => (
                 <Grid item xs={12} key={item.id}>
                   <Card
                     sx={{
-                      display: "flex",
-                      height: 200,
-                      transition: "0.3s",
+                      borderRadius: 3,
+                      overflow: "hidden",
+                      boxShadow: 2,
+                      transition: "all 0.3s ease",
                       "&:hover": {
+                        transform: "translateY(-6px)",
                         boxShadow: 6,
-                        transform: "translateY(-3px)",
                       },
                     }}
                   >
-                    <CardMedia
-                      component="img"
-                      image={item.image}
-                      alt={item.title}
-                      sx={{ width: 260 }}
-                    />
+                    {/* Ảnh */}
+                    <Box sx={{ overflow: "hidden" }}>
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        style={{
+                          width: "100%",
+                          height: 300,
+                          objectFit: "cover",
+                          transition: "0.4s",
+                        }}
+                      />
+                    </Box>
 
-                    <CardContent sx={{ flex: 1 }}>
+                    {/* Nội dung */}
+                    <CardContent>
                       <Typography
                         variant="h6"
-                        fontWeight={600}
+                        fontWeight={700}
                         gutterBottom
                       >
                         {item.title}
                       </Typography>
 
                       <Typography
-                        variant="body2"
+                        variant="caption"
                         color="text.secondary"
-                        mb={1}
                       >
                         {item.date}
                       </Typography>
 
                       <Typography
                         variant="body1"
+                        mt={2}
                         sx={{
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           display: "-webkit-box",
-                          WebkitLineClamp: 2,
+                          WebkitLineClamp: 3,
                           WebkitBoxOrient: "vertical",
                         }}
                       >
@@ -83,9 +91,14 @@ const News = () => {
                       <Button
                         component={Link}
                         to={`/news/${item.id}`}
-                        sx={{ mt: 2 }}
                         variant="contained"
                         color="warning"
+                        sx={{
+                          mt: 3,
+                          borderRadius: 2,
+                          textTransform: "none",
+                          fontWeight: 600,
+                        }}
                       >
                         Xem chi tiết
                       </Button>
@@ -101,30 +114,61 @@ const News = () => {
             <Box
               sx={{
                 backgroundColor: "#fff",
-                borderRadius: 2,
+                borderRadius: 3,
                 p: 3,
-                boxShadow: 1,
+                boxShadow: 2,
               }}
             >
-              <Typography variant="h6" fontWeight={600} mb={2}>
+              <Typography
+                variant="h6"
+                fontWeight={700}
+                mb={3}
+              >
                 Tin mới nhất
               </Typography>
 
-              <Stack spacing={2}>
+              <Stack spacing={3}>
                 {newsData.map((item) => (
                   <Box
                     key={item.id}
                     component={Link}
                     to={`/news/${item.id}`}
                     sx={{
+                      display: "flex",
+                      gap: 2,
                       textDecoration: "none",
                       color: "inherit",
-                      "&:hover": { color: "#ff9800" },
+                      "&:hover .title": {
+                        color: "#f59e0b",
+                      },
                     }}
                   >
-                    <Typography fontSize={14} fontWeight={500}>
-                      {item.title}
-                    </Typography>
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      style={{
+                        width: 80,
+                        height: 60,
+                        objectFit: "cover",
+                        borderRadius: 8,
+                      }}
+                    />
+
+                    <Box>
+                      <Typography
+                        className="title"
+                        fontSize={14}
+                        fontWeight={600}
+                      >
+                        {item.title}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                      >
+                        {item.date}
+                      </Typography>
+                    </Box>
                   </Box>
                 ))}
               </Stack>

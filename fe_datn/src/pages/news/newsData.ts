@@ -1,37 +1,29 @@
-export interface NewsItem {
-  id: number;
-  title: string;
-  description: string;
-  image: string;
-  date: string;
-}
-
-export const newsData: NewsItem[] = [
+export const newsData = [
   {
     id: 1,
-    title: "iPhone 16 ra mắt – Có gì mới?",
+    title: "iPhone 15 Pro Max giảm giá mạnh",
+    date: "18/02/2026",
     description:
-      "Apple chính thức ra mắt iPhone 16 với nhiều cải tiến về camera và hiệu năng.",
+      "iPhone 15 Pro Max hiện đang được giảm giá sâu tại nhiều hệ thống bán lẻ.",
     image:
-      "https://cdn.tgdd.vn/Files/2024/09/10/1552273/iphone-16-hero.jpg",
-    date: "12/09/2025",
+      "https://images.unsplash.com/photo-1603899122499-1b9f1b5d8c6b?auto=format&fit=crop&w=800&q=80",
   },
   {
     id: 2,
-    title: "Top laptop sinh viên đáng mua 2025",
+    title: "Samsung Galaxy S24 Ultra ra mắt",
+    date: "17/02/2026",
     description:
-      "Danh sách laptop giá tốt, cấu hình mạnh dành cho sinh viên CNTT.",
+      "Galaxy S24 Ultra sở hữu camera 200MP và AI thông minh.",
     image:
-      "https://cdn.tgdd.vn/Files/2024/08/20/1549982/laptop-sinh-vien.jpg",
-    date: "05/09/2025",
+      "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=800&q=80",
   },
   {
     id: 3,
-    title: "Khuyến mãi cuối năm – Giảm đến 50%",
+    title: "Xiaomi 14 cấu hình mạnh giá tốt",
+    date: "16/02/2026",
     description:
-      "Hàng loạt sản phẩm công nghệ giảm sâu, cơ hội mua sắm không thể bỏ lỡ.",
+      "Xiaomi 14 trang bị Snapdragon mới nhất với hiệu năng vượt trội.",
     image:
-      "https://cdn.tgdd.vn/Files/2024/11/01/1562219/sale-cuoi-nam.jpg",
-    date: "01/09/2025",
+      "https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=800&q=80",
   },
 ];

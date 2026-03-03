@@ -5,11 +5,11 @@ import {
   TextField,
   Typography,
   Paper,
+  Divider,
   Link,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import Footer from "../../components/Footer";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -19,9 +19,9 @@ const Login = () => {
     password: "",
   });
 
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<any>({});
 
-  const handleChange = (e) => {
+  const handleChange = (e: any) => {
     setForm({
       ...form,
       [e.target.name]: e.target.value,
@@ -29,7 +29,7 @@ const Login = () => {
   };
 
   const validate = () => {
-    const newErrors = {};
+    const newErrors: any = {};
 
     if (!form.email) {
       newErrors.email = "Email không được để trống";
@@ -47,7 +47,7 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     if (!validate()) return;
@@ -65,38 +65,69 @@ const Login = () => {
         alert("Sai email hoặc mật khẩu!");
       }
     } catch (error) {
-      console.error(error);
       alert("Không kết nối được server!");
     }
   };
 
   return (
-    <>
-      <Box
-        sx={{
-          minHeight: "600px",
-          background: "linear-gradient(135deg, #1f1f1f, #2b2b2b)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          borderTop: "1px solid rgba(255,255,255,0.35)",
-        }}
-      >
+    <Box
+      sx={{
+        py: 6,
+        background: "linear-gradient(135deg, #0f2027, #203a43, #2c5364)",
+      }}
+    >
+      {/* WIDTH 1280 GIỐNG PRODUCT LIST */}
+      <Box sx={{ maxWidth: 1280, mx: "auto", px: 2 }}>
         <Paper
           elevation={10}
           sx={{
-            width: 900,
+            minHeight: 520,
             display: "flex",
-            p: 4,
-            backgroundColor: "#121212",
-            color: "#fff",
             borderRadius: 3,
-            border: "1px solid rgba(255,255,255,0.35)",
+            overflow: "hidden",
           }}
         >
-          <Box sx={{ flex: 1, pr: 4 }}>
-            <Typography variant="h5" mb={3} fontWeight="bold">
-              ĐĂNG NHẬP
+          {/* LEFT SIDE */}
+          <Box
+            sx={{
+              flex: 1,
+              background:
+                "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1512436991641-6745cdb1723f')",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              color: "#fff",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              p: 5,
+            }}
+          >
+            <Typography variant="h4" fontWeight="bold" mb={2}>
+              Welcome Back
+            </Typography>
+
+            <Typography align="center" sx={{ opacity: 0.9 }}>
+              Đăng nhập để tiếp tục mua sắm <br />
+              và khám phá những sản phẩm mới nhất.
+            </Typography>
+          </Box>
+
+          {/* RIGHT SIDE */}
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            sx={{
+              flex: 1,
+              backgroundColor: "#ffffff",
+              p: 6,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
+          >
+            <Typography variant="h5" fontWeight="bold" mb={3}>
+              ĐĂNG NHẬP TÀI KHOẢN
             </Typography>
 
             <TextField
@@ -108,8 +139,6 @@ const Login = () => {
               margin="normal"
               error={!!errors.email}
               helperText={errors.email}
-              InputLabelProps={{ style: { color: "#aaa" } }}
-              InputProps={{ style: { color: "#fff" } }}
             />
 
             <TextField
@@ -122,42 +151,44 @@ const Login = () => {
               margin="normal"
               error={!!errors.password}
               helperText={errors.password}
-              InputLabelProps={{ style: { color: "#aaa" } }}
-              InputProps={{ style: { color: "#fff" } }}
             />
 
             <Button
+              type="submit"
               fullWidth
+              variant="contained"
               sx={{
                 mt: 3,
-                py: 1.2,
-                backgroundColor: "#e65100",
+                py: 1.3,
                 fontWeight: "bold",
+                background: "linear-gradient(90deg, #ff512f, #dd2476)",
+                boxShadow: "0 6px 20px rgba(221,36,118,0.4)",
+                transition: "0.3s",
                 "&:hover": {
-                  backgroundColor: "#ef6c00",
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 8px 25px rgba(221,36,118,0.6)",
                 },
               }}
-              variant="contained"
-              onClick={handleSubmit}
             >
               ĐĂNG NHẬP
             </Button>
 
-            <Box mt={2}>
-              <Link href="#" underline="hover" color="#90caf9">
-                Quên mật khẩu
+            <Divider sx={{ my: 3 }}>Hoặc</Divider>
+
+            <Typography variant="body2">
+              Chưa có tài khoản?{" "}
+              <Link
+                href="/register"
+                underline="hover"
+                sx={{ fontWeight: "bold" }}
+              >
+                Đăng ký ngay
               </Link>
-              {" | "}
-              <Link href="/register" color="error" underline="hover">
-                Đăng ký tài khoản mới
-              </Link>
-            </Box>
+            </Typography>
           </Box>
         </Paper>
       </Box>
-
-      <Footer />
-    </>
+    </Box>
   );
 };
 

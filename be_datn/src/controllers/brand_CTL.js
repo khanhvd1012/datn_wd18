@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
-import brand_MD from "../models/brand_MD";
+import brand_MD from "../models/brand_MD.js";
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import product_MD from '../models/product_MD';
+import product_MD from '../models/product_MD.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

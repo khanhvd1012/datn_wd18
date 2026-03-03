@@ -20,11 +20,13 @@ interface Product {
   img: string
   price: number
   description: string
+  sold?: number
 }
 
 const ProductDetail = () => {
   const [quantity, setQuantity] = useState<number>(1)
   const [product, setProduct] = useState<Product | null>(null)
+  const [bestSeller, setBestSeller] = useState<Product[]>([])
 
   const { id } = useParams()
   const navigate = useNavigate()
@@ -36,6 +38,16 @@ const ProductDetail = () => {
       .then((res) => setProduct(res.data))
       .catch((err) => console.error(err))
   }, [id])
+
+  // ================= LẤY SẢN PHẨM BÁN CHẠY =================
+  useEffect(() => {
+    axios
+      .get(
+        'http://localhost:3000/products?_sort=sold&_order=desc&_limit=4'
+      )
+      .then((res) => setBestSeller(res.data))
+      .catch((err) => console.error(err))
+  }, [])
 
   // ================= THÊM VÀO CART =================
   const addToCart = async () => {
@@ -69,15 +81,14 @@ const ProductDetail = () => {
     }
   }
 
-  // ================= BUTTON HANDLERS =================
   const handleAddToCart = async () => {
     await addToCart()
-    navigate('/cart') // 👉 chuyển sang giỏ hàng
+    navigate('/cart')
   }
 
   const handleBuyNow = async () => {
     await addToCart()
-    navigate('/checkout') // 👉 chuyển sang trang thanh toán
+    navigate('/checkout')
   }
 
   if (!product) {
@@ -91,7 +102,11 @@ const ProductDetail = () => {
   return (
     <Container maxWidth="lg" sx={{ py: 3 }}>
       <Breadcrumbs sx={{ mb: 2 }}>
-        <Link href="/" underline="hover">
+        <Link
+          underline="hover"
+          sx={{ cursor: 'pointer' }}
+          onClick={() => navigate('/')}
+        >
           Trang chủ
         </Link>
         <Typography>{product.name}</Typography>
@@ -166,6 +181,68 @@ const ProductDetail = () => {
           </Typography>
         </Grid>
       </Grid>
+
+      {/* ================= SẢN PHẨM BÁN CHẠY ================= */}
+      <Box sx={{ mt: 8 }}>
+        <Typography variant="h5" fontWeight={700} mb={3}>
+          🔥 Sản phẩm bán chạy
+        </Typography>
+
+        <Grid container spacing={3}>
+          {bestSeller.map((item) => (
+            <Grid item xs={12} sm={6} md={3} key={item.id}>
+              <Box
+                sx={{
+                  backgroundColor: '#fff',
+                  borderRadius: 2,
+                  p: 2,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+                  transition: '0.3s',
+                  '&:hover': {
+                    transform: 'translateY(-5px)',
+                    boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
+                  },
+                }}
+                onClick={() => navigate(`/product/${item.id}`)}
+              >
+                <Box
+                  component="img"
+                  src={item.img}
+                  alt={item.name}
+                  sx={{
+                    width: '100%',
+                    height: 160,
+                    objectFit: 'contain',
+                    mb: 2,
+                  }}
+                />
+
+                <Typography
+                  sx={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    height: 40,
+                    overflow: 'hidden',
+                    mb: 1,
+                  }}
+                >
+                  {item.name}
+                </Typography>
+
+                <Typography
+                  sx={{
+                    color: '#d70018',
+                    fontWeight: 700,
+                  }}
+                >
+                  {item.price.toLocaleString()}₫
+                </Typography>
+              </Box>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
 
       <Footer />
     </Container>

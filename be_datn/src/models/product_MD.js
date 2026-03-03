@@ -21,7 +21,11 @@ const productSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Variant"
     }],
-    slug: { type: String, required: true, unique: true }
+    slug: { type: String, required: true, unique: true },
+    price: { type: Number, required: true },
+    original_price: { type: Number },
+    images: [{ type: String }],
+    countInStock: { type: Number, default: 0 }
 }, { timestamps: true });
 
 // Plugin hỗ trợ phân trang

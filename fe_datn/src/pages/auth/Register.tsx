@@ -23,6 +23,29 @@ const Register = () => {
 
   const [errors, setErrors] = useState({});
 
+  const darkInputStyle = {
+    "& .MuiInputLabel-root": {
+      color: "#fff",
+    },
+    "& .MuiInputBase-input": {
+      color: "#fff",
+    },
+    "& .MuiOutlinedInput-root": {
+      "& fieldset": {
+        borderColor: "rgba(255,255,255,0.5)",
+      },
+      "&:hover fieldset": {
+        borderColor: "#fff",
+      },
+      "&.Mui-focused fieldset": {
+        borderColor: "#e65100",
+      },
+    },
+    "& .MuiFormHelperText-root": {
+      color: "#ff5252",
+    },
+  };
+
   const handleChange = (e) => {
     setForm({
       ...form,
@@ -65,7 +88,7 @@ const Register = () => {
     if (!validate()) return;
 
     try {
-      // 1️⃣ Kiểm tra email đã tồn tại chưa
+      // Kiểm tra email đã tồn tại
       const checkUser = await axios.get(
         `http://localhost:3000/users?email=${form.email}`
       );
@@ -75,19 +98,18 @@ const Register = () => {
         return;
       }
 
-      // 2️⃣ Tạo user mới
+      // Tạo user mới
       const newUser = {
         name: form.name,
         email: form.email,
         password: form.password,
+        role: "user",
       };
 
       await axios.post("http://localhost:3000/users", newUser);
 
       alert("Đăng ký thành công!");
-
       navigate("/login");
-
     } catch (error) {
       console.error(error);
       alert("Lỗi đăng ký! Kiểm tra json-server.");
@@ -109,7 +131,7 @@ const Register = () => {
         <Paper
           elevation={10}
           sx={{
-            width: 900,
+            width: 450,
             p: 4,
             backgroundColor: "#121212",
             color: "#fff",
@@ -130,6 +152,7 @@ const Register = () => {
             margin="normal"
             error={!!errors.name}
             helperText={errors.name}
+            sx={darkInputStyle}
           />
 
           <TextField
@@ -141,6 +164,7 @@ const Register = () => {
             margin="normal"
             error={!!errors.email}
             helperText={errors.email}
+            sx={darkInputStyle}
           />
 
           <TextField
@@ -153,6 +177,7 @@ const Register = () => {
             margin="normal"
             error={!!errors.password}
             helperText={errors.password}
+            sx={darkInputStyle}
           />
 
           <TextField
@@ -165,10 +190,13 @@ const Register = () => {
             margin="normal"
             error={!!errors.confirmPassword}
             helperText={errors.confirmPassword}
+            sx={darkInputStyle}
           />
 
           <Button
             fullWidth
+            variant="contained"
+            onClick={handleSubmit}
             sx={{
               mt: 3,
               py: 1.2,
@@ -176,8 +204,6 @@ const Register = () => {
               fontWeight: "bold",
               "&:hover": { backgroundColor: "#ef6c00" },
             }}
-            variant="contained"
-            onClick={handleSubmit}
           >
             ĐĂNG KÝ
           </Button>
@@ -189,6 +215,7 @@ const Register = () => {
                 component="button"
                 onClick={() => navigate("/login")}
                 underline="hover"
+                sx={{ color: "#e65100" }}
               >
                 Đăng nhập
               </Link>
