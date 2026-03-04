@@ -1,34 +1,61 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Paper } from "@mui/material";
-import { getDashboardStats } from "../../services/dashboardService";
+import { Grid, Paper, Typography } from "@mui/material";
+import { getDashboardStatsApi } from "../../services/dashboardService";
 
-const Dashboardd = () => {
+const Dashboard = () => {
+
   const [stats, setStats] = useState<any>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await getDashboardStats();
-        setStats(data);
-      } catch (error) {
-        console.error("Lỗi lấy dashboard:", error);
-      }
+
+    const fetch = async () => {
+
+      const data = await getDashboardStatsApi();
+
+      setStats(data);
+
     };
 
-    fetchData();
+    fetch();
+
   }, []);
 
-  if (!stats) return <Typography>Loading...</Typography>;
+  if (!stats) return <>Loading...</>;
+
+  const cards = [
+    { title: "Products", value: stats.products.total },
+    { title: "Categories", value: stats.categories.total },
+    { title: "Brands", value: stats.brands.total },
+    { title: "Vouchers", value: stats.vouchers.total },
+  ];
 
   return (
-    <Box>
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6">Tổng sản phẩm: {stats.totalProducts}</Typography>
-        <Typography variant="h6">Tổng user: {stats.totalUsers}</Typography>
-        <Typography variant="h6">Tổng đơn hàng: {stats.totalOrders}</Typography>
-      </Paper>
-    </Box>
+
+    <Grid container spacing={3}>
+
+      {cards.map((card) => (
+
+        <Grid item xs={3} key={card.title}>
+
+          <Paper sx={{ p: 3 }}>
+
+            <Typography variant="h6">
+              {card.title}
+            </Typography>
+
+            <Typography variant="h4">
+              {card.value}
+            </Typography>
+
+          </Paper>
+
+        </Grid>
+
+      ))}
+
+    </Grid>
+
   );
 };
 
-export default Dashboardd;
+export default Dashboard;

@@ -8,10 +8,11 @@ import Users from '../pages/admin/Users'
 import NotFound from '../pages/NotFound'
 import ClientLayout from '../layouts/ClientLayout'
 import AdminLayout from '../layouts/AdminLayout'
-import AdminProducts from '../pages/admin/Products'
+import AdminProducts from '../pages/admin/AdminProducts'
 import ProductDetail from '../pages/product/ProductDetail'
-import Categories from '../pages/admin/Categories'
-import Dashboardd from '../pages/admin/Dashboard'
+import Banner from '../pages/admin/Banner'
+import Category from '../pages/admin/Category'
+import Dashboard from '../pages/admin/Dashboard'
 
 const AppRouter = () => {
   return (
@@ -28,10 +29,11 @@ const AppRouter = () => {
 
       {/* ADMIN */}
       <Route path="/admin" element={<AdminLayout />}>
-        <Route index element={<Dashboardd />} />
+        <Route index element={<Dashboard />} />
         <Route path="products" element={<AdminProducts />} />
         <Route path="users" element={<Users />} />
-        <Route path="categories" element={<Categories />} />
+        <Route path="banner" element={<Banner />} />
+        <Route path="category" element={<Category />} />
       </Route>
 
       {/* NOT FOUND */}

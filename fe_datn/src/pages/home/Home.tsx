@@ -6,6 +6,7 @@ import { Box, Fab } from '@mui/material'
 import ChatIcon from '@mui/icons-material/Chat'
 import ProductList from '../product/ProductList'
 import FeatureBar from '../../components/FeatureBar'
+import Deal from '../../components/Deal'
 
 const Home = () => {
   return (
@@ -13,6 +14,7 @@ const Home = () => {
       <Banner />
       <FeatureBar/>
       <FeaturedProducts />
+      <Deal/>
       <ProductList/>
       <Footer />
 
