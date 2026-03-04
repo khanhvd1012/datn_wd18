@@ -13,6 +13,7 @@ import ProductDetail from '../pages/product/ProductDetail'
 import Banner from '../pages/admin/Banner'
 import Category from '../pages/admin/Category'
 import Dashboard from '../pages/admin/Dashboard'
+import Profile from '../pages/Profile'
 
 const AppRouter = () => {
   return (
@@ -24,6 +25,8 @@ const AppRouter = () => {
         <Route path="cart" element={<Cart />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
+        <Route path="profile" element={<Profile />} />
+
         <Route path="product/:id" element={<ProductDetail />} />
       </Route>
 

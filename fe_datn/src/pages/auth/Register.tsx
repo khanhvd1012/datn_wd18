@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { registerApi } from "../../services/authService";
+import { registerAPI } from "../../services/authService";
 
-const Register = () => {
+export default function Register() {
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -9,75 +9,40 @@ const Register = () => {
     confirmPassword: "",
   });
 
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-
   const handleChange = (e: any) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleRegister = async (e: any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
-
     try {
-      const res = await registerApi(form);
-
-      setSuccess(res.message);
-      setError("");
-
-      console.log(res);
-    } catch (err: any) {
-      console.log(err.response.data);
-
-      if (err.response.data.messages) {
-        setError(err.response.data.messages.join(", "));
-      } else {
-        setError(err.response.data.message);
-      }
+      const res = await registerAPI(form);
+      alert(res.message);
+    } catch (error: any) {
+      alert(error.response?.data?.message || "Lỗi");
     }
   };
 
   return (
-    <div>
+    <form onSubmit={handleSubmit}>
       <h2>Register</h2>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {success && <p style={{ color: "green" }}>{success}</p>}
+      <input name="username" placeholder="Username" onChange={handleChange} />
+      <input name="email" placeholder="Email" onChange={handleChange} />
+      <input
+        name="password"
+        type="password"
+        placeholder="Password"
+        onChange={handleChange}
+      />
+      <input
+        name="confirmPassword"
+        type="password"
+        placeholder="Confirm Password"
+        onChange={handleChange}
+      />
 
-      <form onSubmit={handleRegister}>
-        <input
-          name="username"
-          placeholder="Username"
-          onChange={handleChange}
-        />
-
-        <input
-          name="email"
-          placeholder="Email"
-          onChange={handleChange}
-        />
-
-        <input
-          name="password"
-          placeholder="Password"
-          type="password"
-          onChange={handleChange}
-        />
-
-        <input
-          name="confirmPassword"
-          placeholder="Confirm Password"
-          type="password"
-          onChange={handleChange}
-        />
-
-        <button type="submit">Register</button>
-      </form>
-    </div>
+      <button type="submit">Đăng ký</button>
+    </form>
   );
-};
-
-export default Register;
+}
