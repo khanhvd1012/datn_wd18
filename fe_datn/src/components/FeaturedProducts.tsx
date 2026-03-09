@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   Box,
-  Grid,
   Card,
   CardMedia,
   CardContent,
@@ -30,14 +29,15 @@ const FeaturedProducts = () => {
     price.toLocaleString("vi-VN") + " đ";
 
   return (
-    <Box sx={{ backgroundColor: "", p: 1.2, borderTop: "1px solid #c5ba9d" }}>
-      {/* Header */}
-      <Box sx={{ display: "flex", alignItems: "center", mb: 1.5 }}>
+    <Box sx={{ backgroundColor: "#111", px: 2, py: 3 }}>
+      
+      {/* HEADER */}
+      <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
         <Box
           sx={{
             backgroundColor: "#ff6a00",
             color: "#fff",
-            px: 4.8,
+            px: 5,
             py: 1,
             fontWeight: "bold",
             clipPath:
@@ -48,76 +48,76 @@ const FeaturedProducts = () => {
         </Box>
       </Box>
 
-      {/* Product grid */}
-      <Grid
-        container
-        spacing={1}
-        // sx={{
-        //   maxHeight: "818px", // gioi hạn số hàng
-        //   overflow: "hidden",
-        // }}
+      {/* GRID 5 SẢN PHẨM 1 HÀNG */}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "repeat(1, 1fr)",
+            sm: "repeat(2, 1fr)",
+            md: "repeat(3, 1fr)",
+            lg: "repeat(5, 1fr)", // 🔥 5 sản phẩm 1 hàng
+          },
+          gap: 2,
+        }}
       >
-        {products.slice(0,10).map((item) => (
-          <Grid item xs={12} sm={6} md={3} key={item.id}>
-            <Link
-              to={`/product/${item.id}`}
-              style={{ textDecoration: "none" }}
+        {products.map((item) => (
+          <Link
+            key={item.id}
+            to={`/product/${item.id}`}
+            style={{ textDecoration: "none" }}
+          >
+            <Card
+              sx={{
+                backgroundColor: "#1a1a1a",
+                border: "1px solid #2a2a2a",
+                height: "100%",
+                transition: "0.3s",
+                cursor: "pointer",
+                "&:hover": {
+                  borderColor: "#ff6a00",
+                  transform: "translateY(-6px)",
+                },
+              }}
             >
-              <Card
+              <CardMedia
+                component="img"
+                image={item.img}
+                alt={item.name}
                 sx={{
-                  backgroundColor: "#201e1e",
-                  border: "1px solid #2a2a2a",
-                  height: "400px",
-                  width: "236px",
-                  transition: "0.6s",
-                  cursor: "pointer",
-                  "&:hover": {
-                    borderColor: "#ff6a00",
-                    transform: "translateY(-5px)",
-                  },
+                  height: 220,
+                  objectFit: "contain",
+                  backgroundColor: "#fff",
+                  p: 2,
                 }}
-              >
-                <CardMedia
-                  component="img"
-                  image={item.img}
-                  alt={item.name}
+              />
+
+              <CardContent>
+                <Typography
+                  variant="body2"
                   sx={{
-                    height: 220,
-                    objectFit: "contain",
-                    backgroundColor: "#fff",
-                    p: 1,
+                    color: "#eee",
+                    minHeight: 48,
+                    mb: 1,
                   }}
-                />
+                >
+                  {item.name}
+                </Typography>
 
-                <CardContent>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: "#eee",
-                      minHeight: 48,
-                      mb: 1,
-                    }}
-                  >
-                    {item.name}
-                  </Typography>
-
-                  <Typography
-                    sx={{
-                      color: "#ff3b3b",
-                      fontWeight: "bold",
-                      fontSize: 16,
-                    }}
-                  >
-                    {formatPrice(item.price)}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Link>
-          </Grid>
+                <Typography
+                  sx={{
+                    color: "#ff3b3b",
+                    fontWeight: "bold",
+                    fontSize: 16,
+                  }}
+                >
+                  {formatPrice(item.price)}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
-      </Grid>
-
-
+      </Box>
     </Box>
   );
 };

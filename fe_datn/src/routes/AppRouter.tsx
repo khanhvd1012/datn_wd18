@@ -1,33 +1,35 @@
-import { Route, Routes } from 'react-router-dom'
-import Home from '../pages/home/Home'
-import ProductList from '../pages/product/ProductList'
-import Cart from '../pages/cart/Cart'
-import Login from '../pages/auth/Login'
-import Register from '../pages/auth/Register'
-import Users from '../pages/admin/Users'
-import NotFound from '../pages/NotFound'
-import ClientLayout from '../layouts/ClientLayout'
-import AdminLayout from '../layouts/AdminLayout'
-import AdminProducts from '../pages/admin/AdminProducts'
-import ProductDetail from '../pages/product/ProductDetail'
-import Banner from '../pages/admin/Banner'
-import Category from '../pages/admin/Category'
-import Dashboard from '../pages/admin/Dashboard'
-import Profile from '../pages/Profile'
+import { Route, Routes } from "react-router-dom";
+import Home from "../pages/home/Home";
+import ProductList from "../pages/product/ProductList";
+import Cart from "../pages/cart/Cart";
+import Login from "../pages/auth/Login";
+import Register from "../pages/auth/Register";
+import Users from "../pages/admin/Users";
+import NotFound from "../pages/NotFound";
+import ClientLayout from "../layouts/ClientLayout";
+import AdminLayout from "../layouts/AdminLayout";
+import AdminProducts from "../pages/admin/AdminProducts";
+import ProductDetail from "../pages/product/ProductDetail";
+import Banner from "../pages/admin/Banner";
+import Category from "../pages/admin/Category";
+import Dashboard from "../pages/admin/Dashboard";
+import Profile from "../pages/Profile";
+import Checkout from "../pages/Checkout";
 
 const AppRouter = () => {
   return (
     <Routes>
+
       {/* CLIENT */}
       <Route path="/" element={<ClientLayout />}>
-        <Route index element={<Home />} /> 
+        <Route index element={<Home />} />
         <Route path="products" element={<ProductList />} />
+        <Route path="product/:id" element={<ProductDetail />} />
         <Route path="cart" element={<Cart />} />
+        <Route path="checkout" element={<Checkout />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
         <Route path="profile" element={<Profile />} />
-
-        <Route path="product/:id" element={<ProductDetail />} />
       </Route>
 
       {/* ADMIN */}
@@ -41,8 +43,9 @@ const AppRouter = () => {
 
       {/* NOT FOUND */}
       <Route path="*" element={<NotFound />} />
-    </Routes>
-  )
-}
 
-export default AppRouter
+    </Routes>
+  );
+};
+
+export default AppRouter;

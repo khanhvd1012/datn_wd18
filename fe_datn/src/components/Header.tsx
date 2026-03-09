@@ -10,32 +10,53 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import PhoneIcon from "@mui/icons-material/Phone";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import logo3 from "../img/logo3.png";
+
 const Header = () => {
+
+  const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
+
+  const loadUser = () => {
+    const storedUser = localStorage.getItem("user");
+    setUser(storedUser ? JSON.parse(storedUser) : null);
+  };
+
+  useEffect(() => {
+    loadUser();
+
+    // lắng nghe thay đổi localStorage
+    window.addEventListener("storage", loadUser);
+
+    return () => {
+      window.removeEventListener("storage", loadUser);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    navigate("/");
+  };
+
   return (
     <AppBar position="static" sx={{ backgroundColor: "#222" }}>
       <Toolbar sx={{ justifyContent: "space-between" }}>
+
         {/* Logo */}
         <Box
           component={Link}
           to="/"
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            textDecoration: "none"
-          }}
+          sx={{ display: "flex", alignItems: "center", textDecoration: "none" }}
         >
           <img
-            src={logo3}    
+            src={logo3}
             alt="Logo"
-            style={{
-              height: 48,    
-              objectFit: "contain"
-            }}
+            style={{ height: 48, objectFit: "contain" }}
           />
         </Box>
-
 
         {/* Search */}
         <Box
@@ -59,53 +80,64 @@ const Header = () => {
         </Box>
 
         {/* Right */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 6 }}>
-          
-          {/* Phone with animation + link */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 4 }}>
+
+          {/* Phone */}
           <Box
             component="a"
             href="tel:0987654321"
             sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5,
-                textDecoration: "none",
-                color: "#fff",
-                "&:hover": {
-                color: "#ffffca",
-                },
+              display: "flex",
+              alignItems: "center",
+              gap: 0.5,
+              textDecoration: "none",
+              color: "#fff",
+              "&:hover": { color: "#ffffca" }
             }}
-            >
+          >
             <PhoneIcon
-                sx={{
+              sx={{
                 color: "#ff9800",
                 animation: "pulse 2.5s infinite ease-in-out",
-                }}
+              }}
             />
             <Typography fontSize={14}>0987.65.4321</Typography>
-            </Box>
+          </Box>
 
+          {/* LOGIN / LOGOUT */}
+          {user ? (
+            <>
+              <Typography color="#fff">
+                Xin chào, {user.name}
+              </Typography>
 
-          <Button
-            component={Link}
-            to="/login"
-            variant="outlined"
-            sx={{ color: "#fff", borderColor: "#ff9800" }}
-          >
-            Đăng nhập
-          </Button>
+              <Button
+                variant="outlined"
+                onClick={handleLogout}
+                sx={{ color: "#fff", borderColor: "#ff9800" }}
+              >
+                Đăng xuất
+              </Button>
+            </>
+          ) : (
+            <Button
+              component={Link}
+              to="/login"
+              variant="outlined"
+              sx={{ color: "#fff", borderColor: "#ff9800" }}
+            >
+              Đăng nhập
+            </Button>
+          )}
 
-          <IconButton
-            component={Link}
-            to="/cart"
-            sx={{ color: "#ded2ac" }}
-          >
+          {/* CART */}
+          <IconButton component={Link} to="/cart" sx={{ color: "#ded2ac" }}>
             <ShoppingCartIcon />
           </IconButton>
+
         </Box>
       </Toolbar>
 
-      {/* Animation */}
       <style>
         {`
           @keyframes pulse {
@@ -115,6 +147,7 @@ const Header = () => {
           }
         `}
       </style>
+
     </AppBar>
   );
 };
