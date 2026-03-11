@@ -29,94 +29,104 @@ const FeaturedProducts = () => {
     price.toLocaleString("vi-VN") + " đ";
 
   return (
-    <Box sx={{ backgroundColor: "#111", px: 2, py: 3 }}>
-      
-      {/* HEADER */}
-      <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-        <Box
-          sx={{
-            backgroundColor: "#ff6a00",
-            color: "#fff",
-            px: 5,
-            py: 1,
-            fontWeight: "bold",
-            clipPath:
-              "polygon(0 0, 90% 0, 100% 50%, 90% 100%, 0 100%)",
-          }}
-        >
-          PHỤ KIỆN NỔI BẬT
-        </Box>
-      </Box>
-
-      {/* GRID 5 SẢN PHẨM 1 HÀNG */}
+    <Box sx={{ backgroundColor: "#111", py: 4 }}>
+      {/* Container */}
       <Box
         sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "repeat(1, 1fr)",
-            sm: "repeat(2, 1fr)",
-            md: "repeat(3, 1fr)",
-            lg: "repeat(5, 1fr)", // 🔥 5 sản phẩm 1 hàng
-          },
-          gap: 2,
+          maxWidth: "1300px",
+          margin: "auto",
+          px: 2,
         }}
       >
-        {products.map((item) => (
-          <Link
-            key={item.id}
-            to={`/product/${item.id}`}
-            style={{ textDecoration: "none" }}
+        {/* HEADER */}
+        <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+          <Box
+            sx={{
+              backgroundColor: "#ff6a00",
+              color: "#fff",
+              px: 5,
+              py: 1,
+              fontWeight: "bold",
+              fontSize: 18,
+              clipPath:
+                "polygon(0 0, 90% 0, 100% 50%, 90% 100%, 0 100%)",
+            }}
           >
-            <Card
-              sx={{
-                backgroundColor: "#1a1a1a",
-                border: "1px solid #2a2a2a",
-                height: "100%",
-                transition: "0.3s",
-                cursor: "pointer",
-                "&:hover": {
-                  borderColor: "#ff6a00",
-                  transform: "translateY(-6px)",
-                },
-              }}
+            PHỤ KIỆN NỔI BẬT
+          </Box>
+        </Box>
+
+        {/* GRID */}
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "repeat(1, 1fr)",
+              sm: "repeat(2, 1fr)",
+              md: "repeat(3, 1fr)",
+              lg: "repeat(5, 1fr)", // 5 sản phẩm / 1 hàng
+            },
+            gap: 2,
+          }}
+        >
+          {products.slice(0, 5).map((item) => (
+            <Link
+              key={item.id}
+              to={`/product/${item.id}`}
+              style={{ textDecoration: "none" }}
             >
-              <CardMedia
-                component="img"
-                image={item.img}
-                alt={item.name}
+              <Card
                 sx={{
-                  height: 220,
-                  objectFit: "contain",
-                  backgroundColor: "#fff",
-                  p: 2,
+                  backgroundColor: "#1a1a1a",
+                  border: "1px solid #2a2a2a",
+                  height: "100%",
+                  transition: "0.3s",
+                  cursor: "pointer",
+                  "&:hover": {
+                    borderColor: "#ff6a00",
+                    transform: "translateY(-6px)",
+                    boxShadow: "0 8px 25px rgba(0,0,0,0.5)",
+                  },
                 }}
-              />
-
-              <CardContent>
-                <Typography
-                  variant="body2"
+              >
+                <CardMedia
+                  component="img"
+                  image={item.img}
+                  alt={item.name}
                   sx={{
-                    color: "#eee",
-                    minHeight: 48,
-                    mb: 1,
+                    height: 200,
+                    objectFit: "contain",
+                    backgroundColor: "#fff",
+                    p: 2,
                   }}
-                >
-                  {item.name}
-                </Typography>
+                />
 
-                <Typography
-                  sx={{
-                    color: "#ff3b3b",
-                    fontWeight: "bold",
-                    fontSize: 16,
-                  }}
-                >
-                  {formatPrice(item.price)}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+                <CardContent>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "#eee",
+                      minHeight: 48,
+                      mb: 1,
+                    }}
+                  >
+                    {item.name}
+                  </Typography>
+
+                  <Typography
+                    sx={{
+                      color: "#ff3b3b",
+                      fontWeight: "bold",
+                      fontSize: 16,
+                    }}
+                  >
+                    {formatPrice(item.price)}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </Box>
       </Box>
     </Box>
   );

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import axios from 'axios'
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import {
   Container,
   Grid,
@@ -9,244 +9,307 @@ import {
   TextField,
   Breadcrumbs,
   Link,
-} from '@mui/material'
-import { ShoppingCart } from 'lucide-react'
-import Footer from '../../components/Footer'
-import { useParams, useNavigate } from 'react-router-dom'
+  IconButton,
+  Rating,
+  Chip,
+  Stack,
+  Card,
+  CardContent,
+  Divider,
+} from "@mui/material";
+
+import { ShoppingCart } from "lucide-react";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import RemoveIcon from "@mui/icons-material/Remove";
+import AddIcon from "@mui/icons-material/Add";
+
+import { useParams, useNavigate } from "react-router-dom";
 
 interface Product {
-  id: number
-  name: string
-  img: string
-  price: number
-  description: string
-  sold?: number
+  id: number;
+  name: string;
+  img: string;
+  price: number;
+  description: string;
+  sold?: number;
+  rating?: number;
+  discount?: number;
 }
 
 const ProductDetail = () => {
-  const [quantity, setQuantity] = useState<number>(1)
-  const [product, setProduct] = useState<Product | null>(null)
-  const [bestSeller, setBestSeller] = useState<Product[]>([])
+  const [quantity, setQuantity] = useState<number>(1);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [related, setRelated] = useState<Product[]>([]);
 
-  const { id } = useParams()
-  const navigate = useNavigate()
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-  // ================= LẤY SẢN PHẨM =================
+  // ===== LẤY SẢN PHẨM =====
   useEffect(() => {
     axios
       .get(`http://localhost:3000/products/${id}`)
       .then((res) => setProduct(res.data))
-      .catch((err) => console.error(err))
-  }, [id])
+      .catch((err) => console.error(err));
+  }, [id]);
 
-  // ================= LẤY SẢN PHẨM BÁN CHẠY =================
+  // ===== SẢN PHẨM LIÊN QUAN =====
   useEffect(() => {
     axios
-      .get(
-        'http://localhost:3000/products?_sort=sold&_order=desc&_limit=4'
-      )
-      .then((res) => setBestSeller(res.data))
-      .catch((err) => console.error(err))
-  }, [])
+      .get(`http://localhost:3000/products?_limit=4`)
+      .then((res) => setRelated(res.data))
+      .catch((err) => console.error(err));
+  }, []);
 
-  // ================= THÊM VÀO CART =================
+  // ===== ADD TO CART =====
   const addToCart = async () => {
-    if (!product) return
+    if (!product) return;
 
-    try {
-      const res = await axios.get(
-        `http://localhost:3000/cart?productId=${product.id}`
-      )
+    const res = await axios.get(
+      `http://localhost:3000/cart?productId=${product.id}`
+    );
 
-      if (res.data.length > 0) {
-        const existing = res.data[0]
+    if (res.data.length > 0) {
+      const item = res.data[0];
 
-        await axios.patch(
-          `http://localhost:3000/cart/${existing.id}`,
-          {
-            quantity: existing.quantity + quantity,
-          }
-        )
-      } else {
-        await axios.post('http://localhost:3000/cart', {
-          productId: product.id,
-          name: product.name,
-          img: product.img,
-          price: product.price,
-          quantity,
-        })
-      }
-    } catch (error) {
-      console.error('Lỗi thêm giỏ hàng:', error)
+      await axios.patch(`http://localhost:3000/cart/${item.id}`, {
+        quantity: item.quantity + quantity,
+      });
+    } else {
+      await axios.post("http://localhost:3000/cart", {
+        productId: product.id,
+        name: product.name,
+        img: product.img,
+        price: product.price,
+        quantity,
+      });
     }
-  }
+  };
 
   const handleAddToCart = async () => {
-    await addToCart()
-    navigate('/cart')
-  }
+    await addToCart();
+    navigate("/cart");
+  };
 
   const handleBuyNow = async () => {
-    await addToCart()
-    navigate('/checkout')
-  }
+    await addToCart();
+    navigate("/checkout");
+  };
+
+  const increase = () => setQuantity((prev) => prev + 1);
+  const decrease = () => setQuantity((prev) => Math.max(1, prev - 1));
 
   if (!product) {
     return (
       <Container>
         <Typography>Không tìm thấy sản phẩm</Typography>
       </Container>
-    )
+    );
   }
 
   return (
     <Container maxWidth="lg" sx={{ py: 3 }}>
-      <Breadcrumbs sx={{ mb: 2 }}>
-        <Link
-          underline="hover"
-          sx={{ cursor: 'pointer' }}
-          onClick={() => navigate('/')}
-        >
+      {/* Breadcrumb */}
+      <Breadcrumbs sx={{ mb: 3 }}>
+        <Link sx={{ cursor: "pointer" }} onClick={() => navigate("/")}>
           Trang chủ
         </Link>
         <Typography>{product.name}</Typography>
       </Breadcrumbs>
 
       <Grid container spacing={4}>
-        <Grid item xs={12} md={6}>
-          <img
-            src={product.img}
-            alt={product.name}
-            style={{
-              width: '400px',
-              height: '400px',
-              objectFit: 'cover',
-              borderRadius: 8,
-            }}
-          />
+        {/* IMAGE */}
+        <Grid item xs={12} md={5}>
+          <Card sx={{ borderRadius: 3 }}>
+            <CardContent sx={{ textAlign: "center" }}>
+              <img
+                src={product.img}
+                alt={product.name}
+                style={{
+                  width: "100%",
+                  maxHeight: 420,
+                  objectFit: "contain",
+                }}
+              />
+            </CardContent>
+          </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
-          <Typography variant="h4" sx={{ mb: 2 }}>
-            {product.name}
-          </Typography>
+        {/* INFO */}
+        <Grid item xs={12} md={7}>
+          <Stack spacing={2}>
+            <Typography variant="h5" fontWeight={700}>
+              {product.name}
+            </Typography>
 
-          <Typography
-            variant="h5"
-            sx={{ color: '#ff0000', mb: 2 }}
-          >
-            {product.price.toLocaleString()}₫
-          </Typography>
+            <Stack direction="row" spacing={2}>
+              <Rating value={product.rating || 4} precision={0.5} readOnly />
+              <Typography color="gray">
+                Đã bán {product.sold || 0}
+              </Typography>
+            </Stack>
 
-          <TextField
-            type="number"
-            label="Số lượng"
-            value={quantity}
-            onChange={(e) =>
-              setQuantity(Math.max(1, Number(e.target.value)))
-            }
-            inputProps={{ min: 1 }}
-            sx={{ width: 120, mb: 3 }}
-          />
-
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button
-              variant="contained"
-              sx={{
-                flex: 1,
-                backgroundColor: '#ff6b35',
-                '&:hover': { backgroundColor: '#e65c2f' },
-              }}
-              startIcon={<ShoppingCart size={20} />}
-              onClick={handleAddToCart}
+            {/* PRICE */}
+            <Typography
+              variant="h4"
+              sx={{ color: "#d70018", fontWeight: 700 }}
             >
-              Thêm vào giỏ
-            </Button>
+              {product.price.toLocaleString()}₫
+            </Typography>
 
-            <Button
-              variant="contained"
-              sx={{
-                flex: 1,
-                backgroundColor: '#d32f2f',
-                '&:hover': { backgroundColor: '#b71c1c' },
-              }}
-              onClick={handleBuyNow}
-            >
-              Mua ngay
-            </Button>
-          </Box>
+            {product.discount && (
+              <Chip
+                label={`Giảm ${product.discount}%`}
+                color="error"
+                sx={{ width: "fit-content" }}
+              />
+            )}
 
-          <Typography sx={{ mt: 3 }}>
-            <strong>Mô tả:</strong> {product.description}
-          </Typography>
+            {/* KHUYẾN MÃI */}
+            <Card sx={{ borderRadius: 3, bgcolor: "#fff7f7" }}>
+              <CardContent>
+                <Typography fontWeight={700} mb={1}>
+                  🎁 Khuyến mãi
+                </Typography>
+
+                <Typography fontSize={14}>
+                  ✔ Giảm thêm 5% khi thanh toán online
+                </Typography>
+
+                <Typography fontSize={14}>
+                  ✔ Miễn phí giao hàng toàn quốc
+                </Typography>
+
+                <Typography fontSize={14}>
+                  ✔ Bảo hành chính hãng 12 tháng
+                </Typography>
+              </CardContent>
+            </Card>
+
+            {/* SỐ LƯỢNG */}
+            <Stack direction="row" spacing={1} alignItems="center">
+              <IconButton onClick={decrease}>
+                <RemoveIcon />
+              </IconButton>
+
+              <TextField
+                value={quantity}
+                size="small"
+                sx={{ width: 70 }}
+                inputProps={{ style: { textAlign: "center" } }}
+              />
+
+              <IconButton onClick={increase}>
+                <AddIcon />
+              </IconButton>
+            </Stack>
+
+            {/* BUTTON */}
+            <Stack direction="row" spacing={2}>
+              <Button
+                variant="contained"
+                startIcon={<ShoppingCart size={18} />}
+                sx={{
+                  flex: 1,
+                  backgroundColor: "#ff6b35",
+                }}
+                onClick={handleAddToCart}
+              >
+                Thêm giỏ
+              </Button>
+
+              <Button
+                variant="contained"
+                sx={{
+                  flex: 1,
+                  backgroundColor: "#d70018",
+                }}
+                onClick={handleBuyNow}
+              >
+                Mua ngay
+              </Button>
+
+              <IconButton>
+                <FavoriteBorderIcon />
+              </IconButton>
+            </Stack>
+
+            {/* MÔ TẢ */}
+            <Card sx={{ borderRadius: 3 }}>
+              <CardContent>
+                <Typography fontWeight={700} mb={1}>
+                  Mô tả sản phẩm
+                </Typography>
+
+                <Divider sx={{ mb: 2 }} />
+
+                <Typography>{product.description}</Typography>
+              </CardContent>
+            </Card>
+          </Stack>
         </Grid>
       </Grid>
 
-      {/* ================= SẢN PHẨM BÁN CHẠY ================= */}
-      <Box sx={{ mt: 8 }}>
+      {/* SẢN PHẨM LIÊN QUAN */}
+      <Box sx={{ mt: 7 }}>
         <Typography variant="h5" fontWeight={700} mb={3}>
-          🔥 Sản phẩm bán chạy
+          Sản phẩm liên quan
         </Typography>
 
         <Grid container spacing={3}>
-          {bestSeller.map((item) => (
+          {related.map((item) => (
             <Grid item xs={12} sm={6} md={3} key={item.id}>
-              <Box
+              <Card
                 sx={{
-                  backgroundColor: '#fff',
-                  borderRadius: 2,
-                  p: 2,
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-                  transition: '0.3s',
-                  '&:hover': {
-                    transform: 'translateY(-5px)',
-                    boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
+                  cursor: "pointer",
+                  borderRadius: 3,
+                  transition: "0.3s",
+                  "&:hover": {
+                    transform: "translateY(-5px)",
+                    boxShadow: 6,
                   },
                 }}
                 onClick={() => navigate(`/product/${item.id}`)}
               >
-                <Box
-                  component="img"
-                  src={item.img}
-                  alt={item.name}
-                  sx={{
-                    width: '100%',
-                    height: 160,
-                    objectFit: 'contain',
-                    mb: 2,
-                  }}
-                />
+                <CardContent>
+                  <Box
+                    component="img"
+                    src={item.img}
+                    sx={{
+                      width: "100%",
+                      height: 160,
+                      objectFit: "contain",
+                      mb: 2,
+                    }}
+                  />
 
-                <Typography
-                  sx={{
-                    fontSize: 14,
-                    fontWeight: 600,
-                    height: 40,
-                    overflow: 'hidden',
-                    mb: 1,
-                  }}
-                >
-                  {item.name}
-                </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: 14,
+                      fontWeight: 600,
+                      height: 40,
+                      overflow: "hidden",
+                    }}
+                  >
+                    {item.name}
+                  </Typography>
 
-                <Typography
-                  sx={{
-                    color: '#d70018',
-                    fontWeight: 700,
-                  }}
-                >
-                  {item.price.toLocaleString()}₫
-                </Typography>
-              </Box>
+                  <Typography
+                    sx={{
+                      color: "#d70018",
+                      fontWeight: 700,
+                      mt: 1,
+                    }}
+                  >
+                    {item.price.toLocaleString()}₫
+                  </Typography>
+                </CardContent>
+              </Card>
             </Grid>
           ))}
         </Grid>
       </Box>
-
-      <Footer />
     </Container>
-  )
-}
+  );
+};
 
-export default ProductDetail
+export default ProductDetail;

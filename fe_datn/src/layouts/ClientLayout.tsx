@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { Box, Container } from "@mui/material";
+import { Box } from "@mui/material";
 
 const ClientLayout = () => {
   return (
@@ -10,18 +10,17 @@ const ClientLayout = () => {
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-        background: "#f5f5f7",
       }}
     >
+      {/* HEADER */}
       <Header />
 
-      {/* Nội dung trang */}
-      <Box sx={{ flex: 1, py: 3 }}>
-        <Container maxWidth="xl">
-          <Outlet />
-        </Container>
+      {/* PAGE CONTENT */}
+      <Box sx={{ flex: 1 }}>
+        <Outlet />
       </Box>
 
+      {/* FOOTER */}
       <Footer />
     </Box>
   );

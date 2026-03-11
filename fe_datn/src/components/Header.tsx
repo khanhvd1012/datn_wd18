@@ -7,11 +7,15 @@ import {
   IconButton,
   Button
 } from "@mui/material";
+
 import SearchIcon from "@mui/icons-material/Search";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import PhoneIcon from "@mui/icons-material/Phone";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+
 import logo3 from "../img/logo3.png";
 
 const Header = () => {
@@ -19,20 +23,11 @@ const Header = () => {
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
 
-  const loadUser = () => {
-    const storedUser = localStorage.getItem("user");
-    setUser(storedUser ? JSON.parse(storedUser) : null);
-  };
-
   useEffect(() => {
-    loadUser();
-
-    // lắng nghe thay đổi localStorage
-    window.addEventListener("storage", loadUser);
-
-    return () => {
-      window.removeEventListener("storage", loadUser);
-    };
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
   }, []);
 
   const handleLogout = () => {
@@ -43,22 +38,23 @@ const Header = () => {
 
   return (
     <AppBar position="static" sx={{ backgroundColor: "#222" }}>
+
       <Toolbar sx={{ justifyContent: "space-between" }}>
 
-        {/* Logo */}
+        {/* LOGO */}
         <Box
           component={Link}
           to="/"
-          sx={{ display: "flex", alignItems: "center", textDecoration: "none" }}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            textDecoration: "none"
+          }}
         >
-          <img
-            src={logo3}
-            alt="Logo"
-            style={{ height: 48, objectFit: "contain" }}
-          />
+          <img src={logo3} alt="Logo" style={{ height: 48 }} />
         </Box>
 
-        {/* Search */}
+        {/* SEARCH */}
         <Box
           sx={{
             display: "flex",
@@ -74,15 +70,16 @@ const Header = () => {
             placeholder="Nhập mã hoặc tên sản phẩm cần tìm?"
             sx={{ flex: 1 }}
           />
+
           <IconButton>
             <SearchIcon />
           </IconButton>
         </Box>
 
-        {/* Right */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 4 }}>
+        {/* RIGHT */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
 
-          {/* Phone */}
+          {/* PHONE */}
           <Box
             component="a"
             href="tel:0987654321"
@@ -91,35 +88,40 @@ const Header = () => {
               alignItems: "center",
               gap: 0.5,
               textDecoration: "none",
-              color: "#fff",
-              "&:hover": { color: "#ffffca" }
+              color: "#fff"
             }}
           >
-            <PhoneIcon
-              sx={{
-                color: "#ff9800",
-                animation: "pulse 2.5s infinite ease-in-out",
-              }}
-            />
-            <Typography fontSize={14}>0987.65.4321</Typography>
+            <PhoneIcon sx={{ color: "#ff9800" }} />
+            <Typography fontSize={14}>
+              0987.65.4321
+            </Typography>
           </Box>
+
+          {/* ORDERS */}
+          {user && (
+            <Button
+              component={Link}
+              to="/orders"
+              startIcon={<ReceiptLongIcon />}
+              sx={{ color: "#fff" }}
+            >
+              Đơn hàng
+            </Button>
+          )}
 
           {/* LOGIN / LOGOUT */}
           {user ? (
-            <>
-              <Typography color="#fff">
-                Xin chào, {user.name}
-              </Typography>
 
-              <Button
-                variant="outlined"
-                onClick={handleLogout}
-                sx={{ color: "#fff", borderColor: "#ff9800" }}
-              >
-                Đăng xuất
-              </Button>
-            </>
+            <Button
+              variant="outlined"
+              onClick={handleLogout}
+              sx={{ color: "#fff", borderColor: "#ff9800" }}
+            >
+              Đăng xuất
+            </Button>
+
           ) : (
+
             <Button
               component={Link}
               to="/login"
@@ -128,25 +130,21 @@ const Header = () => {
             >
               Đăng nhập
             </Button>
+
           )}
 
           {/* CART */}
-          <IconButton component={Link} to="/cart" sx={{ color: "#ded2ac" }}>
+          <IconButton
+            component={Link}
+            to="/cart"
+            sx={{ color: "#ded2ac" }}
+          >
             <ShoppingCartIcon />
           </IconButton>
 
         </Box>
-      </Toolbar>
 
-      <style>
-        {`
-          @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.08); }
-            100% { transform: scale(1); }
-          }
-        `}
-      </style>
+      </Toolbar>
 
     </AppBar>
   );

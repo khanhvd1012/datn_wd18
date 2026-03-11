@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import axios from 'axios'
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+
 import {
   Container,
   Typography,
@@ -18,9 +19,13 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
-} from '@mui/material'
-import { useNavigate } from 'react-router-dom'
-import Footer from '../components/Footer'
+  IconButton
+} from "@mui/material";
+
+import RemoveIcon from "@mui/icons-material/Remove";
+import AddIcon from "@mui/icons-material/Add";
+
+import { useNavigate } from "react-router-dom";
 
 interface CartItem {
   id: number
@@ -32,317 +37,406 @@ interface CartItem {
 }
 
 const Checkout = () => {
-  const [cart, setCart] = useState<CartItem[]>([])
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [address, setAddress] = useState('')
-  const [paymentMethod, setPaymentMethod] = useState('cod')
-  const [loading, setLoading] = useState(false)
-  const [openSnackbar, setOpenSnackbar] = useState(false)
 
-  const navigate = useNavigate()
+const [cart,setCart] = useState<CartItem[]>([])
+const [name,setName] = useState("")
+const [email,setEmail] = useState("")
+const [phone,setPhone] = useState("")
+const [address,setAddress] = useState("")
+const [coupon,setCoupon] = useState("")
+const [couponDiscount,setCouponDiscount] = useState(0)
+const [paymentMethod,setPaymentMethod] = useState("cod")
+const [loading,setLoading] = useState(false)
+const [openSnackbar,setOpenSnackbar] = useState(false)
 
-  useEffect(() => {
-    axios
-      .get('http://localhost:3000/cart')
-      .then((res) => setCart(res.data))
-  }, [])
+const navigate = useNavigate()
 
-  const subTotal = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  )
+useEffect(()=>{
 
-  const shippingFee = subTotal > 500000 ? 0 : 30000
-  const discount = subTotal > 1000000 ? subTotal * 0.1 : 0
-  const total = subTotal + shippingFee - discount
+axios.get("http://localhost:3000/cart")
+.then(res=>setCart(res.data))
 
-  const updateQuantity = async (id: number, newQuantity: number) => {
-    if (newQuantity < 1) return
+const user = JSON.parse(localStorage.getItem("user") || "null")
 
-    await axios.patch(`http://localhost:3000/cart/${id}`, {
-      quantity: newQuantity,
-    })
+if(user){
+setName(user.name || "")
+setEmail(user.email || "")
+setPhone(user.phone || "")
+}
 
-    setCart((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      )
-    )
-  }
+},[])
 
-  const removeItem = async (id: number) => {
-    await axios.delete(`http://localhost:3000/cart/${id}`)
-    setCart((prev) => prev.filter((item) => item.id !== id))
-  }
+const subTotal = cart.reduce(
+(sum,item)=>sum + item.price * item.quantity,0
+)
 
-  const isValidPhone = (phone: string) =>
-    /^(0[3|5|7|8|9])[0-9]{8}$/.test(phone)
+const shippingFee = subTotal > 500000 ? 0 : 30000
+const discount = subTotal > 1000000 ? subTotal * 0.1 : 0
+const total = subTotal + shippingFee - discount - couponDiscount
 
-  const isFormValid =
-    name.trim().length >= 2 &&
-    isValidPhone(phone) &&
-    address.trim().length >= 10
+const updateQuantity = async(id:number,newQuantity:number)=>{
 
-  const handlePlaceOrder = async () => {
-    if (!isFormValid) return alert('Vui lòng nhập đúng thông tin')
+if(newQuantity < 1) return
 
-    try {
-      setLoading(true)
+await axios.patch(`http://localhost:3000/cart/${id}`,{
+quantity:newQuantity
+})
 
-      await axios.post('http://localhost:3000/orders', {
-        customerName: name,
-        phone,
-        address,
-        paymentMethod,
-        items: cart,
-        subTotal,
-        shippingFee,
-        discount,
-        total,
-        createdAt: new Date(),
-      })
+setCart(prev =>
+prev.map(item =>
+item.id === id ? {...item,quantity:newQuantity}:item
+)
+)
 
-      await Promise.all(
-        cart.map((item) =>
-          axios.delete(`http://localhost:3000/cart/${item.id}`)
-        )
-      )
+}
 
-      setCart([])
-      setOpenSnackbar(true)
+const removeItem = async(id:number)=>{
 
-      setTimeout(() => navigate('/'), 1500)
-    } finally {
-      setLoading(false)
-    }
-  }
+await axios.delete(`http://localhost:3000/cart/${id}`)
+setCart(prev => prev.filter(item => item.id !== id))
 
-  if (cart.length === 0) {
-    return (
-      <>
-        <Container sx={{ py: 10 }}>
-          <Typography variant="h5" textAlign="center">
-            Giỏ hàng của bạn đang trống
-          </Typography>
-        </Container>
-        <Footer />
-      </>
-    )
-  }
+}
 
-  return (
-    <>
-      <Box sx={{ background: '#f5f5f7', py: 8 }}>
-        <Container maxWidth="lg">
-          <Typography
-            variant="h4"
-            sx={{
-              mb: 6,
-              fontWeight: 700,
-              textAlign: 'center',
-              color: '#222',
-            }}
-          >
-            Thanh Toán
-          </Typography>
+const applyCoupon = ()=>{
 
-          <Grid container spacing={4}>
-            {/* CART */}
-            <Grid item xs={12} md={7}>
-              <Card sx={{ borderRadius: 4, boxShadow: 3 }}>
-                <CardContent sx={{ p: 4 }}>
-                  {cart.map((item) => (
-                    <Box
-                      key={item.id}
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        mb: 3,
-                        alignItems: 'center'
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', gap: 2 }}>
-                        <Avatar
-                          src={item.img}
-                          variant="rounded"
-                          sx={{ width: 80, height: 80 }}
-                        />
+if(coupon === "SALE10"){
+setCouponDiscount(subTotal*0.1)
+alert("Áp dụng mã thành công")
+}else{
+alert("Mã không hợp lệ")
+}
 
-                        <Box>
-                          <Typography fontWeight={600}>
-                            {item.name}
-                          </Typography>
+}
 
-                          <Typography
-                            sx={{ color: '#d70018', fontWeight: 600 }}
-                          >
-                            {item.price.toLocaleString()}₫
-                          </Typography>
+const handlePlaceOrder = async()=>{
 
-                          <Box sx={{ mt: 1 }}>
-                            <Button
-                              size="small"
-                              onClick={() =>
-                                updateQuantity(item.id, item.quantity - 1)
-                              }
-                            >
-                              -
-                            </Button>
+if(!name || !phone || !address){
+alert("Nhập đầy đủ thông tin")
+return
+}
 
-                            {item.quantity}
+try{
 
-                            <Button
-                              size="small"
-                              onClick={() =>
-                                updateQuantity(item.id, item.quantity + 1)
-                              }
-                            >
-                              +
-                            </Button>
-                          </Box>
-                        </Box>
-                      </Box>
+setLoading(true)
 
-                      <Button
-                        color="error"
-                        onClick={() => removeItem(item.id)}
-                      >
-                        Xóa
-                      </Button>
-                    </Box>
-                  ))}
+await axios.post("http://localhost:3000/orders",{
 
-                  <Divider sx={{ my: 3 }} />
+customerName:name,
+email,
+phone,
+address,
+paymentMethod,
+items:cart,
+total,
+createdAt:new Date()
 
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography>Tạm tính</Typography>
-                    <Typography>{subTotal.toLocaleString()}₫</Typography>
-                  </Box>
+})
 
-                  <Box display="flex" justifyContent="space-between" mt={1}>
-                    <Typography>Phí vận chuyển</Typography>
-                    <Typography>
-                      {shippingFee === 0
-                        ? 'Miễn phí'
-                        : shippingFee.toLocaleString() + '₫'}
-                    </Typography>
-                  </Box>
+await Promise.all(
+cart.map(item =>
+axios.delete(`http://localhost:3000/cart/${item.id}`)
+)
+)
 
-                  {discount > 0 && (
-                    <Box display="flex" justifyContent="space-between" mt={1}>
-                      <Typography>Giảm giá</Typography>
-                      <Typography color="success.main">
-                        -{discount.toLocaleString()}₫
-                      </Typography>
-                    </Box>
-                  )}
+setOpenSnackbar(true)
 
-                  <Divider sx={{ my: 3 }} />
+setTimeout(()=>{
+navigate("/order-success")
+},1500)
 
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography variant="h6">Tổng</Typography>
-                    <Typography
-                      variant="h6"
-                      sx={{ color: '#d70018', fontWeight: 700 }}
-                    >
-                      {total.toLocaleString()}₫
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+}catch{
 
-            {/* FORM */}
-            <Grid item xs={12} md={5}>
-              <Paper sx={{ p: 4, borderRadius: 4, boxShadow: 3 }}>
-                <Typography variant="h6" mb={3} fontWeight={600}>
-                  Thông tin giao hàng
-                </Typography>
+alert("Lỗi đặt hàng")
 
-                <Box display="flex" flexDirection="column" gap={3}>
-                  <TextField
-                    label="Họ và tên"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    fullWidth
-                  />
+}finally{
 
-                  <TextField
-                    label="Số điện thoại"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    fullWidth
-                  />
+setLoading(false)
 
-                  <TextField
-                    label="Địa chỉ"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    multiline
-                    rows={3}
-                    fullWidth
-                  />
+}
 
-                  <Typography fontWeight={600}>
-                    Phương thức thanh toán
-                  </Typography>
+}
 
-                  <RadioGroup
-                    value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                  >
-                    <FormControlLabel
-                      value="cod"
-                      control={<Radio sx={{ color: '#d70018' }} />}
-                      label="Thanh toán khi nhận hàng (COD)"
-                    />
-                    <FormControlLabel
-                      value="bank"
-                      control={<Radio sx={{ color: '#d70018' }} />}
-                      label="Chuyển khoản ngân hàng"
-                    />
-                  </RadioGroup>
+return(
 
-                  <Button
-                    variant="contained"
-                    size="large"
-                    disabled={!isFormValid || loading}
-                    onClick={handlePlaceOrder}
-                    sx={{
-                      py: 1.5,
-                      borderRadius: 2,
-                      fontWeight: 600,
-                      backgroundColor: '#d70018',
-                      '&:hover': { backgroundColor: '#b80014' },
-                    }}
-                  >
-                    {loading ? (
-                      <CircularProgress size={24} color="inherit" />
-                    ) : (
-                      'Đặt hàng ngay'
-                    )}
-                  </Button>
-                </Box>
-              </Paper>
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
+<Box sx={{background:"#f5f5f5",minHeight:"100vh",py:5}}>
 
-      <Footer />
+<Container maxWidth="lg">
 
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={1500}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        <Alert severity="success" variant="filled">
-          Thanh toán thành công 🎉
-        </Alert>
-      </Snackbar>
-    </>
-  )
+{/* HEADER */}
+
+<Box mb={4}>
+
+<Typography variant="h4" fontWeight="bold">
+Thanh toán
+</Typography>
+
+<Typography color="text.secondary">
+Hoàn tất thông tin để đặt hàng
+</Typography>
+
+</Box>
+
+{/* STEP CHECKOUT */}
+
+<Box
+display="flex"
+justifyContent="center"
+gap={6}
+mb={4}
+>
+
+<Typography color="success.main">
+✓ Giỏ hàng
+</Typography>
+
+<Typography fontWeight="bold">
+● Thanh toán
+</Typography>
+
+<Typography color="gray">
+○ Hoàn tất
+</Typography>
+
+</Box>
+
+<Grid container spacing={4}>
+
+{/* LEFT - CART */}
+
+<Grid item xs={12} md={7}>
+
+<Card sx={{borderRadius:3}}>
+
+<CardContent>
+
+<Typography variant="h6" fontWeight="bold" mb={2}>
+Sản phẩm của bạn
+</Typography>
+
+{cart.map(item=>(
+
+<Box
+key={item.id}
+display="flex"
+justifyContent="space-between"
+alignItems="center"
+py={2}
+>
+
+<Box display="flex" gap={2}>
+
+<Avatar
+src={item.img}
+variant="rounded"
+sx={{width:70,height:70}}
+/>
+
+<Box>
+
+<Typography fontWeight="bold">
+{item.name}
+</Typography>
+
+<Typography color="#d70018" fontWeight="bold">
+{item.price.toLocaleString()}₫
+</Typography>
+
+<Box display="flex" alignItems="center">
+
+<IconButton
+onClick={()=>updateQuantity(item.id,item.quantity-1)}
+>
+<RemoveIcon/>
+</IconButton>
+
+<Typography mx={1}>
+{item.quantity}
+</Typography>
+
+<IconButton
+onClick={()=>updateQuantity(item.id,item.quantity+1)}
+>
+<AddIcon/>
+</IconButton>
+
+</Box>
+
+</Box>
+
+</Box>
+
+<Button
+color="error"
+onClick={()=>removeItem(item.id)}
+>
+Xóa
+</Button>
+
+</Box>
+
+))}
+
+</CardContent>
+
+</Card>
+
+</Grid>
+
+{/* RIGHT - SUMMARY */}
+
+<Grid item xs={12} md={5}>
+
+<Paper
+sx={{
+p:4,
+borderRadius:3,
+position:"sticky",
+top:20
+}}
+>
+
+<Typography variant="h6" fontWeight="bold" mb={3}>
+Thông tin giao hàng
+</Typography>
+
+<Box display="flex" flexDirection="column" gap={2}>
+
+<TextField
+label="Họ tên"
+value={name}
+onChange={e=>setName(e.target.value)}
+fullWidth
+/>
+
+<TextField
+label="Email"
+value={email}
+onChange={e=>setEmail(e.target.value)}
+fullWidth
+/>
+
+<TextField
+label="Số điện thoại"
+value={phone}
+onChange={e=>setPhone(e.target.value)}
+fullWidth
+/>
+
+<TextField
+label="Địa chỉ"
+value={address}
+onChange={e=>setAddress(e.target.value)}
+fullWidth
+/>
+
+</Box>
+
+<Divider sx={{my:3}}/>
+
+<Typography fontWeight="bold" mb={2}>
+Phương thức thanh toán
+</Typography>
+
+<RadioGroup
+value={paymentMethod}
+onChange={e=>setPaymentMethod(e.target.value)}
+>
+
+<FormControlLabel
+value="cod"
+control={<Radio/>}
+label="Thanh toán khi nhận hàng"
+/>
+
+<FormControlLabel
+value="bank"
+control={<Radio/>}
+label="Chuyển khoản"
+/>
+
+<FormControlLabel
+value="momo"
+control={<Radio/>}
+label="Ví MoMo"
+/>
+
+<FormControlLabel
+value="vnpay"
+control={<Radio/>}
+label="VNPay"
+/>
+
+</RadioGroup>
+
+<Divider sx={{my:3}}/>
+
+<Box display="flex" justifyContent="space-between">
+<Typography>Tạm tính</Typography>
+<Typography>{subTotal.toLocaleString()}₫</Typography>
+</Box>
+
+<Box display="flex" justifyContent="space-between">
+<Typography>Phí ship</Typography>
+<Typography>
+{shippingFee === 0 ? "Miễn phí" : shippingFee.toLocaleString()+"₫"}
+</Typography>
+</Box>
+
+<Divider sx={{my:2}}/>
+
+<Box display="flex" justifyContent="space-between" mb={3}>
+
+<Typography variant="h6">
+Tổng tiền
+</Typography>
+
+<Typography
+variant="h6"
+color="#d70018"
+fontWeight="bold"
+>
+{total.toLocaleString()}₫
+</Typography>
+
+</Box>
+
+<Button
+fullWidth
+variant="contained"
+sx={{
+background:"#d70018",
+py:1.5,
+fontWeight:"bold",
+fontSize:16
+}}
+onClick={handlePlaceOrder}
+disabled={loading}
+>
+
+{loading
+? <CircularProgress size={24}/>
+: "Đặt hàng"}
+
+</Button>
+
+</Paper>
+
+</Grid>
+
+</Grid>
+
+</Container>
+
+<Snackbar open={openSnackbar} autoHideDuration={2000}>
+<Alert severity="success">
+Đặt hàng thành công
+</Alert>
+</Snackbar>
+
+</Box>
+
+)
+
 }
 
 export default Checkout

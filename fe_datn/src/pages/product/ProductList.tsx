@@ -14,7 +14,14 @@ import {
   FormControl,
   InputLabel,
   Breadcrumbs,
+  TextField,
+  Rating,
+  IconButton,
 } from "@mui/material";
+
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 interface Product {
@@ -24,6 +31,7 @@ interface Product {
   price: number;
   sold?: number;
   discount?: number;
+  rating?: number;
   category?: string;
   subCategory?: string;
 }
@@ -32,17 +40,22 @@ const ProductList = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [sortType, setSortType] = useState("default");
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [priceFilter, setPriceFilter] = useState("all");
 
   const navigate = useNavigate();
   const location = useLocation();
+
   const queryParams = new URLSearchParams(location.search);
   const category = queryParams.get("category");
   const sub = queryParams.get("sub");
 
   const productsPerPage = 8;
 
+  // ================= LẤY SẢN PHẨM =================
   useEffect(() => {
     let url = "http://localhost:3000/products";
+
     if (category) url += `?category=${category}`;
     if (sub) url += `${category ? "&" : "?"}subCategory=${sub}`;
 
@@ -54,25 +67,87 @@ const ProductList = () => {
       });
   }, [category, sub]);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [page]);
+
   const formatPrice = (price: number) =>
     price.toLocaleString("vi-VN") + " đ";
 
-  const sortedProducts = useMemo(() => {
-    let sorted = [...products];
-    if (sortType === "priceAsc")
-      sorted.sort((a, b) => a.price - b.price);
-    if (sortType === "priceDesc")
-      sorted.sort((a, b) => b.price - a.price);
-    if (sortType === "soldDesc")
-      sorted.sort((a, b) => (b.sold ?? 0) - (a.sold ?? 0));
-    return sorted;
-  }, [products, sortType]);
+  // ================= FILTER + SORT =================
+  const filteredProducts = useMemo(() => {
+    let filtered = [...products];
 
-  const totalPages = Math.ceil(sortedProducts.length / productsPerPage);
-  const displayedProducts = sortedProducts.slice(
+    if (search) {
+      filtered = filtered.filter((p) =>
+        p.name.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    if (priceFilter === "1") {
+      filtered = filtered.filter((p) => p.price < 1000000);
+    }
+
+    if (priceFilter === "5") {
+      filtered = filtered.filter(
+        (p) => p.price >= 1000000 && p.price <= 5000000
+      );
+    }
+
+    if (priceFilter === "10") {
+      filtered = filtered.filter((p) => p.price > 5000000);
+    }
+
+    if (sortType === "priceAsc")
+      filtered.sort((a, b) => a.price - b.price);
+
+    if (sortType === "priceDesc")
+      filtered.sort((a, b) => b.price - a.price);
+
+    if (sortType === "soldDesc")
+      filtered.sort((a, b) => (b.sold ?? 0) - (a.sold ?? 0));
+
+    return filtered;
+  }, [products, sortType, search, priceFilter]);
+
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+
+  const displayedProducts = filteredProducts.slice(
     (page - 1) * productsPerPage,
     page * productsPerPage
   );
+
+  // ================= ADD TO CART =================
+  const addToCart = async (product: Product) => {
+    const res = await fetch(
+      `http://localhost:3000/cart?productId=${product.id}`
+    );
+    const data = await res.json();
+
+    if (data.length > 0) {
+      const item = data[0];
+
+      await fetch(`http://localhost:3000/cart/${item.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quantity: item.quantity + 1,
+        }),
+      });
+    } else {
+      await fetch(`http://localhost:3000/cart`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: product.id,
+          name: product.name,
+          img: product.img,
+          price: product.price,
+          quantity: 1,
+        }),
+      });
+    }
+  };
 
   return (
     <Box sx={{ backgroundColor: "#f2f4f7", py: 4 }}>
@@ -83,12 +158,13 @@ const ProductList = () => {
           <Link to="/" style={{ textDecoration: "none", color: "#666" }}>
             Trang chủ
           </Link>
+
           <Typography color="text.primary">
             {category ? decodeURIComponent(category) : "Tất cả sản phẩm"}
           </Typography>
         </Breadcrumbs>
 
-        {/* Header + Filter Box */}
+        {/* HEADER */}
         <Box
           sx={{
             background: "#fff",
@@ -111,12 +187,35 @@ const ProductList = () => {
                   ? decodeURIComponent(category)
                   : "TẤT CẢ SẢN PHẨM"}
               </Typography>
+
               <Typography fontSize={13} color="gray">
-                {products.length} sản phẩm
+                {filteredProducts.length} sản phẩm
               </Typography>
             </Box>
 
-            <Stack direction="row" spacing={2}>
+            <Stack direction="row" spacing={2} flexWrap="wrap">
+
+              <TextField
+                size="small"
+                placeholder="Tìm sản phẩm..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+
+              <FormControl size="small">
+                <InputLabel>Giá</InputLabel>
+                <Select
+                  value={priceFilter}
+                  label="Giá"
+                  onChange={(e) => setPriceFilter(e.target.value)}
+                >
+                  <MenuItem value="all">Tất cả</MenuItem>
+                  <MenuItem value="1">Dưới 1 triệu</MenuItem>
+                  <MenuItem value="5">1 - 5 triệu</MenuItem>
+                  <MenuItem value="10">Trên 5 triệu</MenuItem>
+                </Select>
+              </FormControl>
+
               <FormControl size="small">
                 <InputLabel>Sắp xếp</InputLabel>
                 <Select
@@ -125,19 +224,15 @@ const ProductList = () => {
                   onChange={(e) => setSortType(e.target.value)}
                 >
                   <MenuItem value="default">Mặc định</MenuItem>
-                  <MenuItem value="priceAsc">Giá tăng dần</MenuItem>
-                  <MenuItem value="priceDesc">Giá giảm dần</MenuItem>
+                  <MenuItem value="priceAsc">Giá tăng</MenuItem>
+                  <MenuItem value="priceDesc">Giá giảm</MenuItem>
                   <MenuItem value="soldDesc">Bán chạy</MenuItem>
                 </Select>
               </FormControl>
 
               <Button
                 variant="contained"
-                sx={{
-                  backgroundColor: "#d70018",
-                  borderRadius: 2,
-                  px: 3,
-                }}
+                sx={{ backgroundColor: "#d70018" }}
                 onClick={() => navigate("/")}
               >
                 Trang chủ
@@ -146,52 +241,62 @@ const ProductList = () => {
           </Stack>
         </Box>
 
-        {/* Grid */}
+        {/* GRID PRODUCT */}
         <Box
           sx={{
             display: "grid",
             gridTemplateColumns: {
-              xs: "repeat(1, 1fr)",
-              sm: "repeat(2, 1fr)",
-              md: "repeat(3, 1fr)",
-              lg: "repeat(4, 1fr)",
+              xs: "repeat(1,1fr)",
+              sm: "repeat(2,1fr)",
+              md: "repeat(3,1fr)",
+              lg: "repeat(4,1fr)",
             },
             gap: 3,
           }}
         >
           {displayedProducts.map((item) => (
-            <Link
+            <Card
               key={item.id}
-              to={`/product/${item.id}`}
-              style={{ textDecoration: "none" }}
+              sx={{
+                borderRadius: 3,
+                border: "1px solid #eee",
+                position: "relative",
+                transition: "0.3s",
+                "&:hover": {
+                  transform: "translateY(-6px)",
+                  boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+                  borderColor: "#d70018",
+                },
+              }}
             >
-              <Card
+              {item.discount && (
+                <Chip
+                  label={`-${item.discount}%`}
+                  sx={{
+                    position: "absolute",
+                    top: 10,
+                    left: 10,
+                    background: "#d70018",
+                    color: "#fff",
+                    fontWeight: 700,
+                  }}
+                />
+              )}
+
+              <IconButton
                 sx={{
-                  borderRadius: 3,
-                  border: "1px solid #eee",
-                  transition: "0.3s",
-                  position: "relative",
-                  "&:hover": {
-                    transform: "translateY(-6px)",
-                    boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-                    borderColor: "#d70018",
-                  },
+                  position: "absolute",
+                  top: 10,
+                  right: 10,
                 }}
               >
-                {item.discount && (
-                  <Chip
-                    label={`-${item.discount}%`}
-                    sx={{
-                      position: "absolute",
-                      top: 12,
-                      left: 12,
-                      background: "#d70018",
-                      color: "#fff",
-                      fontWeight: 700,
-                    }}
-                  />
-                )}
+                <FavoriteBorderIcon />
+              </IconButton>
 
+              <Link
+                to={`/product/${item.id}`}
+                style={{ textDecoration: "none" }}
+              >
                 <CardMedia
                   component="img"
                   image={item.img}
@@ -203,43 +308,57 @@ const ProductList = () => {
                     p: 3,
                   }}
                 />
+              </Link>
 
-                <CardContent>
-                  <Typography
-                    sx={{
-                      fontSize: 14,
-                      fontWeight: 600,
-                      mb: 1,
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                      minHeight: 40,
-                    }}
-                  >
-                    {item.name}
-                  </Typography>
+              <CardContent>
+                <Typography
+                  sx={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    mb: 1,
+                    minHeight: 40,
+                  }}
+                >
+                  {item.name}
+                </Typography>
 
-                  <Typography
-                    sx={{
-                      color: "#d70018",
-                      fontWeight: "bold",
-                      fontSize: 17,
-                    }}
-                  >
-                    {formatPrice(item.price)}
-                  </Typography>
+                <Rating
+                  value={item.rating || 4}
+                  precision={0.5}
+                  readOnly
+                  size="small"
+                />
 
-                  <Typography fontSize={12} color="gray" mt={0.5}>
-                    Đã bán {item.sold ?? 0}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Link>
+                <Typography
+                  sx={{
+                    color: "#d70018",
+                    fontWeight: "bold",
+                    fontSize: 17,
+                    mt: 1,
+                  }}
+                >
+                  {formatPrice(item.price)}
+                </Typography>
+
+                <Typography fontSize={12} color="gray">
+                  Đã bán {item.sold ?? 0}
+                </Typography>
+
+                <Button
+                  fullWidth
+                  variant="contained"
+                  startIcon={<ShoppingCartIcon />}
+                  sx={{ mt: 1.5, backgroundColor: "#d70018" }}
+                  onClick={() => addToCart(item)}
+                >
+                  Thêm giỏ
+                </Button>
+              </CardContent>
+            </Card>
           ))}
         </Box>
 
-        {/* Pagination */}
+        {/* PAGINATION */}
         <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
           <Pagination
             count={totalPages}
