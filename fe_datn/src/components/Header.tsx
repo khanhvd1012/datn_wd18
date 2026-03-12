@@ -5,7 +5,11 @@ import {
   Typography,
   InputBase,
   IconButton,
-  Button
+  Button,
+  Badge,
+  Avatar,
+  Menu,
+  MenuItem
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
@@ -21,22 +25,55 @@ import logo3 from "../img/logo3.png";
 const Header = () => {
 
   const [user, setUser] = useState<any>(null);
+  const [cartCount, setCartCount] = useState(0);
+
+  const [search, setSearch] = useState("");
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
+
     const storedUser = localStorage.getItem("user");
+
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
+
+    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+    setCartCount(cart.length);
+
   }, []);
 
   const handleLogout = () => {
+
     localStorage.removeItem("user");
     setUser(null);
+
     navigate("/");
+
+  };
+
+  const handleSearch = () => {
+
+    if (!search.trim()) return;
+
+    navigate(`/search?q=${search}`);
+
+  };
+
+  const openMenu = (e: any) => {
+    setAnchorEl(e.currentTarget);
+  };
+
+  const closeMenu = () => {
+    setAnchorEl(null);
   };
 
   return (
+
     <AppBar position="static" sx={{ backgroundColor: "#222" }}>
 
       <Toolbar sx={{ justifyContent: "space-between" }}>
@@ -66,14 +103,18 @@ const Header = () => {
             mx: 4
           }}
         >
+
           <InputBase
             placeholder="Nhập mã hoặc tên sản phẩm cần tìm?"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             sx={{ flex: 1 }}
           />
 
-          <IconButton>
+          <IconButton onClick={handleSearch}>
             <SearchIcon />
           </IconButton>
+
         </Box>
 
         {/* RIGHT */}
@@ -97,28 +138,51 @@ const Header = () => {
             </Typography>
           </Box>
 
-          {/* ORDERS */}
-          {user && (
-            <Button
-              component={Link}
-              to="/orders"
-              startIcon={<ReceiptLongIcon />}
-              sx={{ color: "#fff" }}
-            >
-              Đơn hàng
-            </Button>
-          )}
 
-          {/* LOGIN / LOGOUT */}
+
+          {/* LOGIN / ACCOUNT */}
           {user ? (
 
-            <Button
-              variant="outlined"
-              onClick={handleLogout}
-              sx={{ color: "#fff", borderColor: "#ff9800" }}
-            >
-              Đăng xuất
-            </Button>
+            <>
+              <IconButton onClick={openMenu}>
+
+                <Avatar
+                  src={user.avatar || "https://i.pravatar.cc/150"}
+                />
+
+              </IconButton>
+
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={closeMenu}
+              >
+
+                <MenuItem
+                  onClick={() => {
+                    navigate("/my-account");
+                    closeMenu();
+                  }}
+                >
+                  Tài khoản
+                </MenuItem>
+
+                <MenuItem
+                  onClick={() => {
+                    navigate("/orders");
+                    closeMenu();
+                  }}
+                >
+                  Đơn hàng
+                </MenuItem>
+
+                <MenuItem onClick={handleLogout}>
+                  Đăng xuất
+                </MenuItem>
+
+              </Menu>
+
+            </>
 
           ) : (
 
@@ -139,7 +203,13 @@ const Header = () => {
             to="/cart"
             sx={{ color: "#ded2ac" }}
           >
-            <ShoppingCartIcon />
+
+            <Badge badgeContent={cartCount} color="error">
+
+              <ShoppingCartIcon />
+
+            </Badge>
+
           </IconButton>
 
         </Box>
@@ -147,6 +217,7 @@ const Header = () => {
       </Toolbar>
 
     </AppBar>
+
   );
 };
 

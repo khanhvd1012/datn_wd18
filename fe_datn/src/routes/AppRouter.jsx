@@ -1,6 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 
-// CLIENT
+/* CLIENT */
 import Home from "../pages/home/Home";
 import ProductList from "../pages/product/ProductList";
 import ProductDetail from "../pages/product/ProductDetail";
@@ -14,16 +14,18 @@ import OrderSuccess from "../pages/OrderSuccess";
 
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
-import Profile from "../pages/Profile";
 
-// ADMIN
+import Profile from "../pages/Profile";
+import MyAccount from "../pages/account/MyAccount";
+
+/* ADMIN */
 import Users from "../pages/admin/Users";
 import AdminProducts from "../pages/admin/AdminProducts";
 import Banner from "../pages/admin/Banner";
 import Category from "../pages/admin/Category";
 import Dashboard from "../pages/admin/Dashboard";
 
-// LAYOUT
+/* LAYOUT */
 import ClientLayout from "../layouts/ClientLayout";
 import AdminLayout from "../layouts/AdminLayout";
 
@@ -37,12 +39,17 @@ const AppRouter = () => {
       {/* CLIENT */}
       <Route path="/" element={<ClientLayout />}>
 
-        {/* ai cũng xem được */}
+        {/* PUBLIC */}
         <Route index element={<Home />} />
         <Route path="products" element={<ProductList />} />
         <Route path="product/:id" element={<ProductDetail />} />
 
-        {/* cần login */}
+        {/* AUTH */}
+        <Route path="login" element={<Login />} />
+        <Route path="register" element={<Register />} />
+
+        {/* NEED LOGIN */}
+
         <Route
           path="cart"
           element={
@@ -79,18 +86,30 @@ const AppRouter = () => {
           }
         />
 
-        <Route path="order-success" element={<OrderSuccess />} />
-
-        {/* AUTH */}
-        <Route path="login" element={<Login />} />
-        <Route path="register" element={<Register />} />
-
-        {/* PROFILE */}
         <Route
           path="profile"
           element={
             <PrivateRoute>
               <Profile />
+            </PrivateRoute>
+          }
+        />
+
+        {/* MY ACCOUNT */}
+        <Route
+          path="my-account"
+          element={
+            <PrivateRoute>
+              <MyAccount />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="order-success"
+          element={
+            <PrivateRoute>
+              <OrderSuccess />
             </PrivateRoute>
           }
         />
