@@ -2,41 +2,49 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 import {
-  Container,
-  Typography,
-  Box,
-  TextField,
-  Button,
-  Divider,
-  Card,
-  CardContent,
-  Grid,
-  Avatar,
-  Paper,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-  CircularProgress,
-  Snackbar,
-  Alert,
-  IconButton
+Container,
+Typography,
+Box,
+TextField,
+Button,
+Divider,
+Card,
+CardContent,
+Grid,
+Avatar,
+Paper,
+RadioGroup,
+FormControlLabel,
+Radio,
+CircularProgress,
+IconButton,
+Chip,
+InputAdornment,
+Stepper,
+Step,
+StepLabel
 } from "@mui/material";
 
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import PaymentsIcon from "@mui/icons-material/Payments";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 
 import { useNavigate } from "react-router-dom";
 
-interface CartItem {
-  id: number
-  productId: number
-  name: string
-  img: string
-  price: number
-  quantity: number
+interface CartItem{
+id:number
+name:string
+img:string
+price:number
+quantity:number
 }
 
-const Checkout = () => {
+const steps = ["Giỏ hàng","Thanh toán","Hoàn tất"]
+
+const Checkout = ()=>{
 
 const [cart,setCart] = useState<CartItem[]>([])
 const [name,setName] = useState("")
@@ -47,7 +55,6 @@ const [coupon,setCoupon] = useState("")
 const [couponDiscount,setCouponDiscount] = useState(0)
 const [paymentMethod,setPaymentMethod] = useState("cod")
 const [loading,setLoading] = useState(false)
-const [openSnackbar,setOpenSnackbar] = useState(false)
 
 const navigate = useNavigate()
 
@@ -56,23 +63,15 @@ useEffect(()=>{
 axios.get("http://localhost:3000/cart")
 .then(res=>setCart(res.data))
 
-const user = JSON.parse(localStorage.getItem("user") || "null")
-
-if(user){
-setName(user.name || "")
-setEmail(user.email || "")
-setPhone(user.phone || "")
-}
-
 },[])
 
 const subTotal = cart.reduce(
-(sum,item)=>sum + item.price * item.quantity,0
+(sum,item)=> sum + item.price * item.quantity ,0
 )
 
-const shippingFee = subTotal > 500000 ? 0 : 30000
-const discount = subTotal > 1000000 ? subTotal * 0.1 : 0
-const total = subTotal + shippingFee - discount - couponDiscount
+const shipping = subTotal > 500000 ? 0 : 30000
+
+const total = subTotal + shipping - couponDiscount
 
 const updateQuantity = async(id:number,newQuantity:number)=>{
 
@@ -100,7 +99,7 @@ setCart(prev => prev.filter(item => item.id !== id))
 const applyCoupon = ()=>{
 
 if(coupon === "SALE10"){
-setCouponDiscount(subTotal*0.1)
+setCouponDiscount(100000)
 alert("Áp dụng mã thành công")
 }else{
 alert("Mã không hợp lệ")
@@ -108,14 +107,17 @@ alert("Mã không hợp lệ")
 
 }
 
-const handlePlaceOrder = async()=>{
+const handleOrder = async()=>{
+
+if(cart.length === 0){
+alert("Giỏ hàng trống")
+return
+}
 
 if(!name || !phone || !address){
 alert("Nhập đầy đủ thông tin")
 return
 }
-
-try{
 
 setLoading(true)
 
@@ -128,6 +130,7 @@ address,
 paymentMethod,
 items:cart,
 total,
+status:"pending",
 createdAt:new Date()
 
 })
@@ -138,79 +141,75 @@ axios.delete(`http://localhost:3000/cart/${item.id}`)
 )
 )
 
-setOpenSnackbar(true)
-
-setTimeout(()=>{
 navigate("/order-success")
-},1500)
-
-}catch{
-
-alert("Lỗi đặt hàng")
-
-}finally{
-
-setLoading(false)
-
-}
 
 }
 
 return(
 
-<Box sx={{background:"#f5f5f5",minHeight:"100vh",py:5}}>
+<Box
+sx={{
+background:"#f4f6f8",
+minHeight:"100vh",
+display:"flex",
+alignItems:"center",
+justifyContent:"center",
+py:6
+}}
+>
 
 <Container maxWidth="lg">
 
-{/* HEADER */}
-
-<Box mb={4}>
-
-<Typography variant="h4" fontWeight="bold">
-Thanh toán
-</Typography>
-
-<Typography color="text.secondary">
-Hoàn tất thông tin để đặt hàng
-</Typography>
-
-</Box>
-
-{/* STEP CHECKOUT */}
-
-<Box
-display="flex"
-justifyContent="center"
-gap={6}
+<Typography
+variant="h4"
+fontWeight="bold"
+textAlign="center"
 mb={4}
 >
-
-<Typography color="success.main">
-✓ Giỏ hàng
+Thanh toán đơn hàng
 </Typography>
 
-<Typography fontWeight="bold">
-● Thanh toán
-</Typography>
+<Stepper activeStep={1} sx={{mb:5}}>
+{steps.map(step=>(
+<Step key={step}>
+<StepLabel>{step}</StepLabel>
+</Step>
+))}
+</Stepper>
 
-<Typography color="gray">
-○ Hoàn tất
-</Typography>
-
-</Box>
-
-<Grid container spacing={4}>
-
-{/* LEFT - CART */}
+<Grid container spacing={4} justifyContent="center">
 
 <Grid item xs={12} md={7}>
 
-<Card sx={{borderRadius:3}}>
+<Box
+sx={{
+background:"#e3f2fd",
+p:2,
+borderRadius:2,
+mb:2
+}}
+>
+<Typography fontWeight="bold" color="#1976d2">
+🚚 Miễn phí vận chuyển cho đơn trên 500.000₫
+</Typography>
+</Box>
+
+<Card
+sx={{
+borderRadius:4,
+boxShadow:3,
+transition:"0.3s",
+"&:hover":{
+boxShadow:8,
+transform:"translateY(-3px)"
+}
+}}
+>
 
 <CardContent>
 
 <Typography variant="h6" fontWeight="bold" mb={2}>
-Sản phẩm của bạn
+Sản phẩm ({cart.length})
 </Typography>
 
 {cart.map(item=>(
@@ -221,6 +220,10 @@ display="flex"
 justifyContent="space-between"
 alignItems="center"
 py={2}
+sx={{
+borderBottom:"1px solid #eee",
+"&:hover":{background:"#fafafa"}
+}}
 >
 
 <Box display="flex" gap={2}>
@@ -228,16 +231,27 @@ py={2}
 <Avatar
 src={item.img}
 variant="rounded"
-sx={{width:70,height:70}}
+sx={{width:80,height:80}}
 />
 
 <Box>
+
+<Box display="flex" alignItems="center" gap={1}>
 
 <Typography fontWeight="bold">
 {item.name}
 </Typography>
 
-<Typography color="#d70018" fontWeight="bold">
+<Chip
+icon={<LocalOfferIcon/>}
+label="-10%"
+size="small"
+color="error"
+/>
+
+</Box>
+
+<Typography color="#d70018">
 {item.price.toLocaleString()}₫
 </Typography>
 
@@ -265,12 +279,20 @@ onClick={()=>updateQuantity(item.id,item.quantity+1)}
 
 </Box>
 
-<Button
+<Box textAlign="right">
+
+<Typography fontWeight="bold">
+{(item.price * item.quantity).toLocaleString()}₫
+</Typography>
+
+<IconButton
 color="error"
 onClick={()=>removeItem(item.id)}
 >
-Xóa
-</Button>
+<DeleteIcon/>
+</IconButton>
+
+</Box>
 
 </Box>
 
@@ -282,14 +304,13 @@ Xóa
 
 </Grid>
 
-{/* RIGHT - SUMMARY */}
-
 <Grid item xs={12} md={5}>
 
 <Paper
 sx={{
 p:4,
-borderRadius:3,
+borderRadius:4,
+boxShadow:5,
 position:"sticky",
 top:20
 }}
@@ -329,12 +350,46 @@ onChange={e=>setAddress(e.target.value)}
 fullWidth
 />
 
+<TextField
+label="Mã giảm giá"
+value={coupon}
+onChange={e=>setCoupon(e.target.value)}
+InputProps={{
+endAdornment:(
+<InputAdornment position="end">
+<Button onClick={applyCoupon}>
+Áp dụng
+</Button>
+</InputAdornment>
+)
+}}
+/>
+
+<Box mt={1} display="flex" gap={1} flexWrap="wrap">
+
+<Chip
+label="SALE10 - Giảm 100k"
+color="success"
+onClick={()=>{
+setCoupon("SALE10")
+setCouponDiscount(100000)
+}}
+/>
+
+<Chip
+label="FREESHIP"
+color="primary"
+onClick={()=>alert("Miễn phí vận chuyển")}
+/>
+
+</Box>
+
 </Box>
 
 <Divider sx={{my:3}}/>
 
 <Typography fontWeight="bold" mb={2}>
-Phương thức thanh toán
+Thanh toán
 </Typography>
 
 <RadioGroup
@@ -345,25 +400,23 @@ onChange={e=>setPaymentMethod(e.target.value)}
 <FormControlLabel
 value="cod"
 control={<Radio/>}
-label="Thanh toán khi nhận hàng"
-/>
-
-<FormControlLabel
-value="bank"
-control={<Radio/>}
-label="Chuyển khoản"
+label={
+<Box display="flex" alignItems="center" gap={1}>
+<PaymentsIcon/>
+Thanh toán khi nhận hàng
+</Box>
+}
 />
 
 <FormControlLabel
 value="momo"
 control={<Radio/>}
-label="Ví MoMo"
-/>
-
-<FormControlLabel
-value="vnpay"
-control={<Radio/>}
-label="VNPay"
+label={
+<Box display="flex" alignItems="center" gap={1}>
+<AccountBalanceWalletIcon/>
+Ví MoMo
+</Box>
+}
 />
 
 </RadioGroup>
@@ -378,38 +431,59 @@ label="VNPay"
 <Box display="flex" justifyContent="space-between">
 <Typography>Phí ship</Typography>
 <Typography>
-{shippingFee === 0 ? "Miễn phí" : shippingFee.toLocaleString()+"₫"}
+{shipping === 0 ? "Miễn phí" : shipping.toLocaleString()+"₫"}
 </Typography>
 </Box>
+
+{couponDiscount > 0 &&(
+
+<Box display="flex" justifyContent="space-between">
+
+<Typography>Giảm giá</Typography>
+
+<Typography color="green">
+-{couponDiscount.toLocaleString()}₫
+</Typography>
+
+</Box>
+
+)}
 
 <Divider sx={{my:2}}/>
 
 <Box display="flex" justifyContent="space-between" mb={3}>
 
-<Typography variant="h6">
+<Typography fontWeight="bold">
 Tổng tiền
 </Typography>
 
 <Typography
-variant="h6"
-color="#d70018"
 fontWeight="bold"
+fontSize={22}
+color="#d70018"
 >
 {total.toLocaleString()}₫
 </Typography>
 
 </Box>
 
+<Box mb={2}>
+<Typography fontSize={14} color="text.secondary">
+🚚 Giao hàng dự kiến: 2 - 4 ngày
+</Typography>
+</Box>
+
 <Button
 fullWidth
 variant="contained"
 sx={{
-background:"#d70018",
+background:"linear-gradient(45deg,#ff512f,#dd2476)",
 py:1.5,
+fontSize:16,
 fontWeight:"bold",
-fontSize:16
+borderRadius:3
 }}
-onClick={handlePlaceOrder}
+onClick={handleOrder}
 disabled={loading}
 >
 
@@ -426,12 +500,6 @@ disabled={loading}
 </Grid>
 
 </Container>
-
-<Snackbar open={openSnackbar} autoHideDuration={2000}>
-<Alert severity="success">
-Đặt hàng thành công
-</Alert>
-</Snackbar>
 
 </Box>
 

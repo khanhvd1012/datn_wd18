@@ -5,7 +5,6 @@ import {
   CardMedia,
   CardContent,
   Typography,
-  Chip,
   Select,
   MenuItem,
   Pagination,
@@ -13,364 +12,388 @@ import {
   Stack,
   FormControl,
   InputLabel,
-  Breadcrumbs,
   TextField,
   Rating,
+  Snackbar,
+  Alert,
+  Chip,
   IconButton,
+  InputAdornment
 } from "@mui/material";
 
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
+import SearchIcon from "@mui/icons-material/Search";
 
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 
 interface Product {
   id: number;
   name: string;
   img: string;
   price: number;
+  category?: string;
   sold?: number;
   discount?: number;
   rating?: number;
-  category?: string;
-  subCategory?: string;
 }
 
 const ProductList = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [sortType, setSortType] = useState("default");
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [priceFilter, setPriceFilter] = useState("all");
 
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const queryParams = new URLSearchParams(location.search);
-  const category = queryParams.get("category");
-  const sub = queryParams.get("sub");
+  const [products,setProducts] = useState<Product[]>([]);
+  const [page,setPage] = useState(1);
+  const [search,setSearch] = useState("");
+  const [sortType,setSortType] = useState("default");
+  const [open,setOpen] = useState(false);
 
   const productsPerPage = 8;
 
-  // ================= LẤY SẢN PHẨM =================
-  useEffect(() => {
-    let url = "http://localhost:3000/products";
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
-    if (category) url += `?category=${category}`;
-    if (sub) url += `${category ? "&" : "?"}subCategory=${sub}`;
+  const category = searchParams.get("category");
 
-    fetch(url)
-      .then((res) => res.json())
-      .then((data) => {
-        setProducts(data);
-        setPage(1);
-      });
-  }, [category, sub]);
+  useEffect(()=>{
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [page]);
+    fetch("http://localhost:3000/products")
+      .then(res=>res.json())
+      .then(data=>setProducts(data))
 
-  const formatPrice = (price: number) =>
-    price.toLocaleString("vi-VN") + " đ";
+  },[])
 
-  // ================= FILTER + SORT =================
-  const filteredProducts = useMemo(() => {
+  const formatPrice = (price:number)=>
+    price.toLocaleString("vi-VN")+" đ";
+
+  const filteredProducts = useMemo(()=>{
+
     let filtered = [...products];
 
-    if (search) {
-      filtered = filtered.filter((p) =>
+    // lọc category
+    if(category){
+      filtered = filtered.filter(p=>p.category===category)
+    }
+
+    // search
+    if(search){
+      filtered = filtered.filter(p=>
         p.name.toLowerCase().includes(search.toLowerCase())
-      );
+      )
     }
 
-    if (priceFilter === "1") {
-      filtered = filtered.filter((p) => p.price < 1000000);
-    }
+    // sort
+    if(sortType==="priceAsc")
+      filtered.sort((a,b)=>a.price-b.price)
 
-    if (priceFilter === "5") {
-      filtered = filtered.filter(
-        (p) => p.price >= 1000000 && p.price <= 5000000
-      );
-    }
+    if(sortType==="priceDesc")
+      filtered.sort((a,b)=>b.price-a.price)
 
-    if (priceFilter === "10") {
-      filtered = filtered.filter((p) => p.price > 5000000);
-    }
+    return filtered
 
-    if (sortType === "priceAsc")
-      filtered.sort((a, b) => a.price - b.price);
+  },[products,search,sortType,category])
 
-    if (sortType === "priceDesc")
-      filtered.sort((a, b) => b.price - a.price);
-
-    if (sortType === "soldDesc")
-      filtered.sort((a, b) => (b.sold ?? 0) - (a.sold ?? 0));
-
-    return filtered;
-  }, [products, sortType, search, priceFilter]);
-
-  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+  const totalPages = Math.ceil(filteredProducts.length/productsPerPage)
 
   const displayedProducts = filteredProducts.slice(
-    (page - 1) * productsPerPage,
-    page * productsPerPage
-  );
+    (page-1)*productsPerPage,
+    page*productsPerPage
+  )
 
-  // ================= ADD TO CART =================
-  const addToCart = async (product: Product) => {
+  const addToCart = async(product:Product)=>{
+
     const res = await fetch(
       `http://localhost:3000/cart?productId=${product.id}`
-    );
-    const data = await res.json();
+    )
 
-    if (data.length > 0) {
-      const item = data[0];
+    const data = await res.json()
 
-      await fetch(`http://localhost:3000/cart/${item.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          quantity: item.quantity + 1,
-        }),
-      });
-    } else {
-      await fetch(`http://localhost:3000/cart`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productId: product.id,
-          name: product.name,
-          img: product.img,
-          price: product.price,
-          quantity: 1,
-        }),
-      });
+    if(data.length>0){
+
+      const item = data[0]
+
+      await fetch(`http://localhost:3000/cart/${item.id}`,{
+        method:"PATCH",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({
+          quantity:item.quantity+1
+        })
+      })
+
+    }else{
+
+      await fetch(`http://localhost:3000/cart`,{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({
+          productId:product.id,
+          name:product.name,
+          img:product.img,
+          price:product.price,
+          quantity:1
+        })
+      })
+
     }
-  };
 
-  return (
-    <Box sx={{ backgroundColor: "#f2f4f7", py: 4 }}>
-      <Box sx={{ maxWidth: "1300px", mx: "auto", px: 2 }}>
+    setOpen(true)
 
-        {/* Breadcrumb */}
-        <Breadcrumbs sx={{ mb: 2 }}>
-          <Link to="/" style={{ textDecoration: "none", color: "#666" }}>
-            Trang chủ
-          </Link>
+  }
 
-          <Typography color="text.primary">
-            {category ? decodeURIComponent(category) : "Tất cả sản phẩm"}
-          </Typography>
-        </Breadcrumbs>
+  return(
 
-        {/* HEADER */}
-        <Box
+    <Box sx={{maxWidth:1300,mx:"auto",p:3,background:"#fafafa"}}>
+
+      {/* CATEGORY FILTER */}
+
+      {category && (
+
+        <Stack direction="row" spacing={2} mb={2}>
+
+          <Chip
+            label={`Danh mục: ${category}`}
+            color="primary"
+          />
+
+          <Button
+            variant="outlined"
+            onClick={()=>navigate("/products")}
+          >
+            Xóa lọc
+          </Button>
+
+        </Stack>
+
+      )}
+
+      {/* SEARCH + SORT */}
+
+      <Stack
+        direction={{ xs:"column", md:"row" }}
+        spacing={2}
+        mb={4}
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{
+          background:"#fff",
+          padding:"18px",
+          borderRadius:"12px",
+          boxShadow:"0 4px 12px rgba(0,0,0,0.05)"
+        }}
+      >
+
+        <TextField
+          size="small"
+          placeholder="Tìm sản phẩm..."
+          value={search}
+          onChange={(e)=>setSearch(e.target.value)}
           sx={{
-            background: "#fff",
-            borderRadius: 3,
-            p: 3,
-            mb: 3,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+            width:{ xs:"100%", md:320 },
+            background:"#f5f5f5",
+            borderRadius:"8px"
+          }}
+          InputProps={{
+            startAdornment:(
+              <InputAdornment position="start">
+                <SearchIcon/>
+              </InputAdornment>
+            )
+          }}
+        />
+
+        <FormControl
+          size="small"
+          sx={{
+            width:200,
+            background:"#f5f5f5",
+            borderRadius:"8px"
           }}
         >
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-            flexWrap="wrap"
-            gap={2}
+          <InputLabel>Sắp xếp</InputLabel>
+
+          <Select
+            value={sortType}
+            label="Sắp xếp"
+            onChange={(e)=>setSortType(e.target.value)}
           >
-            <Box>
-              <Typography variant="h5" fontWeight={700}>
-                {category
-                  ? decodeURIComponent(category)
-                  : "TẤT CẢ SẢN PHẨM"}
-              </Typography>
+            <MenuItem value="default">Mặc định</MenuItem>
+            <MenuItem value="priceAsc">Giá tăng dần</MenuItem>
+            <MenuItem value="priceDesc">Giá giảm dần</MenuItem>
+          </Select>
 
-              <Typography fontSize={13} color="gray">
-                {filteredProducts.length} sản phẩm
-              </Typography>
-            </Box>
+        </FormControl>
 
-            <Stack direction="row" spacing={2} flexWrap="wrap">
+      </Stack>
 
-              <TextField
+      {/* PRODUCT GRID */}
+
+      <Box
+        sx={{
+          display:"grid",
+          gridTemplateColumns:{
+            xs:"repeat(2,1fr)",
+            sm:"repeat(3,1fr)",
+            md:"repeat(4,1fr)"
+          },
+          gap:3
+        }}
+      >
+
+        {displayedProducts.map(item=>(
+
+          <Card
+            key={item.id}
+            sx={{
+              borderRadius:3,
+              overflow:"hidden",
+              background:"#fff",
+              border:"1px solid #eee",
+              position:"relative",
+              transition:"all .3s",
+              "&:hover":{
+                transform:"translateY(-6px)",
+                boxShadow:"0 12px 25px rgba(0,0,0,0.12)"
+              }
+            }}
+          >
+
+            {item.discount &&(
+
+              <Chip
+                label={`-${item.discount}%`}
+                color="error"
                 size="small"
-                placeholder="Tìm sản phẩm..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                sx={{
+                  position:"absolute",
+                  top:10,
+                  left:10,
+                  fontWeight:"bold"
+                }}
               />
 
-              <FormControl size="small">
-                <InputLabel>Giá</InputLabel>
-                <Select
-                  value={priceFilter}
-                  label="Giá"
-                  onChange={(e) => setPriceFilter(e.target.value)}
-                >
-                  <MenuItem value="all">Tất cả</MenuItem>
-                  <MenuItem value="1">Dưới 1 triệu</MenuItem>
-                  <MenuItem value="5">1 - 5 triệu</MenuItem>
-                  <MenuItem value="10">Trên 5 triệu</MenuItem>
-                </Select>
-              </FormControl>
+            )}
 
-              <FormControl size="small">
-                <InputLabel>Sắp xếp</InputLabel>
-                <Select
-                  value={sortType}
-                  label="Sắp xếp"
-                  onChange={(e) => setSortType(e.target.value)}
-                >
-                  <MenuItem value="default">Mặc định</MenuItem>
-                  <MenuItem value="priceAsc">Giá tăng</MenuItem>
-                  <MenuItem value="priceDesc">Giá giảm</MenuItem>
-                  <MenuItem value="soldDesc">Bán chạy</MenuItem>
-                </Select>
-              </FormControl>
-
-              <Button
-                variant="contained"
-                sx={{ backgroundColor: "#d70018" }}
-                onClick={() => navigate("/")}
-              >
-                Trang chủ
-              </Button>
-            </Stack>
-          </Stack>
-        </Box>
-
-        {/* GRID PRODUCT */}
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "repeat(1,1fr)",
-              sm: "repeat(2,1fr)",
-              md: "repeat(3,1fr)",
-              lg: "repeat(4,1fr)",
-            },
-            gap: 3,
-          }}
-        >
-          {displayedProducts.map((item) => (
-            <Card
-              key={item.id}
+            <IconButton
               sx={{
-                borderRadius: 3,
-                border: "1px solid #eee",
-                position: "relative",
-                transition: "0.3s",
-                "&:hover": {
-                  transform: "translateY(-6px)",
-                  boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-                  borderColor: "#d70018",
-                },
+                position:"absolute",
+                top:8,
+                right:8,
+                bgcolor:"#fff"
               }}
             >
-              {item.discount && (
-                <Chip
-                  label={`-${item.discount}%`}
-                  sx={{
-                    position: "absolute",
-                    top: 10,
-                    left: 10,
-                    background: "#d70018",
-                    color: "#fff",
-                    fontWeight: 700,
-                  }}
-                />
-              )}
+              <FavoriteBorderIcon/>
+            </IconButton>
 
-              <IconButton
+            <Link to={`/product/${item.id}`}>
+
+              <CardMedia
+                component="img"
+                image={item.img}
+                onError={(e:any)=>{
+                  e.target.src="https://via.placeholder.com/200"
+                }}
                 sx={{
-                  position: "absolute",
-                  top: 10,
-                  right: 10,
+                  height:200,
+                  objectFit:"contain",
+                  p:2
+                }}
+              />
+
+            </Link>
+
+            <CardContent>
+
+              <Typography
+                sx={{
+                  fontSize:15,
+                  fontWeight:500,
+                  minHeight:40
                 }}
               >
-                <FavoriteBorderIcon />
-              </IconButton>
+                {item.name}
+              </Typography>
 
-              <Link
-                to={`/product/${item.id}`}
-                style={{ textDecoration: "none" }}
+              <Rating
+                value={item.rating || 4}
+                readOnly
+                size="small"
+              />
+
+              <Typography
+                sx={{
+                  fontSize:13,
+                  color:"#666",
+                  display:"flex",
+                  alignItems:"center",
+                  gap:0.5
+                }}
               >
-                <CardMedia
-                  component="img"
-                  image={item.img}
-                  alt={item.name}
-                  sx={{
-                    height: 220,
-                    objectFit: "contain",
-                    backgroundColor: "#fafafa",
-                    p: 3,
-                  }}
+                <LocalFireDepartmentIcon
+                  sx={{fontSize:16,color:"#ff6d00"}}
                 />
-              </Link>
+                Đã bán {item.sold || 0}
+              </Typography>
 
-              <CardContent>
-                <Typography
-                  sx={{
-                    fontSize: 14,
-                    fontWeight: 600,
-                    mb: 1,
-                    minHeight: 40,
-                  }}
-                >
-                  {item.name}
-                </Typography>
+              <Typography
+                sx={{
+                  color:"#d70018",
+                  fontWeight:700,
+                  fontSize:18,
+                  mt:1
+                }}
+              >
+                {formatPrice(item.price)}
+              </Typography>
 
-                <Rating
-                  value={item.rating || 4}
-                  precision={0.5}
-                  readOnly
-                  size="small"
-                />
+              <Button
+                fullWidth
+                variant="contained"
+                startIcon={<ShoppingCartIcon/>}
+                sx={{
+                  mt:1.5,
+                  backgroundColor:"#d70018",
+                  textTransform:"none"
+                }}
+                onClick={()=>addToCart(item)}
+              >
+                Thêm vào giỏ
+              </Button>
 
-                <Typography
-                  sx={{
-                    color: "#d70018",
-                    fontWeight: "bold",
-                    fontSize: 17,
-                    mt: 1,
-                  }}
-                >
-                  {formatPrice(item.price)}
-                </Typography>
+            </CardContent>
 
-                <Typography fontSize={12} color="gray">
-                  Đã bán {item.sold ?? 0}
-                </Typography>
+          </Card>
 
-                <Button
-                  fullWidth
-                  variant="contained"
-                  startIcon={<ShoppingCartIcon />}
-                  sx={{ mt: 1.5, backgroundColor: "#d70018" }}
-                  onClick={() => addToCart(item)}
-                >
-                  Thêm giỏ
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </Box>
+        ))}
 
-        {/* PAGINATION */}
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
-          <Pagination
-            count={totalPages}
-            page={page}
-            onChange={(e, value) => setPage(value)}
-            shape="rounded"
-            size="large"
-          />
-        </Box>
       </Box>
-    </Box>
-  );
-};
 
-export default ProductList;
+      {/* PAGINATION */}
+
+      <Box sx={{display:"flex",justifyContent:"center",mt:4}}>
+
+        <Pagination
+          count={totalPages}
+          page={page}
+          onChange={(e,value)=>setPage(value)}
+        />
+
+      </Box>
+
+      {/* ALERT */}
+
+      <Snackbar
+        open={open}
+        autoHideDuration={2000}
+        onClose={()=>setOpen(false)}
+      >
+        <Alert severity="success">
+          Đã thêm sản phẩm vào giỏ hàng
+        </Alert>
+      </Snackbar>
+
+    </Box>
+
+  )
+
+}
+
+export default ProductList

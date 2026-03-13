@@ -10,7 +10,8 @@ import {
   Divider,
   Button,
   Stack,
-  Chip
+  Chip,
+  CircularProgress
 } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -24,25 +25,41 @@ const OrderDetail = () => {
   useEffect(() => {
     axios
       .get(`http://localhost:3000/orders/${id}`)
-      .then(res => setOrder(res.data));
-  }, [id]);
+      .then(res => setOrder(res.data))
+      .catch(() => navigate("/404"));
+  }, [id, navigate]);
 
-  if (!order)
+  if (!order) {
     return (
-      <Typography textAlign="center" mt={10}>
-        Loading...
-      </Typography>
+      <Box textAlign="center" mt={10}>
+        <CircularProgress />
+        <Typography mt={2}>Đang tải đơn hàng...</Typography>
+      </Box>
     );
+  }
+
+  const getStatus = (status) => {
+    switch (status) {
+      case "pending":
+        return { label: "Chờ xác nhận", color: "#ff9800" };
+      case "shipping":
+        return { label: "Đang giao", color: "#2196f3" };
+      case "completed":
+        return { label: "Hoàn thành", color: "#4caf50" };
+      case "cancel":
+        return { label: "Đã hủy", color: "#f44336" };
+      default:
+        return { label: "Đã đặt hàng", color: "#ff5722" };
+    }
+  };
+
+  const status = getStatus(order.status);
 
   return (
     <Container sx={{ py: 6, maxWidth: "950px" }}>
 
       {/* TITLE */}
-      <Typography
-        variant="h4"
-        fontWeight="bold"
-        mb={4}
-      >
+      <Typography variant="h4" fontWeight="bold" mb={4}>
         Chi tiết đơn hàng #{order.id}
       </Typography>
 
@@ -74,6 +91,7 @@ const OrderDetail = () => {
             >
 
               <Box>
+
                 <Typography fontWeight="bold">
                   Người nhận: {order.customerName}
                 </Typography>
@@ -89,12 +107,13 @@ const OrderDetail = () => {
                 <Typography color="text.secondary">
                   Ngày đặt: {new Date(order.createdAt).toLocaleString()}
                 </Typography>
+
               </Box>
 
               <Chip
-                label="Đã đặt hàng"
+                label={status.label}
                 sx={{
-                  background: "#ff5722",
+                  background: status.color,
                   color: "#fff",
                   fontWeight: "bold",
                   height: 32
@@ -106,11 +125,7 @@ const OrderDetail = () => {
           </Box>
 
           {/* PRODUCT LIST */}
-          <Typography
-            variant="h6"
-            fontWeight="bold"
-            mb={2}
-          >
+          <Typography variant="h6" fontWeight="bold" mb={2}>
             Sản phẩm trong đơn
           </Typography>
 
@@ -171,10 +186,11 @@ const OrderDetail = () => {
 
           ))}
 
+          <Divider sx={{ my: 3 }} />
+
           {/* TOTAL */}
           <Box
             sx={{
-              mt: 3,
               p: 3,
               background: "#fff7f4",
               borderRadius: 3,
@@ -182,11 +198,7 @@ const OrderDetail = () => {
             }}
           >
 
-            <Typography
-              fontSize={22}
-              fontWeight="bold"
-              color="#ff5722"
-            >
+            <Typography fontSize={22} fontWeight="bold" color="#ff5722">
               Tổng tiền: {order.total?.toLocaleString()}₫
             </Typography>
 
@@ -195,22 +207,33 @@ const OrderDetail = () => {
           {/* BUTTON */}
           <Box mt={4} textAlign="right">
 
-            <Button
-              variant="contained"
-              onClick={() => navigate("/orders")}
-              sx={{
-                background: "#ff5722",
-                px: 4,
-                py: 1,
-                borderRadius: 2,
-                fontWeight: "bold",
-                "&:hover": {
-                  background: "#e64a19"
-                }
-              }}
-            >
-              Quay lại đơn hàng
-            </Button>
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
+
+              <Button
+                variant="outlined"
+                onClick={() => navigate("/account")}
+              >
+                Tài khoản
+              </Button>
+
+              <Button
+                variant="contained"
+                onClick={() => navigate("/orders")}
+                sx={{
+                  background: "#ff5722",
+                  px: 4,
+                  py: 1,
+                  borderRadius: 2,
+                  fontWeight: "bold",
+                  "&:hover": {
+                    background: "#e64a19"
+                  }
+                }}
+              >
+                Quay lại đơn hàng
+              </Button>
+
+            </Stack>
 
           </Box>
 

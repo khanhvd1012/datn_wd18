@@ -4,14 +4,18 @@ import {
   Typography,
   Button,
   Paper,
-  Stack
+  Stack,
+  Divider
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const OrderSuccess = () => {
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const order = location.state?.order;
 
   return (
 
@@ -32,7 +36,7 @@ const OrderSuccess = () => {
           p: 6,
           borderRadius: 4,
           textAlign: "center",
-          maxWidth: 500,
+          maxWidth: 520,
           width: "100%"
         }}
       >
@@ -48,21 +52,36 @@ const OrderSuccess = () => {
         />
 
         {/* TITLE */}
-        <Typography
-          variant="h4"
-          fontWeight="bold"
-        >
+        <Typography variant="h4" fontWeight="bold">
           Đặt hàng thành công
         </Typography>
 
         {/* DESC */}
-        <Typography
-          color="text.secondary"
-          sx={{ mt: 2, mb: 4 }}
-        >
-          Cảm ơn bạn đã mua hàng tại <b>Mobitech</b>.  
-          Đơn hàng của bạn đang được xử lý.
+        <Typography color="text.secondary" sx={{ mt: 2 }}>
+          Cảm ơn bạn đã mua hàng tại <b>Mobitech</b>
         </Typography>
+
+        <Divider sx={{ my: 3 }} />
+
+        {/* ORDER INFO */}
+        {order && (
+
+          <Box sx={{ textAlign: "left", mb: 3 }}>
+
+            <Typography>
+              Mã đơn hàng: <b>#{order.id}</b>
+            </Typography>
+
+            <Typography>
+              Tổng tiền:{" "}
+              <b style={{ color: "#ff5722" }}>
+                {order.total?.toLocaleString()}₫
+              </b>
+            </Typography>
+
+          </Box>
+
+        )}
 
         {/* BUTTONS */}
         <Stack
@@ -77,6 +96,19 @@ const OrderSuccess = () => {
           >
             Tiếp tục mua
           </Button>
+
+          {order && (
+            <Button
+              variant="contained"
+              onClick={() => navigate(`/orders/${order.id}`)}
+              sx={{
+                background: "#ff5722",
+                "&:hover": { background: "#e64a19" }
+              }}
+            >
+              Xem chi tiết
+            </Button>
+          )}
 
           <Button
             variant="contained"
@@ -96,7 +128,7 @@ const OrderSuccess = () => {
       <style>
         {`
           @keyframes pop {
-            0% { transform: scale(0.5); opacity:0 }
+            0% { transform: scale(0.6); opacity:0 }
             100% { transform: scale(1); opacity:1 }
           }
         `}
