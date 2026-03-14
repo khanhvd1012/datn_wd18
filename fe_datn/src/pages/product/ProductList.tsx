@@ -21,11 +21,13 @@ import {
 
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import axios from "axios";
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 interface Product {
   id: number;
+  _id?: string;
   name: string;
   img: string;
   price: number;
@@ -36,8 +38,23 @@ interface Product {
   subCategory?: string;
 }
 
+interface Variant {
+  _id: string;
+  price: number;
+  original_price?: number;
+  is_default?: boolean;
+}
+
+interface ProductWithVariants extends Product {
+  displayPrice?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  hasVariants?: boolean;
+  variantCount?: number;
+}
+
 const ProductList = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductWithVariants[]>([]);
   const [sortType, setSortType] = useState("default");
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -52,19 +69,67 @@ const ProductList = () => {
 
   const productsPerPage = 8;
 
-  // ================= LẤY SẢN PHẨM =================
+  // ================= LẤY SẢN PHẨM VÀ VARIANTS =================
   useEffect(() => {
-    let url = "http://localhost:3000/products";
+    const loadProductsWithVariants = async () => {
+      try {
+        let url = "http://localhost:3000/api/products";
+        if (category) url += `?category=${category}`;
+        if (sub) url += `${category ? "&" : "?"}subCategory=${sub}`;
 
-    if (category) url += `?category=${category}`;
-    if (sub) url += `${category ? "&" : "?"}subCategory=${sub}`;
+        const res = await fetch(url);
+        const data = await res.json();
 
-    fetch(url)
-      .then((res) => res.json())
-      .then((data) => {
-        setProducts(data);
+        // Load variants cho từng sản phẩm
+        const productsWithVariants = await Promise.all(
+          data.map(async (product: Product) => {
+            try {
+              const productId = product._id || product.id;
+              const variantsRes = await axios.get(
+                `http://localhost:3000/api/variants/product/${productId}`
+              );
+
+              if (variantsRes.data?.variants && variantsRes.data.variants.length > 0) {
+                const variants: Variant[] = variantsRes.data.variants;
+                const defaultVariant = variants.find((v) => v.is_default) || variants[0];
+                const prices = variants.map((v) => v.price);
+                const minPrice = Math.min(...prices);
+                const maxPrice = Math.max(...prices);
+
+                return {
+                  ...product,
+                  displayPrice: defaultVariant.price,
+                  minPrice,
+                  maxPrice,
+                  hasVariants: true,
+                  variantCount: variants.length,
+                };
+              }
+
+              return {
+                ...product,
+                displayPrice: product.price,
+                hasVariants: false,
+              };
+            } catch (error) {
+              // Nếu không có variants hoặc API lỗi, dùng giá mặc định
+              return {
+                ...product,
+                displayPrice: product.price,
+                hasVariants: false,
+              };
+            }
+          })
+        );
+
+        setProducts(productsWithVariants);
         setPage(1);
-      });
+      } catch (error) {
+        console.error("Lỗi load products:", error);
+      }
+    };
+
+    loadProductsWithVariants();
   }, [category, sub]);
 
   useEffect(() => {
@@ -99,10 +164,16 @@ const ProductList = () => {
     }
 
     if (sortType === "priceAsc")
-      filtered.sort((a, b) => a.price - b.price);
+      filtered.sort(
+        (a, b) =>
+          (a.displayPrice || a.price) - (b.displayPrice || b.price)
+      );
 
     if (sortType === "priceDesc")
-      filtered.sort((a, b) => b.price - a.price);
+      filtered.sort(
+        (a, b) =>
+          (b.displayPrice || b.price) - (a.displayPrice || a.price)
+      );
 
     if (sortType === "soldDesc")
       filtered.sort((a, b) => (b.sold ?? 0) - (a.sold ?? 0));
@@ -279,6 +350,25 @@ const ProductList = () => {
                     background: "#d70018",
                     color: "#fff",
                     fontWeight: 700,
+                    zIndex: 1,
+                  }}
+                />
+              )}
+
+              {/* Badge nhiều biến thể */}
+              {item.hasVariants && item.variantCount && item.variantCount > 1 && (
+                <Chip
+                  label={`${item.variantCount} biến thể`}
+                  size="small"
+                  sx={{
+                    position: "absolute",
+                    top: item.discount ? 50 : 10,
+                    left: 10,
+                    background: "#ff6a00",
+                    color: "#fff",
+                    fontSize: "0.7rem",
+                    height: 22,
+                    zIndex: 1,
                   }}
                 />
               )}
@@ -288,6 +378,7 @@ const ProductList = () => {
                   position: "absolute",
                   top: 10,
                   right: 10,
+                  zIndex: 1,
                 }}
               >
                 <FavoriteBorderIcon />
@@ -329,18 +420,36 @@ const ProductList = () => {
                   size="small"
                 />
 
-                <Typography
-                  sx={{
-                    color: "#d70018",
-                    fontWeight: "bold",
-                    fontSize: 17,
-                    mt: 1,
-                  }}
-                >
-                  {formatPrice(item.price)}
-                </Typography>
+                {/* Hiển thị giá */}
+                {item.hasVariants && item.minPrice !== item.maxPrice ? (
+                  <Box sx={{ mt: 1 }}>
+                    <Typography
+                      sx={{
+                        color: "#d70018",
+                        fontWeight: "bold",
+                        fontSize: 17,
+                      }}
+                    >
+                      {formatPrice(item.minPrice || item.displayPrice || item.price)} - {formatPrice(item.maxPrice || item.displayPrice || item.price)}
+                    </Typography>
+                    <Typography fontSize={12} color="gray" sx={{ mt: 0.5 }}>
+                      {item.variantCount} lựa chọn
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Typography
+                    sx={{
+                      color: "#d70018",
+                      fontWeight: "bold",
+                      fontSize: 17,
+                      mt: 1,
+                    }}
+                  >
+                    {formatPrice(item.displayPrice || item.price)}
+                  </Typography>
+                )}
 
-                <Typography fontSize={12} color="gray">
+                <Typography fontSize={12} color="gray" sx={{ mt: 0.5 }}>
                   Đã bán {item.sold ?? 0}
                 </Typography>
 

@@ -1,6 +1,5 @@
 import Banner from '../../components/Banner'
 import FeaturedProducts from '../../components/FeaturedProducts'
-import Footer from '../../components/Footer'
 
 import { Box, Fab } from '@mui/material'
 import ChatIcon from '@mui/icons-material/Chat'
@@ -16,7 +15,6 @@ const Home = () => {
       <FeaturedProducts />
       <Deal/>
       <ProductList/>
-      <Footer />
 
       {/* Zalo Floating Button */}
       <Box

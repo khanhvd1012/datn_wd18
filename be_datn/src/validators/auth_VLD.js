@@ -18,9 +18,8 @@ export const registerValidator = Joi.object({
         "string.empty": "Mật khẩu không được để trống",
         "any.required": "Mật khẩu là bắt buộc",
     }),
-    confirmPassword: Joi.string().valid(Joi.ref("password")).required().messages({
+    confirmPassword: Joi.string().valid(Joi.ref("password")).optional().messages({
         "any.only": "Mật khẩu nhập lại không khớp",
-        "any.required": "Mật khẩu nhập lại là bắt buộc",
     }),
 });
 

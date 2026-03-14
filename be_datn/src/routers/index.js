@@ -10,6 +10,8 @@ import dashboardRouter from "./dashboard_RT.js";
 import stockRouter from "./stock_RT.js";
 import voucherRouter from "./voucher_RT.js";
 import categoryRouter from "./category_RT.js";
+import variantRouter from "./variant_RT.js";
+import productRouter from "./product_RT.js";
 const router = Router();
 
 router.use("/banners", bannerRouter);
@@ -22,5 +24,7 @@ router.use("/cart", cartRouter);
 router.use("/dashboard", dashboardRouter);
 router.use("/stocks", stockRouter);
 router.use("/vouchers", voucherRouter);
+router.use("/variants", variantRouter);
+router.use("/products", productRouter);
 
 export default router;

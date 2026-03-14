@@ -53,19 +53,31 @@ const Login = () => {
     if (!validate()) return;
 
     try {
-      const res = await axios.get(
-        `http://localhost:3000/users?email=${form.email}&password=${form.password}`
-      );
+      // Gọi API backend thật
+      const response = await axios.post("http://localhost:3000/api/auth/login", {
+        email: form.email,
+        password: form.password
+      });
 
-      if (res.data.length > 0) {
-        localStorage.setItem("user", JSON.stringify(res.data[0]));
-        alert("Đăng nhập thành công!");
+      // Lưu token và user vào localStorage
+      if (response.data.accessToken) {
+        localStorage.setItem("token", response.data.accessToken);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        // Dispatch event để Header cập nhật
+        window.dispatchEvent(new Event("loginSuccess"));
+        alert(response.data.message || "Đăng nhập thành công!");
         navigate("/");
       } else {
-        alert("Sai email hoặc mật khẩu!");
+        alert("Đăng nhập thất bại!");
       }
     } catch (error) {
-      alert("Không kết nối được server!");
+      // Hiển thị lỗi chi tiết hơn
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.messages?.join(", ") ||
+                          error.message || 
+                          "Không kết nối được server!";
+      alert(errorMessage);
+      console.error("Lỗi đăng nhập:", error.response?.data || error);
     }
   };
 
