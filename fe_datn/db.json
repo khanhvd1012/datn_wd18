@@ -336,16 +336,7 @@
       "role": "user"
     }
   ],
-  "cart": [
-    {
-      "id": "9ba2",
-      "productId": "1",
-      "name": "Kính cường lực iPhone 15",
-      "img": "https://images.unsplash.com/photo-1598327105666-5b89351aff97",
-      "price": 120000,
-      "quantity": 2
-    }
-  ],
+  "cart": [],
   "orders": [
     {
       "id": "31f0",
@@ -446,6 +437,43 @@
       "total": 150000,
       "status": "pending",
       "createdAt": "2026-03-13T15:45:04.355Z"
+    },
+    {
+      "id": "8f34",
+      "customerName": "amwpdma d",
+      "email": "uaudb@gmail.com",
+      "phone": "0987654321",
+      "address": "msa[mamcfaf",
+      "paymentMethod": "cod",
+      "items": [
+        {
+          "id": "9ba2",
+          "productId": "1",
+          "name": "Kính cường lực iPhone 15",
+          "img": "https://images.unsplash.com/photo-1598327105666-5b89351aff97",
+          "price": 120000,
+          "quantity": 3
+        },
+        {
+          "id": "5fa1",
+          "productId": "2",
+          "name": "Ốp lưng iPhone Silicon",
+          "img": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9",
+          "price": 180000,
+          "quantity": 1
+        },
+        {
+          "id": "14bb",
+          "productId": "6",
+          "name": "Kính cường lực Samsung",
+          "img": "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd",
+          "price": 120000,
+          "quantity": 1
+        }
+      ],
+      "total": 660000,
+      "status": "pending",
+      "createdAt": "2026-03-15T17:35:33.413Z"
     }
   ]
 }

@@ -10,7 +10,8 @@ import {
   Divider,
   Button,
   Stack,
-  Chip
+  Chip,
+  CircularProgress
 } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -19,114 +20,47 @@ const OrderDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [order, setOrder] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>("");
+  const [order, setOrder] = useState(null);
 
   useEffect(() => {
-    const fetchOrderDetail = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const token = localStorage.getItem("token");
-        if (!token) {
-          navigate("/login");
-          return;
-        }
-
-        const response = await axios.get(`http://localhost:3000/api/orders/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        if (response.data && response.data.order) {
-          setOrder(response.data.order);
-        }
-      } catch (error: any) {
-        console.error("Error loading order detail:", error);
-        
-        // Xử lý lỗi token hết hạn
-        if (error.response?.status === 401) {
-          const errorMessage = error.response?.data?.message || "";
-          if (errorMessage.includes("hết hạn") || errorMessage.includes("không hợp lệ")) {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-            navigate("/login");
-            return;
-          }
-        }
-        
-        if (error.response?.status === 404) {
-          setError("Đơn hàng không tồn tại");
-        } else {
-          setError("Không thể tải chi tiết đơn hàng");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchOrderDetail();
-    }
+    axios
+      .get(`http://localhost:3000/orders/${id}`)
+      .then(res => setOrder(res.data))
+      .catch(() => navigate("/404"));
   }, [id, navigate]);
-
-  if (loading) {
-    return (
-      <Typography textAlign="center" mt={10}>
-        Đang tải chi tiết đơn hàng...
-      </Typography>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container sx={{ py: 6, maxWidth: "950px" }}>
-        <Typography textAlign="center" color="error" mt={10}>
-          {error}
-        </Typography>
-        <Box textAlign="center" mt={3}>
-          <Button
-            variant="contained"
-            onClick={() => navigate("/orders")}
-            sx={{
-              background: "#ff5722",
-              px: 4,
-              py: 1,
-              borderRadius: 2,
-              fontWeight: "bold",
-              "&:hover": {
-                background: "#e64a19"
-              }
-            }}
-          >
-            Quay lại đơn hàng
-          </Button>
-        </Box>
-      </Container>
-    );
-  }
 
   if (!order) {
     return (
-      <Typography textAlign="center" mt={10}>
-        Không tìm thấy đơn hàng
-      </Typography>
+      <Box textAlign="center" mt={10}>
+        <CircularProgress />
+        <Typography mt={2}>Đang tải đơn hàng...</Typography>
+      </Box>
     );
   }
+
+  const getStatus = (status) => {
+    switch (status) {
+      case "pending":
+        return { label: "Chờ xác nhận", color: "#ff9800" };
+      case "shipping":
+        return { label: "Đang giao", color: "#2196f3" };
+      case "completed":
+        return { label: "Hoàn thành", color: "#4caf50" };
+      case "cancel":
+        return { label: "Đã hủy", color: "#f44336" };
+      default:
+        return { label: "Đã đặt hàng", color: "#ff5722" };
+    }
+  };
+
+  const status = getStatus(order.status);
 
   return (
     <Container sx={{ py: 6, maxWidth: "950px" }}>
 
       {/* TITLE */}
-      <Typography
-        variant="h4"
-        fontWeight="bold"
-        mb={4}
-      >
-        Chi tiết đơn hàng #{order._id?.toString().slice(-6).toUpperCase() || id}
+      <Typography variant="h4" fontWeight="bold" mb={4}>
+        Chi tiết đơn hàng #{order.id}
       </Typography>
 
       <Card
@@ -157,53 +91,29 @@ const OrderDetail = () => {
             >
 
               <Box>
+
                 <Typography fontWeight="bold">
-                  Người nhận: {order.shipping_info?.name || "N/A"}
+                  Người nhận: {order.customerName}
                 </Typography>
 
                 <Typography color="text.secondary">
-                  Email: {order.shipping_info?.email || "N/A"}
+                  SĐT: {order.phone}
                 </Typography>
 
                 <Typography color="text.secondary">
-                  SĐT: {order.shipping_info?.phone || "N/A"}
+                  Địa chỉ: {order.address}
                 </Typography>
 
                 <Typography color="text.secondary">
-                  Địa chỉ: {order.shipping_info?.address || "N/A"}
+                  Ngày đặt: {new Date(order.createdAt).toLocaleString()}
                 </Typography>
 
-                <Typography color="text.secondary">
-                  Ngày đặt: {new Date(order.createdAt).toLocaleString("vi-VN")}
-                </Typography>
-
-                <Typography color="text.secondary" mt={1}>
-                  Phương thức thanh toán: {
-                    order.payment_method === "cod" ? "Thanh toán khi nhận hàng" :
-                    order.payment_method === "bank" ? "Chuyển khoản" :
-                    order.payment_method === "momo" ? "Ví MoMo" :
-                    order.payment_method === "vnpay" ? "VNPay" :
-                    "N/A"
-                  }
-                </Typography>
               </Box>
 
               <Chip
-                label={
-                  order.order_status === "pending" ? "Chờ xử lý" :
-                  order.order_status === "confirmed" ? "Đã xác nhận" :
-                  order.order_status === "processing" ? "Đang xử lý" :
-                  order.order_status === "shipping" ? "Đang giao hàng" :
-                  order.order_status === "delivered" ? "Đã giao hàng" :
-                  order.order_status === "cancelled" ? "Đã hủy" :
-                  "Chờ xử lý"
-                }
+                label={status.label}
                 sx={{
-                  background: 
-                    order.order_status === "delivered" ? "#4caf50" :
-                    order.order_status === "cancelled" ? "#f44336" :
-                    order.order_status === "shipping" ? "#2196f3" :
-                    "#ff5722",
+                  background: status.color,
                   color: "#fff",
                   fontWeight: "bold",
                   height: 32
@@ -215,17 +125,14 @@ const OrderDetail = () => {
           </Box>
 
           {/* PRODUCT LIST */}
-          <Typography
-            variant="h6"
-            fontWeight="bold"
-            mb={2}
-          >
+          <Typography variant="h6" fontWeight="bold" mb={2}>
             Sản phẩm trong đơn
           </Typography>
 
-          {order.order_items?.map((item: any, index: number) => (
+          {order.items?.map(item => (
+
             <Box
-              key={index}
+              key={item.id}
               sx={{
                 display: "flex",
                 justifyContent: "space-between",
@@ -234,10 +141,12 @@ const OrderDetail = () => {
                 borderBottom: "1px solid #eee"
               }}
             >
+
               {/* LEFT */}
               <Box display="flex" alignItems="center" gap={2}>
+
                 <Avatar
-                  src={item.image || ""}
+                  src={item.img}
                   variant="rounded"
                   sx={{
                     width: 80,
@@ -247,6 +156,7 @@ const OrderDetail = () => {
                 />
 
                 <Box>
+
                   <Typography fontWeight="bold">
                     {item.name}
                   </Typography>
@@ -256,9 +166,11 @@ const OrderDetail = () => {
                   </Typography>
 
                   <Typography color="text.secondary">
-                    Giá: {item.price?.toLocaleString("vi-VN")}₫
+                    Giá: {item.price.toLocaleString()}₫
                   </Typography>
+
                 </Box>
+
               </Box>
 
               {/* PRICE */}
@@ -267,88 +179,61 @@ const OrderDetail = () => {
                 fontSize={18}
                 color="#ff5722"
               >
-                {((item.price || 0) * (item.quantity || 0)).toLocaleString("vi-VN")}₫
+                {(item.price * item.quantity).toLocaleString()}₫
               </Typography>
+
             </Box>
+
           ))}
+
+          <Divider sx={{ my: 3 }} />
 
           {/* TOTAL */}
           <Box
             sx={{
-              mt: 3,
               p: 3,
               background: "#fff7f4",
-              borderRadius: 3
+              borderRadius: 3,
+              textAlign: "right"
             }}
           >
-            <Box display="flex" justifyContent="space-between" mb={1}>
-              <Typography>Tạm tính:</Typography>
-              <Typography>{order.subtotal?.toLocaleString("vi-VN")}₫</Typography>
-            </Box>
-            
-            <Box display="flex" justifyContent="space-between" mb={1}>
-              <Typography>Phí ship:</Typography>
-              <Typography>
-                {order.shipping_fee === 0 ? "Miễn phí" : `${order.shipping_fee?.toLocaleString("vi-VN")}₫`}
-              </Typography>
-            </Box>
 
-            {order.discount > 0 && (
-              <Box display="flex" justifyContent="space-between" mb={1}>
-                <Typography>Giảm giá:</Typography>
-                <Typography color="success.main">
-                  -{order.discount?.toLocaleString("vi-VN")}₫
-                </Typography>
-              </Box>
-            )}
+            <Typography fontSize={22} fontWeight="bold" color="#ff5722">
+              Tổng tiền: {order.total?.toLocaleString()}₫
+            </Typography>
 
-            {order.coupon_discount > 0 && (
-              <Box display="flex" justifyContent="space-between" mb={1}>
-                <Typography>Mã giảm giá:</Typography>
-                <Typography color="success.main">
-                  -{order.coupon_discount?.toLocaleString("vi-VN")}₫
-                </Typography>
-              </Box>
-            )}
-
-            <Divider sx={{ my: 2 }} />
-
-            <Box display="flex" justifyContent="space-between">
-              <Typography
-                fontSize={22}
-                fontWeight="bold"
-              >
-                Tổng tiền:
-              </Typography>
-              <Typography
-                fontSize={22}
-                fontWeight="bold"
-                color="#ff5722"
-              >
-                {order.total?.toLocaleString("vi-VN")}₫
-              </Typography>
-            </Box>
           </Box>
 
           {/* BUTTON */}
           <Box mt={4} textAlign="right">
 
-            <Button
-              variant="contained"
-              onClick={() => navigate("/orders")}
-              sx={{
-                background: "#ff5722",
-                px: 4,
-                py: 1,
-                borderRadius: 2,
-                fontWeight: "bold",
-                "&:hover": {
-                  background: "#e64a19"
-                }
-              }}
-            >
-              Quay lại đơn hàng
-            </Button>
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
+
+              <Button
+                variant="outlined"
+                onClick={() => navigate("/account")}
+              >
+                Tài khoản
+              </Button>
+
+              <Button
+                variant="contained"
+                onClick={() => navigate("/orders")}
+                sx={{
+                  background: "#ff5722",
+                  px: 4,
+                  py: 1,
+                  borderRadius: 2,
+                  fontWeight: "bold",
+                  "&:hover": {
+                    background: "#e64a19"
+                  }
+                }}
+              >
+                Quay lại đơn hàng
+              </Button>
+
+            </Stack>
 
           </Box>
 

@@ -6,108 +6,101 @@ import {
   InputBase,
   IconButton,
   Button,
+  Badge,
+  Avatar,
   Menu,
-  MenuItem,
-  Divider
+  MenuItem
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import PhoneIcon from "@mui/icons-material/Phone";
-import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
-import PersonIcon from "@mui/icons-material/Person";
-import LogoutIcon from "@mui/icons-material/Logout";
 
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 
 import logo3 from "../img/logo3.png";
 
 const Header = () => {
 
   const [user, setUser] = useState<any>(null);
+  const [cartCount, setCartCount] = useState(0);
+  const [search, setSearch] = useState("");
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const menuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const navigate = useNavigate();
 
+  // ================= LOAD USER =================
   useEffect(() => {
-    const loadUser = () => {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      } else {
-        setUser(null);
-      }
-    };
 
-    // Load user khi component mount
-    loadUser();
+    const storedUser = localStorage.getItem("user");
 
-    // Lắng nghe sự thay đổi trong localStorage
-    const handleStorageChange = (e: any) => {
-      if (e.key === "user") {
-        loadUser();
-      }
-    };
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
 
-    window.addEventListener("storage", handleStorageChange);
-
-    // Lắng nghe custom event từ Login page
-    const handleLoginSuccess = () => {
-      loadUser();
-    };
-
-    window.addEventListener("loginSuccess", handleLoginSuccess);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("loginSuccess", handleLoginSuccess);
-      if (menuTimeoutRef.current) {
-        clearTimeout(menuTimeoutRef.current);
-      }
-    };
   }, []);
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    if (menuTimeoutRef.current) {
-      clearTimeout(menuTimeoutRef.current);
-      menuTimeoutRef.current = null;
-    }
-    setAnchorEl(event.currentTarget);
-  };
+  // ================= LOAD CART COUNT =================
+  const loadCartCount = async () => {
+    try {
 
-  const handleMenuClose = () => {
-    // Delay đóng menu để có thời gian di chuột vào menu
-    if (menuTimeoutRef.current) {
-      clearTimeout(menuTimeoutRef.current);
-    }
-    menuTimeoutRef.current = setTimeout(() => {
-      setAnchorEl(null);
-    }, 150);
-  };
+      const res = await fetch("http://localhost:3000/cart");
+      const data = await res.json();
 
-  const handleMenuEnter = () => {
-    // Hủy timeout đóng menu khi di chuột vào menu
-    if (menuTimeoutRef.current) {
-      clearTimeout(menuTimeoutRef.current);
-      menuTimeoutRef.current = null;
+      const total = data.reduce(
+        (sum: number, item: any) => sum + item.quantity,
+        0
+      );
+
+      setCartCount(total);
+
+    } catch (error) {
+      console.error("Load cart error:", error);
     }
   };
 
+  useEffect(() => {
+    loadCartCount();
+
+    // cập nhật khi localStorage thay đổi
+    window.addEventListener("storage", loadCartCount);
+
+    return () => {
+      window.removeEventListener("storage", loadCartCount);
+    };
+
+  }, []);
+
+  // ================= LOGOUT =================
   const handleLogout = () => {
+
     localStorage.removeItem("user");
-    localStorage.removeItem("token"); // Xóa token khi logout
     setUser(null);
-    setAnchorEl(null);
+
     navigate("/");
+
   };
 
-  const handleProfileClick = () => {
+  // ================= SEARCH =================
+  const handleSearch = () => {
+
+    if (!search.trim()) return;
+
+    navigate(`/products?search=${search}`);
+
+  };
+
+  const openMenu = (e: any) => {
+    setAnchorEl(e.currentTarget);
+  };
+
+  const closeMenu = () => {
     setAnchorEl(null);
-    navigate("/profile");
   };
 
   return (
+
     <AppBar position="static" sx={{ backgroundColor: "#222" }}>
 
       <Toolbar sx={{ justifyContent: "space-between" }}>
@@ -137,14 +130,18 @@ const Header = () => {
             mx: 4
           }}
         >
+
           <InputBase
-            placeholder="Nhập mã hoặc tên sản phẩm cần tìm?"
+            placeholder="Nhập tên sản phẩm cần tìm?"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             sx={{ flex: 1 }}
           />
 
-          <IconButton>
+          <IconButton onClick={handleSearch}>
             <SearchIcon />
           </IconButton>
+
         </Box>
 
         {/* RIGHT */}
@@ -168,75 +165,52 @@ const Header = () => {
             </Typography>
           </Box>
 
-          {/* ORDERS */}
-          {user && (
-            <Button
-              component={Link}
-              to="/orders"
-              startIcon={<ReceiptLongIcon />}
-              sx={{ color: "#fff" }}
-            >
-              Đơn hàng
-            </Button>
-          )}
-
-          {/* LOGIN / LOGOUT */}
+          {/* ACCOUNT */}
           {user ? (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Typography
-                onMouseEnter={handleMenuOpen}
-                onClick={handleMenuOpen}
-                sx={{
-                  color: "#ff9800",
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  "&:hover": {
-                    textDecoration: "underline"
-                  },
-                  py: 1,
-                  px: 1
-                }}
-              >
-                {user.username || user.email}
-              </Typography>
+
+            <>
+              <IconButton onClick={openMenu}>
+
+                <Avatar
+                  src={user.avatar || "https://i.pravatar.cc/150"}
+                />
+
+              </IconButton>
+
               <Menu
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-                MenuListProps={{
-                  onMouseLeave: handleMenuClose,
-                  onMouseEnter: handleMenuEnter
-                }}
-                anchorOrigin={{
-                  vertical: "bottom",
-                  horizontal: "right",
-                }}
-                transformOrigin={{
-                  vertical: "top",
-                  horizontal: "right",
-                }}
-                PaperProps={{
-                  sx: {
-                    mt: 1,
-                    minWidth: 200,
-                    boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                  },
-                  onMouseEnter: handleMenuEnter,
-                  onMouseLeave: handleMenuClose
-                }}
+                onClose={closeMenu}
               >
-                <MenuItem onClick={handleProfileClick}>
-                  <PersonIcon sx={{ mr: 1.5, fontSize: 20 }} />
-                  Tài khoản cá nhân
+
+                <MenuItem
+                  onClick={() => {
+                    navigate("/my-account");
+                    closeMenu();
+                  }}
+                >
+                  Tài khoản
                 </MenuItem>
-                <Divider />
+
+                <MenuItem
+                  onClick={() => {
+                    navigate("/orders");
+                    closeMenu();
+                  }}
+                >
+                  Đơn hàng
+                </MenuItem>
+
                 <MenuItem onClick={handleLogout}>
-                  <LogoutIcon sx={{ mr: 1.5, fontSize: 20 }} />
                   Đăng xuất
                 </MenuItem>
+
               </Menu>
-            </Box>
+
+            </>
+
           ) : (
+
             <Button
               component={Link}
               to="/login"
@@ -245,6 +219,7 @@ const Header = () => {
             >
               Đăng nhập
             </Button>
+
           )}
 
           {/* CART */}
@@ -253,7 +228,13 @@ const Header = () => {
             to="/cart"
             sx={{ color: "#ded2ac" }}
           >
-            <ShoppingCartIcon />
+
+            <Badge badgeContent={cartCount} color="error">
+
+              <ShoppingCartIcon />
+
+            </Badge>
+
           </IconButton>
 
         </Box>
@@ -261,6 +242,7 @@ const Header = () => {
       </Toolbar>
 
     </AppBar>
+
   );
 };
 

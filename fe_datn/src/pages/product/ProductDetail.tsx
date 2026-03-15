@@ -1,577 +1,548 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
+
 import {
+  Box,
   Container,
   Grid,
-  Box,
   Typography,
   Button,
-  TextField,
-  Breadcrumbs,
-  Link,
-  IconButton,
-  Rating,
-  Chip,
-  Stack,
   Card,
   CardContent,
+  Stack,
+  IconButton,
+  Rating,
+  TextField,
+  Chip,
   Divider,
-  FormControl,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-  Alert,
+  Tabs,
+  Tab,
+  Paper,
+  LinearProgress
 } from "@mui/material";
 
-import { ShoppingCart } from "lucide-react";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
+import RemoveIcon from "@mui/icons-material/Remove";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 
 import { useParams, useNavigate } from "react-router-dom";
 
-interface Product {
-  id: number;
-  _id?: string;
-  name: string;
-  img: string;
-  price: number;
-  description: string;
-  sold?: number;
-  rating?: number;
-  discount?: number;
-}
-
-interface Variant {
-  _id: string;
-  name: string;
-  price: number;
-  original_price?: number;
-  stock: number;
-  attributes?: Record<string, string>;
-  images?: string[];
-  is_default?: boolean;
-  sku?: string;
-}
-
 const ProductDetail = () => {
-  const [quantity, setQuantity] = useState<number>(1);
-  const [product, setProduct] = useState<Product | null>(null);
-  const [related, setRelated] = useState<Product[]>([]);
-  const [variants, setVariants] = useState<Variant[]>([]);
-  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
-  const [loadingVariants, setLoadingVariants] = useState<boolean>(false);
 
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // ===== LẤY SẢN PHẨM =====
-  useEffect(() => {
-    axios
-      .get(`http://localhost:3000/api/products/${id}`)
-      .then((res) => {
-        setProduct(res.data);
-        // Lấy variants của sản phẩm
-        loadVariants(id!);
-      })
-      .catch((err) => console.error(err));
-  }, [id]);
+  const [product,setProduct] = useState<any>(null);
+  const [related,setRelated] = useState<any[]>([]);
+  const [img,setImg] = useState("");
+  const [qty,setQty] = useState(1);
+  const [tab,setTab] = useState(0);
 
-  // ===== LẤY VARIANTS =====
-  const loadVariants = async (productId: string) => {
-    try {
-      setLoadingVariants(true);
-      // Thử gọi API backend trước, nếu không có thì bỏ qua
-      const response = await axios.get(
-        `http://localhost:3000/api/variants/product/${productId}`
-      );
-      if (response.data && response.data.variants) {
-        setVariants(response.data.variants);
-        // Tự động chọn variant mặc định hoặc variant đầu tiên
-        const defaultVariant = response.data.variants.find(
-          (v: Variant) => v.is_default
-        ) || response.data.variants[0];
-        if (defaultVariant) {
-          setSelectedVariant(defaultVariant);
-        }
-      }
-    } catch (error) {
-      // Nếu API không tồn tại hoặc lỗi, không hiển thị variants
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      console.log("Không có variants hoặc API chưa sẵn sàng:", errorMessage);
-    } finally {
-      setLoadingVariants(false);
-    }
-  };
+  const [reviews,setReviews] = useState<any[]>([]);
+  const [rating,setRating] = useState(5);
+  const [comment,setComment] = useState("");
 
-  // ===== SẢN PHẨM LIÊN QUAN =====
-  useEffect(() => {
-    axios
-      .get(`http://localhost:3000/api/products?limit=4`)
-      .then((res) => setRelated(res.data))
-      .catch((err) => console.error(err));
-  }, []);
+  const [time,setTime] = useState(3600);
 
-  // ===== ADD TO CART =====
-  const addToCart = async () => {
-    if (!product) return;
+  /* FLASH SALE TIMER */
 
-    const productId = product._id || product.id;
-    const variantId = selectedVariant?._id || null;
-    const price = selectedVariant?.price || product.price;
-    const productName = selectedVariant 
-      ? `${product.name} - ${selectedVariant.name}`
-      : product.name;
+  useEffect(()=>{
 
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng");
-        navigate("/login");
-        return;
-      }
+    const timer=setInterval(()=>{
+      setTime(prev=>prev>0?prev-1:0)
+    },1000)
 
-      // Gọi API backend với variant_id
-      const response = await axios.post(
-        "http://localhost:3000/api/cart/add",
-        {
-          product_id: productId,
-          variant_id: variantId,
-          quantity,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+    return()=>clearInterval(timer)
 
-      if (response.data) {
-        alert("Đã thêm vào giỏ hàng thành công!");
-      }
-    } catch (error: any) {
-      console.error("Error adding to cart:", error);
-      
-      // Xử lý lỗi token hết hạn
-      if (error.response?.status === 401) {
-        const errorMessage = error.response?.data?.message || "";
-        if (errorMessage.includes("hết hạn") || errorMessage.includes("không hợp lệ")) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-          navigate("/login");
-          return;
-        }
-      }
-      
-      const errorMessage = error.response?.data?.message || "Không thể thêm vào giỏ hàng";
-      alert(errorMessage);
-    }
-  };
+  },[])
 
-  const handleAddToCart = async () => {
-    await addToCart();
-    navigate("/cart");
-  };
-
-  const handleBuyNow = async () => {
-    await addToCart();
-    navigate("/checkout");
-  };
-
-  const increase = () => setQuantity((prev) => prev + 1);
-  const decrease = () => setQuantity((prev) => Math.max(1, prev - 1));
-
-  if (!product) {
-    return (
-      <Container>
-        <Typography>Không tìm thấy sản phẩm</Typography>
-      </Container>
-    );
+  const formatPrice=(price:number)=>{
+    return price?.toLocaleString("vi-VN")+"₫"
   }
 
-  return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
-      {/* Breadcrumb */}
-      <Breadcrumbs sx={{ mb: 3 }}>
-        <Link sx={{ cursor: "pointer" }} onClick={() => navigate("/")}>
-          Trang chủ
-        </Link>
-        <Typography>{product.name}</Typography>
-      </Breadcrumbs>
+  /* LOAD PRODUCT */
 
-      <Grid container spacing={4}>
-        {/* IMAGE */}
-        <Grid item xs={12} md={5}>
-          <Card sx={{ borderRadius: 3 }}>
-            <CardContent sx={{ textAlign: "center" }}>
-              <img
-                src={
-                  selectedVariant?.images && selectedVariant.images.length > 0
-                    ? selectedVariant.images[0]
-                    : product.img
-                }
-                alt={product.name}
-                style={{
-                  width: "100%",
-                  maxHeight: 420,
-                  objectFit: "contain",
-                }}
-              />
-            </CardContent>
-          </Card>
-          
-          {/* Variant Images Gallery */}
-          {selectedVariant?.images && selectedVariant.images.length > 1 && (
-            <Box sx={{ mt: 2, display: "flex", gap: 1, flexWrap: "wrap" }}>
-              {selectedVariant.images.map((img, index) => (
-                <Box
-                  key={index}
-                  component="img"
-                  src={img}
-                  alt={`${product.name} - ${index + 1}`}
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    objectFit: "cover",
-                    borderRadius: 2,
-                    cursor: "pointer",
-                    border: "2px solid transparent",
-                    "&:hover": {
-                      border: "2px solid #d70018",
-                    },
-                  }}
-                />
-              ))}
-            </Box>
-          )}
-        </Grid>
+  useEffect(()=>{
 
-        {/* INFO */}
-        <Grid item xs={12} md={7}>
-          <Stack spacing={2}>
-            <Typography variant="h5" fontWeight={700}>
-              {product.name}
-            </Typography>
+    axios
+      .get(`http://localhost:3000/products/${id}`)
+      .then(res=>{
+        setProduct(res.data)
+        setImg(res.data.img)
+      })
 
-            <Stack direction="row" spacing={2}>
-              <Rating value={product.rating || 4} precision={0.5} readOnly />
-              <Typography color="gray">
-                Đã bán {product.sold || 0}
-              </Typography>
-            </Stack>
+  },[id])
 
-            {/* PRICE */}
-            <Box>
-              <Typography
-                variant="h4"
-                sx={{ color: "#d70018", fontWeight: 700 }}
-              >
-                {(selectedVariant?.price || product.price).toLocaleString()}₫
-              </Typography>
-              {selectedVariant?.original_price && 
-               selectedVariant.original_price > selectedVariant.price && (
-                <Stack direction="row" spacing={1} alignItems="center" mt={1}>
-                  <Typography
-                    sx={{
-                      textDecoration: "line-through",
-                      color: "gray",
-                      fontSize: "0.9rem",
-                    }}
-                  >
-                    {selectedVariant.original_price.toLocaleString()}₫
-                  </Typography>
-                  <Chip
-                    label={`Giảm ${Math.round(
-                      ((selectedVariant.original_price - selectedVariant.price) /
-                        selectedVariant.original_price) *
-                        100
-                    )}%`}
-                    color="error"
-                    size="small"
-                  />
-                </Stack>
-              )}
-              {product.discount && !selectedVariant && (
-                <Chip
-                  label={`Giảm ${product.discount}%`}
-                  color="error"
-                  sx={{ width: "fit-content", mt: 1 }}
-                />
-              )}
-            </Box>
+  /* RELATED PRODUCTS */
 
-            {/* VARIANTS SELECTION */}
-            {variants.length > 0 && (
-              <Card sx={{ borderRadius: 3, bgcolor: "#f8f9fa" }}>
-                <CardContent>
-                  <FormControl component="fieldset" fullWidth>
-                    <RadioGroup
-                      value={selectedVariant?._id || ""}
-                      onChange={(e) => {
-                        const variant = variants.find(
-                          (v) => v._id === e.target.value
-                        );
-                        setSelectedVariant(variant || null);
-                        setQuantity(1); // Reset quantity khi đổi variant
-                      }}
-                    >
-                      {variants.map((variant) => (
-                        <FormControlLabel
-                          key={variant._id}
-                          value={variant._id}
-                          control={<Radio />}
-                          label={
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                              <Typography>{variant.name}</Typography>
-                              <Typography
-                                sx={{
-                                  color: "#d70018",
-                                  fontWeight: 600,
-                                  ml: "auto",
-                                }}
-                              >
-                                {variant.price.toLocaleString()}₫
-                              </Typography>
-                              {variant.stock <= 0 && (
-                                <Chip
-                                  label="Hết hàng"
-                                  size="small"
-                                  color="error"
-                                  sx={{ ml: 1 }}
-                                />
-                              )}
-                              {variant.stock > 0 && variant.stock <= 10 && (
-                                <Chip
-                                  label={`Còn ${variant.stock}`}
-                                  size="small"
-                                  color="warning"
-                                  sx={{ ml: 1 }}
-                                />
-                              )}
-                            </Box>
-                          }
-                          disabled={variant.stock <= 0}
-                        />
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
-                  
-                  {selectedVariant && selectedVariant.attributes && 
-                   Object.keys(selectedVariant.attributes).length > 0 && (
-                    <Box sx={{ mt: 2 }}>
-                      <Typography variant="subtitle2" fontWeight={600} mb={1}>
-                        Thông số:
-                      </Typography>
-                      {Object.entries(selectedVariant.attributes).map(([key, value]) => (
-                        <Typography key={key} fontSize={14} sx={{ mb: 0.5 }}>
-                          <strong>{key}:</strong> {value}
-                        </Typography>
-                      ))}
-                    </Box>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+  useEffect(()=>{
 
-            {/* STOCK WARNING */}
-            {selectedVariant && selectedVariant.stock <= 0 && (
-              <Alert severity="error">
-                Biến thể này hiện đang hết hàng
-              </Alert>
-            )}
-            {selectedVariant && 
-             selectedVariant.stock > 0 && 
-             selectedVariant.stock < quantity && (
-              <Alert severity="warning">
-                Chỉ còn {selectedVariant.stock} sản phẩm trong kho
-              </Alert>
-            )}
+    axios
+      .get(`http://localhost:3000/products?_limit=4`)
+      .then(res=>{
+        const list=res.data.filter((p:any)=>p.id!==Number(id))
+        setRelated(list)
+      })
 
-            {/* KHUYẾN MÃI */}
-            <Card sx={{ borderRadius: 3, bgcolor: "#fff7f7" }}>
-              <CardContent>
-                <Typography fontWeight={700} mb={1}>
-                  🎁 Khuyến mãi
-                </Typography>
+  },[id])
 
-                <Typography fontSize={14}>
-                  ✔ Giảm thêm 5% khi thanh toán online
-                </Typography>
+  /* LOAD REVIEWS */
 
-                <Typography fontSize={14}>
-                  ✔ Miễn phí giao hàng toàn quốc
-                </Typography>
+  useEffect(()=>{
 
-                <Typography fontSize={14}>
-                  ✔ Bảo hành chính hãng 12 tháng
-                </Typography>
-              </CardContent>
-            </Card>
+    axios
+      .get(`http://localhost:3000/reviews?productId=${id}`)
+      .then(res=>{
+        setReviews(res.data)
+      })
 
-            {/* SỐ LƯỢNG */}
-            <Stack direction="row" spacing={1} alignItems="center">
-              <IconButton 
-                onClick={decrease}
-                disabled={
-                  quantity <= 1 || 
-                  (selectedVariant ? selectedVariant.stock <= 0 : false)
-                }
-              >
-                <RemoveIcon />
-              </IconButton>
+  },[id])
 
-              <TextField
-                value={quantity}
-                size="small"
-                sx={{ width: 70 }}
-                inputProps={{ 
-                  style: { textAlign: "center" },
-                  min: 1,
-                  max: selectedVariant?.stock || undefined,
-                }}
-                type="number"
-                onChange={(e) => {
-                  const value = parseInt(e.target.value) || 1;
-                  const maxStock = selectedVariant?.stock || Infinity;
-                  setQuantity(Math.max(1, Math.min(value, maxStock)));
-                }}
-              />
+  /* ADD TO CART */
 
-              <IconButton 
-                onClick={increase}
-                disabled={
-                  selectedVariant ? (
-                    quantity >= selectedVariant.stock ||
-                    selectedVariant.stock <= 0
-                  ) : false
-                }
-              >
-                <AddIcon />
-              </IconButton>
-              
-              {selectedVariant && (
-                <Typography variant="body2" color="gray" sx={{ ml: 1 }}>
-                  Còn {selectedVariant.stock} sản phẩm
-                </Typography>
-              )}
-            </Stack>
+  const addToCart = async () => {
 
-            {/* BUTTON */}
-            <Stack direction="row" spacing={2}>
-              <Button
-                variant="contained"
-                startIcon={<ShoppingCart size={18} />}
-                sx={{
-                  flex: 1,
-                  backgroundColor: "#ff6b35",
-                }}
-                onClick={handleAddToCart}
-                disabled={
-                  (selectedVariant && selectedVariant.stock <= 0) ||
-                  loadingVariants
-                }
-              >
-                Thêm giỏ
-              </Button>
+    try {
 
-              <Button
-                variant="contained"
-                sx={{
-                  flex: 1,
-                  backgroundColor: "#d70018",
-                }}
-                onClick={handleBuyNow}
-                disabled={
-                  (selectedVariant && selectedVariant.stock <= 0) ||
-                  loadingVariants
-                }
-              >
-                Mua ngay
-              </Button>
+      const res = await axios.get(
+        `http://localhost:3000/cart?productId=${product.id}`
+      );
 
-              <IconButton>
-                <FavoriteBorderIcon />
-              </IconButton>
-            </Stack>
+      const data = res.data;
 
-            {/* MÔ TẢ */}
-            <Card sx={{ borderRadius: 3 }}>
-              <CardContent>
-                <Typography fontWeight={700} mb={1}>
-                  Mô tả sản phẩm
-                </Typography>
+      if (data.length > 0) {
 
-                <Divider sx={{ mb: 2 }} />
+        const item = data[0];
 
-                <Typography>{product.description}</Typography>
-              </CardContent>
-            </Card>
-          </Stack>
-        </Grid>
-      </Grid>
+        await axios.patch(
+          `http://localhost:3000/cart/${item.id}`,
+          {
+            quantity: item.quantity + qty
+          }
+        );
 
-      {/* SẢN PHẨM LIÊN QUAN */}
-      <Box sx={{ mt: 7 }}>
-        <Typography variant="h5" fontWeight={700} mb={3}>
-          Sản phẩm liên quan
-        </Typography>
+      } else {
 
-        <Grid container spacing={3}>
-          {related.map((item) => (
-            <Grid item xs={12} sm={6} md={3} key={item.id}>
-              <Card
-                sx={{
-                  cursor: "pointer",
-                  borderRadius: 3,
-                  transition: "0.3s",
-                  "&:hover": {
-                    transform: "translateY(-5px)",
-                    boxShadow: 6,
-                  },
-                }}
-                onClick={() => navigate(`/product/${item.id}`)}
-              >
-                <CardContent>
-                  <Box
-                    component="img"
-                    src={item.img}
-                    sx={{
-                      width: "100%",
-                      height: 160,
-                      objectFit: "contain",
-                      mb: 2,
-                    }}
-                  />
+        await axios.post(
+          "http://localhost:3000/cart",
+          {
+            productId: product.id,
+            name: product.name,
+            img: product.img,
+            price: product.price,
+            quantity: qty
+          }
+        );
 
-                  <Typography
-                    sx={{
-                      fontSize: 14,
-                      fontWeight: 600,
-                      height: 40,
-                      overflow: "hidden",
-                    }}
-                  >
-                    {item.name}
-                  </Typography>
+      }
 
-                  <Typography
-                    sx={{
-                      color: "#d70018",
-                      fontWeight: 700,
-                      mt: 1,
-                    }}
-                  >
-                    {item.price.toLocaleString()}₫
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
-    </Container>
-  );
-};
+      // cập nhật header
+      window.dispatchEvent(new Event("cartUpdated"));
+
+      alert("Đã thêm vào giỏ hàng");
+
+    } catch (error) {
+
+      console.error("Add cart error:", error);
+
+    }
+
+  }
+
+  /* SUBMIT REVIEW */
+
+  const submitReview=async()=>{
+
+    if(!comment) return
+
+    const newReview={
+      productId:Number(id),
+      user:"User Demo",
+      rating,
+      comment,
+      date:new Date().toLocaleDateString()
+    }
+
+    const res=await axios.post(
+      "http://localhost:3000/reviews",
+      newReview
+    )
+
+    setReviews([...reviews,res.data])
+
+    setComment("")
+    setRating(5)
+
+  }
+
+  const total=reviews.length
+
+  const avg=total
+  ?reviews.reduce((a,b)=>a+b.rating,0)/total
+  :0
+
+  const countStar=(star:number)=>{
+    return reviews.filter(r=>r.rating===star).length
+  }
+
+  if(!product){
+
+    return(
+      <Typography textAlign="center" mt={10}>
+        Loading...
+      </Typography>
+    )
+
+  }
+
+  return(
+
+  <Box sx={{background:"#f5f5f5",py:6}}>
+
+  <Container maxWidth="lg">
+
+  <Card sx={{p:4,borderRadius:4}}>
+
+  <Grid container spacing={6}>
+
+  {/* IMAGE */}
+
+  <Grid item xs={12} md={5}>
+
+  <Box
+  component="img"
+  src={img}
+  sx={{
+  width:"100%",
+  height:420,
+  objectFit:"contain",
+  borderRadius:3
+  }}
+  />
+
+  <Stack direction="row" spacing={1} mt={2}>
+
+  {[product.img,product.img,product.img].map((i,index)=>(
+
+  <Box
+  key={index}
+  component="img"
+  src={i}
+  onClick={()=>setImg(i)}
+  sx={{
+  width:70,
+  height:70,
+  border:"1px solid #ddd",
+  borderRadius:2,
+  cursor:"pointer",
+  p:1
+  }}
+  />
+
+  ))}
+
+  </Stack>
+
+  </Grid>
+
+  {/* INFO */}
+
+  <Grid item xs={12} md={7}>
+
+  <Stack spacing={2}>
+
+  <Typography variant="h5" fontWeight="bold">
+  {product.name}
+  </Typography>
+
+  <Rating value={avg} precision={0.5} readOnly/>
+
+  <Typography variant="h4" fontWeight="bold" color="#d70018">
+  {formatPrice(product.price)}
+  </Typography>
+
+  <Chip
+  label={`Flash Sale ${Math.floor(time/60)}:${time%60}`}
+  color="error"
+  />
+
+  <Stack direction="row" spacing={1}>
+  <Chip label="Voucher 50K"/>
+  <Chip label="Freeship"/>
+  </Stack>
+
+  <Stack direction="row" spacing={1} alignItems="center">
+  <LocalShippingIcon/>
+  <Typography>
+  Giao hàng toàn quốc
+  </Typography>
+  </Stack>
+
+  <Divider/>
+
+  {/* QUANTITY */}
+
+  <Stack direction="row" spacing={1} alignItems="center">
+
+  <IconButton onClick={()=>setQty(qty>1?qty-1:1)}>
+  <RemoveIcon/>
+  </IconButton>
+
+  <TextField
+  size="small"
+  value={qty}
+  onChange={(e)=>setQty(Number(e.target.value))}
+  sx={{width:70}}
+  inputProps={{style:{textAlign:"center"}}}
+  />
+
+  <IconButton onClick={()=>setQty(qty+1)}>
+  <AddIcon/>
+  </IconButton>
+
+  </Stack>
+
+  {/* BUTTON */}
+
+  <Stack direction="row" spacing={2}>
+
+  <Button
+  variant="contained"
+  startIcon={<ShoppingCartIcon/>}
+  sx={{flex:1,background:"#ff6b35"}}
+  onClick={addToCart}
+  >
+  Thêm giỏ hàng
+  </Button>
+
+  <Button
+  variant="contained"
+  sx={{flex:1,background:"#d70018"}}
+  onClick={()=>{
+  addToCart()
+  navigate("/checkout")
+  }}
+  >
+  Mua ngay
+  </Button>
+
+  <IconButton>
+  <FavoriteBorderIcon/>
+  </IconButton>
+
+  </Stack>
+
+  </Stack>
+
+  </Grid>
+
+  </Grid>
+
+  </Card>
+
+  {/* TABS */}
+
+  <Box mt={5}>
+
+  <Tabs value={tab} onChange={(e,v)=>setTab(v)}>
+  <Tab label="Mô tả"/>
+  <Tab label="Đánh giá"/>
+  </Tabs>
+
+  <Paper sx={{p:3,mt:2}}>
+
+  {tab===0 && (
+  <Typography>
+  {product.description}
+  </Typography>
+  )}
+
+  {tab===1 && (
+
+  <Box>
+
+  <Grid container spacing={4} mb={4}>
+
+  <Grid item md={3}>
+
+  <Typography variant="h3" color="error">
+  {avg.toFixed(1)}
+  </Typography>
+
+  <Rating value={avg} precision={0.5} readOnly/>
+
+  <Typography>
+  {total} đánh giá
+  </Typography>
+
+  </Grid>
+
+  <Grid item md={9}>
+
+  {[5,4,3,2,1].map(star=>{
+
+  const percent=total
+  ?(countStar(star)/total)*100
+  :0
+
+  return(
+
+  <Stack key={star} direction="row" spacing={2} alignItems="center">
+
+  <Typography>{star}⭐</Typography>
+
+  <LinearProgress
+  variant="determinate"
+  value={percent}
+  sx={{flex:1,height:10,borderRadius:5}}
+  />
+
+  </Stack>
+
+  )
+
+  })}
+
+  </Grid>
+
+  </Grid>
+
+  {/* REVIEW FORM */}
+
+  <Paper sx={{p:3,mb:4}}>
+
+  <Typography variant="h6" mb={2}>
+  Viết đánh giá
+  </Typography>
+
+  <Stack spacing={2}>
+
+  <Rating
+  value={rating}
+  onChange={(e,v:any)=>setRating(v)}
+  />
+
+  <TextField
+  label="Bình luận"
+  multiline
+  rows={3}
+  value={comment}
+  onChange={(e)=>setComment(e.target.value)}
+  />
+
+  <Button variant="contained" onClick={submitReview}>
+  Gửi đánh giá
+  </Button>
+
+  </Stack>
+
+  </Paper>
+
+  {/* REVIEW LIST */}
+
+  <Stack spacing={2}>
+
+  {reviews.map(r=>(
+
+  <Paper key={r.id} sx={{p:2}}>
+
+  <Stack direction="row" justifyContent="space-between">
+
+  <Typography fontWeight="bold">
+  {r.user}
+  </Typography>
+
+  <Typography fontSize={13} color="text.secondary">
+  {r.date}
+  </Typography>
+
+  </Stack>
+
+  <Rating value={r.rating} readOnly size="small"/>
+
+  <Typography mt={1}>
+  {r.comment}
+  </Typography>
+
+  </Paper>
+
+  ))}
+
+  </Stack>
+
+  </Box>
+
+  )}
+
+  </Paper>
+
+  </Box>
+
+  {/* RELATED */}
+
+  <Box mt={6}>
+
+  <Typography variant="h5" fontWeight="bold" mb={3}>
+  Sản phẩm liên quan
+  </Typography>
+
+  <Grid container spacing={3}>
+
+  {related.map(item=>(
+
+  <Grid item xs={12} sm={6} md={3} key={item.id}>
+
+  <Card
+  sx={{
+  cursor:"pointer",
+  "&:hover":{
+  transform:"translateY(-6px)",
+  boxShadow:6
+  }
+  }}
+  onClick={()=>navigate(`/product/${item.id}`)}
+  >
+
+  <CardContent>
+
+  <Box
+  component="img"
+  src={item.img}
+  sx={{
+  width:"100%",
+  height:160,
+  objectFit:"contain"
+  }}
+  />
+
+  <Typography fontWeight="bold">
+  {item.name}
+  </Typography>
+
+  <Typography color="#d70018">
+  {formatPrice(item.price)}
+  </Typography>
+
+  </CardContent>
+
+  </Card>
+
+  </Grid>
+
+  ))}
+
+  </Grid>
+
+  </Box>
+
+  </Container>
+
+  </Box>
+
+  )
+
+}
 
 export default ProductDetail;

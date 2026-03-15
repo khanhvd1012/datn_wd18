@@ -5,7 +5,10 @@ import {
   Typography,
   Paper,
   Avatar,
-  CircularProgress
+  CircularProgress,
+  Button,
+  Divider,
+  Stack
 } from "@mui/material";
 
 interface User {
@@ -44,6 +47,13 @@ export default function Profile() {
 
   }, []);
 
+  const handleLogout = () => {
+
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+
+  };
+
   if (loading)
     return (
       <Box textAlign="center" mt={10}>
@@ -62,44 +72,89 @@ export default function Profile() {
 
     <Box
       sx={{
+        minHeight: "80vh",
         display: "flex",
         justifyContent: "center",
-        mt: 6
+        alignItems: "center",
+        background: "#f5f5f5",
+        p: 3
       }}
     >
 
       <Paper
-        elevation={4}
+        elevation={5}
         sx={{
-          p: 4,
-          width: 400,
-          borderRadius: 3,
+          p: 5,
+          width: 420,
+          borderRadius: 4,
           textAlign: "center"
         }}
       >
 
+        {/* Avatar */}
         <Avatar
           sx={{
-            width: 80,
-            height: 80,
+            width: 90,
+            height: 90,
             mx: "auto",
-            mb: 2
+            mb: 2,
+            fontSize: 32,
+            background: "#ff5722"
           }}
         >
           {user.username[0].toUpperCase()}
         </Avatar>
 
-        <Typography variant="h5" fontWeight="bold">
+        {/* Name */}
+        <Typography
+          variant="h5"
+          fontWeight="bold"
+          mb={1}
+        >
           {user.username}
         </Typography>
 
-        <Typography color="text.secondary" mb={2}>
+        <Typography
+          color="text.secondary"
+          mb={3}
+        >
           {user.email}
         </Typography>
 
-        <Typography>
-          <b>ID:</b> {user._id}
-        </Typography>
+        <Divider sx={{ mb: 3 }} />
+
+        {/* Info */}
+        <Stack spacing={2} textAlign="left">
+
+          <Typography>
+            <b>User ID:</b> {user._id}
+          </Typography>
+
+          <Typography>
+            <b>Email:</b> {user.email}
+          </Typography>
+
+          <Typography>
+            <b>Tên người dùng:</b> {user.username}
+          </Typography>
+
+        </Stack>
+
+        <Divider sx={{ my: 3 }} />
+
+        {/* Logout */}
+        <Button
+          variant="contained"
+          fullWidth
+          onClick={handleLogout}
+          sx={{
+            background: "#ff5722",
+            fontWeight: "bold",
+            "&:hover": { background: "#e64a19" }
+          }}
+        >
+          Đăng xuất
+        </Button>
 
       </Paper>
 

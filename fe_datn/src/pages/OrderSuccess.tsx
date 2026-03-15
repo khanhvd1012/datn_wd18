@@ -1,142 +1,120 @@
-import React from "react";
+import React,{useEffect,useState} from "react";
+import axios from "axios";
 import {
-  Box,
-  Typography,
-  Button,
-  Paper,
-  Stack,
-  Divider
+Box,
+Typography,
+Paper,
+Stack,
+Divider
 } from "@mui/material";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import { useNavigate, useLocation } from "react-router-dom";
+import {useParams} from "react-router-dom";
 
-const OrderSuccess = () => {
+const OrderDetail = () => {
 
-  const navigate = useNavigate();
-  const location = useLocation();
+const {id} = useParams()
 
-  const order = location.state?.order;
+const [order,setOrder] = useState(null)
 
-  return (
+useEffect(()=>{
 
-    <Box
-      sx={{
-        minHeight: "80vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "#f5f5f5",
-        p: 3
-      }}
-    >
+axios.get(`http://localhost:3000/orders/${id}`)
+.then(res=>setOrder(res.data))
 
-      <Paper
-        elevation={4}
-        sx={{
-          p: 6,
-          borderRadius: 4,
-          textAlign: "center",
-          maxWidth: 520,
-          width: "100%"
-        }}
-      >
+},[id])
 
-        {/* ICON */}
-        <CheckCircleIcon
-          sx={{
-            fontSize: 90,
-            color: "#4caf50",
-            mb: 2,
-            animation: "pop 0.6s ease"
-          }}
-        />
+if(!order) return <Typography>Loading...</Typography>
 
-        {/* TITLE */}
-        <Typography variant="h4" fontWeight="bold">
-          Đặt hàng thành công
-        </Typography>
+return(
 
-        {/* DESC */}
-        <Typography color="text.secondary" sx={{ mt: 2 }}>
-          Cảm ơn bạn đã mua hàng tại <b>Mobitech</b>
-        </Typography>
+<Box p={4}>
 
-        <Divider sx={{ my: 3 }} />
+<Typography variant="h4" mb={3}>
+Chi tiết đơn #{order.id}
+</Typography>
 
-        {/* ORDER INFO */}
-        {order && (
+<Paper sx={{p:3}}>
 
-          <Box sx={{ textAlign: "left", mb: 3 }}>
+<Typography>
+Khách hàng: {order.customerName}
+</Typography>
 
-            <Typography>
-              Mã đơn hàng: <b>#{order.id}</b>
-            </Typography>
+<Typography>
+Email: {order.email}
+</Typography>
 
-            <Typography>
-              Tổng tiền:{" "}
-              <b style={{ color: "#ff5722" }}>
-                {order.total?.toLocaleString()}₫
-              </b>
-            </Typography>
+<Typography>
+SĐT: {order.phone}
+</Typography>
 
-          </Box>
+<Typography>
+Địa chỉ: {order.address}
+</Typography>
 
-        )}
+<Typography>
+Thanh toán: {order.paymentMethod}
+</Typography>
 
-        {/* BUTTONS */}
-        <Stack
-          direction="row"
-          spacing={2}
-          justifyContent="center"
-        >
+<Typography>
+Trạng thái: {order.status || "pending"}
+</Typography>
 
-          <Button
-            variant="outlined"
-            onClick={() => navigate("/")}
-          >
-            Tiếp tục mua
-          </Button>
+<Divider sx={{my:3}}/>
 
-          {order && (
-            <Button
-              variant="contained"
-              onClick={() => navigate(`/orders/${order.id}`)}
-              sx={{
-                background: "#ff5722",
-                "&:hover": { background: "#e64a19" }
-              }}
-            >
-              Xem chi tiết
-            </Button>
-          )}
+<Stack spacing={2}>
 
-          <Button
-            variant="contained"
-            onClick={() => navigate("/orders")}
-            sx={{
-              background: "#ff5722",
-              "&:hover": { background: "#e64a19" }
-            }}
-          >
-            Xem đơn hàng
-          </Button>
+{order.items.map(item=>(
 
-        </Stack>
+<Paper key={item.id} sx={{p:2}}>
 
-      </Paper>
+<Stack direction="row" spacing={2} alignItems="center">
 
-      <style>
-        {`
-          @keyframes pop {
-            0% { transform: scale(0.6); opacity:0 }
-            100% { transform: scale(1); opacity:1 }
-          }
-        `}
-      </style>
+<img
+src={item.img}
+width={70}
+alt=""
+/>
 
-    </Box>
+<Box>
 
-  );
-};
+<Typography>
+{item.name}
+</Typography>
 
-export default OrderSuccess;
+<Typography>
+SL: {item.quantity}
+</Typography>
+
+<Typography>
+Giá: {item.price.toLocaleString()}₫
+</Typography>
+
+</Box>
+
+</Stack>
+
+</Paper>
+
+))}
+
+</Stack>
+
+<Divider sx={{my:3}}/>
+
+<Typography variant="h6">
+
+Tổng tiền:
+<b style={{color:"#ff5722"}}>
+{order.total.toLocaleString()}₫
+</b>
+
+</Typography>
+
+</Paper>
+
+</Box>
+
+)
+
+}
+
+export default OrderDetail
