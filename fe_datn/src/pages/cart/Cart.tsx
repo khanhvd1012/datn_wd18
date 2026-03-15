@@ -18,38 +18,96 @@ import { useNavigate } from "react-router-dom";
 const Cart = () => {
 
   const [cart, setCart] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   const fetchCart = async () => {
-    const res = await axios.get("http://localhost:3000/cart");
-    setCart(res.data);
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const response = await axios.get("http://localhost:3000/api/cart", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.data && response.data.cart && response.data.cart.items) {
+        setCart(response.data.cart.items);
+      }
+    } catch (error: any) {
+      console.error("Error loading cart:", error);
+      
+      // Xử lý lỗi token hết hạn
+      if (error.response?.status === 401) {
+        const errorMessage = error.response?.data?.message || "";
+        if (errorMessage.includes("hết hạn") || errorMessage.includes("không hợp lệ")) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+          navigate("/login");
+          return;
+        }
+      }
+      
+      alert("Không thể tải giỏ hàng");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchCart();
-  }, []);
+  }, [navigate]);
 
-  const updateQuantity = async (id, newQuantity) => {
+  const updateQuantity = async (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
 
-    await axios.patch(`http://localhost:3000/cart/${id}`, {
-      quantity: newQuantity,
-    });
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(
+        `http://localhost:3000/api/cart/update/${itemId}`,
+        { quantity: newQuantity },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
 
-    setCart(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      )
-    );
+      setCart(prev =>
+        prev.map(item =>
+          item._id === itemId ? { ...item, quantity: newQuantity } : item
+        )
+      );
+    } catch (error: any) {
+      console.error("Error updating quantity:", error);
+      alert("Không thể cập nhật số lượng");
+    }
   };
 
-  const removeItem = async (id) => {
-    await axios.delete(`http://localhost:3000/cart/${id}`);
-    setCart(prev => prev.filter(item => item.id !== id));
+  const removeItem = async (itemId: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`http://localhost:3000/api/cart/remove/${itemId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      setCart(prev => prev.filter(item => item._id !== itemId));
+    } catch (error: any) {
+      console.error("Error removing item:", error);
+      alert("Không thể xóa sản phẩm");
+    }
   };
 
   const totalPrice = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + (item.price || 0) * (item.quantity || 0),
     0
   );
 
@@ -74,7 +132,18 @@ const Cart = () => {
           Giỏ hàng của bạn ({cart.length})
         </Typography>
 
-        {cart.length === 0 ? (
+        {loading ? (
+          <Paper
+            sx={{
+              p: 6,
+              textAlign: "center",
+              borderRadius: 3,
+              border: "1px solid #eee"
+            }}
+          >
+            <Typography>Đang tải giỏ hàng...</Typography>
+          </Paper>
+        ) : cart.length === 0 ? (
 
           <Paper
             sx={{
@@ -111,109 +180,108 @@ const Cart = () => {
               }}
             >
 
-              {cart.map((item, index) => (
+              {cart.map((item: any, index: number) => {
+                const productName = item.product_id?.name || "";
+                const variantName = item.variant_id?.name || "";
+                const displayName = variantName ? `${productName} - ${variantName}` : productName;
+                const imageUrl = item.product_id?.images?.[0] || "";
+                const itemPrice = item.price || 0;
 
-                <Box key={item.id}>
-
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 3
-                    }}
-                  >
-
-                    {/* PRODUCT */}
-                    <Box sx={{ display: "flex", gap: 3 }}>
-
-                      <Box
-                        sx={{
-                          width: 90,
-                          height: 90,
-                          background: "#f9fafb",
-                          borderRadius: 2,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          border: "1px solid #eee"
-                        }}
-                      >
-                        <img
-                          src={item.img}
-                          style={{
-                            width: 70,
-                            height: 70,
-                            objectFit: "contain"
-                          }}
-                        />
-                      </Box>
-
-                      <Box>
-                        <Typography fontWeight={600}>
-                          {item.name}
-                        </Typography>
-
-                        <Typography
-                          sx={{
-                            color: "#d70018",
-                            fontWeight: "bold",
-                            mt: 1
-                          }}
-                        >
-                          {item.price.toLocaleString()}₫
-                        </Typography>
-                      </Box>
-
-                    </Box>
-
-                    {/* QUANTITY */}
+                return (
+                  <Box key={item._id}>
                     <Box
                       sx={{
                         display: "flex",
                         alignItems: "center",
-                        border: "1px solid #ddd",
-                        borderRadius: 2
+                        justifyContent: "space-between",
+                        p: 3
                       }}
                     >
+                      {/* PRODUCT */}
+                      <Box sx={{ display: "flex", gap: 3 }}>
+                        <Box
+                          sx={{
+                            width: 90,
+                            height: 90,
+                            background: "#f9fafb",
+                            borderRadius: 2,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            border: "1px solid #eee"
+                          }}
+                        >
+                          <img
+                            src={imageUrl}
+                            alt={displayName}
+                            style={{
+                              width: 70,
+                              height: 70,
+                              objectFit: "contain"
+                            }}
+                          />
+                        </Box>
 
-                      <IconButton
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity - 1)
-                        }
+                        <Box>
+                          <Typography fontWeight={600}>
+                            {displayName}
+                          </Typography>
+
+                          <Typography
+                            sx={{
+                              color: "#d70018",
+                              fontWeight: "bold",
+                              mt: 1
+                            }}
+                          >
+                            {itemPrice.toLocaleString()}₫
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* QUANTITY */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          border: "1px solid #ddd",
+                          borderRadius: 2
+                        }}
                       >
-                        <Minus size={16} />
-                      </IconButton>
+                        <IconButton
+                          onClick={() =>
+                            updateQuantity(item._id, item.quantity - 1)
+                          }
+                        >
+                          <Minus size={16} />
+                        </IconButton>
 
-                      <Typography sx={{ px: 2 }}>
-                        {item.quantity}
-                      </Typography>
+                        <Typography sx={{ px: 2 }}>
+                          {item.quantity}
+                        </Typography>
 
+                        <IconButton
+                          onClick={() =>
+                            updateQuantity(item._id, item.quantity + 1)
+                          }
+                        >
+                          <Plus size={16} />
+                        </IconButton>
+                      </Box>
+
+                      {/* REMOVE */}
                       <IconButton
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity + 1)
-                        }
+                        sx={{ color: "#d70018" }}
+                        onClick={() => removeItem(item._id)}
                       >
-                        <Plus size={16} />
+                        <Trash2 size={18} />
                       </IconButton>
-
                     </Box>
 
-                    {/* REMOVE */}
-                    <IconButton
-                      sx={{ color: "#d70018" }}
-                      onClick={() => removeItem(item.id)}
-                    >
-                      <Trash2 size={18} />
-                    </IconButton>
-
+                    {index !== cart.length - 1 && <Divider />}
                   </Box>
-
-                  {index !== cart.length - 1 && <Divider />}
-
-                </Box>
-
-              ))}
+                );
+              })}
 
             </Paper>
 

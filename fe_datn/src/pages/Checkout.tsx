@@ -51,51 +51,102 @@ const [openSnackbar,setOpenSnackbar] = useState(false)
 
 const navigate = useNavigate()
 
-useEffect(()=>{
+useEffect(() => {
+  const loadCart = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login");
+        return;
+      }
 
-axios.get("http://localhost:3000/cart")
-.then(res=>setCart(res.data))
+      const response = await axios.get("http://localhost:3000/api/cart", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
 
-const user = JSON.parse(localStorage.getItem("user") || "null")
+      if (response.data && response.data.cart && response.data.cart.items) {
+        setCart(response.data.cart.items);
+      }
+    } catch (error: any) {
+      console.error("Error loading cart:", error);
+      
+      // Xử lý lỗi token hết hạn
+      if (error.response?.status === 401) {
+        const errorMessage = error.response?.data?.message || "";
+        if (errorMessage.includes("hết hạn") || errorMessage.includes("không hợp lệ")) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+          navigate("/login");
+          return;
+        }
+      }
+      
+      alert("Không thể tải giỏ hàng");
+    }
+  };
 
-if(user){
-setName(user.name || "")
-setEmail(user.email || "")
-setPhone(user.phone || "")
-}
+  loadCart();
 
-},[])
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+  if (user) {
+    setName(user.username || user.name || "");
+    setEmail(user.email || "");
+    setPhone(user.phone || "");
+  }
+}, [navigate]);
 
 const subTotal = cart.reduce(
-(sum,item)=>sum + item.price * item.quantity,0
+  (sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0
 )
 
 const shippingFee = subTotal > 500000 ? 0 : 30000
 const discount = subTotal > 1000000 ? subTotal * 0.1 : 0
 const total = subTotal + shippingFee - discount - couponDiscount
 
-const updateQuantity = async(id:number,newQuantity:number)=>{
+const updateQuantity = async (itemId: string, newQuantity: number) => {
+  if (newQuantity < 1) return;
 
-if(newQuantity < 1) return
+  try {
+    const token = localStorage.getItem("token");
+    await axios.put(
+      `http://localhost:3000/api/cart/update/${itemId}`,
+      { quantity: newQuantity },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
 
-await axios.patch(`http://localhost:3000/cart/${id}`,{
-quantity:newQuantity
-})
+    setCart(prev =>
+      prev.map(item =>
+        item._id === itemId ? { ...item, quantity: newQuantity } : item
+      )
+    );
+  } catch (error) {
+    console.error("Error updating quantity:", error);
+    alert("Không thể cập nhật số lượng");
+  }
+};
 
-setCart(prev =>
-prev.map(item =>
-item.id === id ? {...item,quantity:newQuantity}:item
-)
-)
+const removeItem = async (itemId: string) => {
+  try {
+    const token = localStorage.getItem("token");
+    await axios.delete(`http://localhost:3000/api/cart/remove/${itemId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
 
-}
-
-const removeItem = async(id:number)=>{
-
-await axios.delete(`http://localhost:3000/cart/${id}`)
-setCart(prev => prev.filter(item => item.id !== id))
-
-}
+    setCart(prev => prev.filter(item => item._id !== itemId));
+  } catch (error) {
+    console.error("Error removing item:", error);
+    alert("Không thể xóa sản phẩm");
+  }
+};
 
 const applyCoupon = ()=>{
 
@@ -108,53 +159,95 @@ alert("Mã không hợp lệ")
 
 }
 
-const handlePlaceOrder = async()=>{
+const handlePlaceOrder = async () => {
+  if (!name || !phone || !address) {
+    alert("Nhập đầy đủ thông tin");
+    return;
+  }
 
-if(!name || !phone || !address){
-alert("Nhập đầy đủ thông tin")
-return
-}
+  if (!email) {
+    alert("Email không được để trống");
+    return;
+  }
 
-try{
+  if (cart.length === 0) {
+    alert("Giỏ hàng trống");
+    return;
+  }
 
-setLoading(true)
+  try {
+    setLoading(true);
 
-await axios.post("http://localhost:3000/orders",{
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
 
-customerName:name,
-email,
-phone,
-address,
-paymentMethod,
-items:cart,
-total,
-createdAt:new Date()
+    const response = await axios.post(
+      "http://localhost:3000/api/orders",
+      {
+        shipping_info: {
+          name,
+          email,
+          phone,
+          address
+        },
+        payment_method: paymentMethod,
+        coupon_code: coupon || null,
+        notes: ""
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
 
-})
+    if (response.data && response.data.order) {
+      const orderId = response.data.order._id;
 
-await Promise.all(
-cart.map(item =>
-axios.delete(`http://localhost:3000/cart/${item.id}`)
-)
-)
-
-setOpenSnackbar(true)
-
-setTimeout(()=>{
-navigate("/order-success")
-},1500)
-
-}catch{
-
-alert("Lỗi đặt hàng")
-
-}finally{
-
-setLoading(false)
-
-}
-
-}
+      // Xử lý thanh toán theo phương thức
+      if (paymentMethod === "cod") {
+        // COD: Chuyển đến trang thành công
+        setOpenSnackbar(true);
+        setTimeout(() => {
+          navigate("/order-success", { state: { orderId } });
+        }, 1500);
+      } else if (paymentMethod === "bank") {
+        // Bank transfer: Chuyển đến trang hiển thị thông tin chuyển khoản
+        navigate("/payment/bank", { state: { orderId } });
+      } else if (paymentMethod === "vnpay" || paymentMethod === "momo") {
+        // VNPay/MoMo: Chuyển đến trang thanh toán online
+        navigate("/payment/process", { 
+          state: { 
+            orderId, 
+            paymentMethod 
+          } 
+        });
+      }
+    }
+    } catch (error: any) {
+      console.error("Error placing order:", error);
+      
+      // Xử lý lỗi token hết hạn
+      if (error.response?.status === 401) {
+        const errorMessage = error.response?.data?.message || "";
+        if (errorMessage.includes("hết hạn") || errorMessage.includes("không hợp lệ")) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+          navigate("/login");
+          return;
+        }
+      }
+      
+      const errorMessage = error.response?.data?.message || "Lỗi đặt hàng";
+      alert(errorMessage);
+    } finally {
+    setLoading(false);
+  }
+};
 
 return(
 
@@ -213,68 +306,60 @@ mb={4}
 Sản phẩm của bạn
 </Typography>
 
-{cart.map(item=>(
+{cart.map((item) => {
+  const productName = item.product_id?.name || "";
+  const variantName = item.variant_id?.name || "";
+  const displayName = variantName ? `${productName} - ${variantName}` : productName;
+  const imageUrl = item.product_id?.images?.[0] || "";
+  const itemPrice = item.price || 0;
 
-<Box
-key={item.id}
-display="flex"
-justifyContent="space-between"
-alignItems="center"
-py={2}
->
-
-<Box display="flex" gap={2}>
-
-<Avatar
-src={item.img}
-variant="rounded"
-sx={{width:70,height:70}}
-/>
-
-<Box>
-
-<Typography fontWeight="bold">
-{item.name}
-</Typography>
-
-<Typography color="#d70018" fontWeight="bold">
-{item.price.toLocaleString()}₫
-</Typography>
-
-<Box display="flex" alignItems="center">
-
-<IconButton
-onClick={()=>updateQuantity(item.id,item.quantity-1)}
->
-<RemoveIcon/>
-</IconButton>
-
-<Typography mx={1}>
-{item.quantity}
-</Typography>
-
-<IconButton
-onClick={()=>updateQuantity(item.id,item.quantity+1)}
->
-<AddIcon/>
-</IconButton>
-
-</Box>
-
-</Box>
-
-</Box>
-
-<Button
-color="error"
-onClick={()=>removeItem(item.id)}
->
-Xóa
-</Button>
-
-</Box>
-
-))}
+  return (
+    <Box
+      key={item._id}
+      display="flex"
+      justifyContent="space-between"
+      alignItems="center"
+      py={2}
+    >
+      <Box display="flex" gap={2}>
+        <Avatar
+          src={imageUrl}
+          variant="rounded"
+          sx={{ width: 70, height: 70 }}
+        />
+        <Box>
+          <Typography fontWeight="bold">
+            {displayName}
+          </Typography>
+          <Typography color="#d70018" fontWeight="bold">
+            {itemPrice.toLocaleString()}₫
+          </Typography>
+          <Box display="flex" alignItems="center">
+            <IconButton
+              onClick={() => updateQuantity(item._id, item.quantity - 1)}
+            >
+              <RemoveIcon />
+            </IconButton>
+            <Typography mx={1}>
+              {item.quantity}
+            </Typography>
+            <IconButton
+              onClick={() => updateQuantity(item._id, item.quantity + 1)}
+            >
+              <AddIcon />
+            </IconButton>
+          </Box>
+        </Box>
+      </Box>
+      <Button
+        color="error"
+        onClick={() => removeItem(item._id)}
+      >
+        Xóa
+      </Button>
+    </Box>
+  );
+})}
 
 </CardContent>
 

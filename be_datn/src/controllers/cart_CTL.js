@@ -18,7 +18,9 @@ export const getCart = async (req, res) => {
         const cartItems = await CartItem.find({
             cart_id: cart._id,
             deletedAt: null
-        }).populate("product_id", "name price images"); // Populate thông tin sản phẩm
+        })
+        .populate("product_id", "name price images") // Populate thông tin sản phẩm
+        .populate("variant_id", "name price"); // Populate thông tin variant nếu có
 
         res.status(200).json({
             message: "Lấy giỏ hàng thành công",

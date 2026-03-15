@@ -124,38 +124,48 @@ const ProductDetail = () => {
       : product.name;
 
     try {
-      // Thử gọi API backend với variant_id
-      await axios.post("http://localhost:3000/api/cart", {
-        product_id: productId,
-        variant_id: variantId,
-        quantity,
-      }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng");
+        navigate("/login");
+        return;
+      }
+
+      // Gọi API backend với variant_id
+      const response = await axios.post(
+        "http://localhost:3000/api/cart/add",
+        {
+          product_id: productId,
+          variant_id: variantId,
+          quantity,
         },
-      });
-    } catch (error) {
-      // Fallback về API cũ nếu backend chưa có
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      console.log("Fallback to old API:", errorMessage);
-      const res = await axios.get(
-        `http://localhost:3000/cart?productId=${product.id}`
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
-      if (res.data.length > 0) {
-        const item = res.data[0];
-        await axios.patch(`http://localhost:3000/cart/${item.id}`, {
-          quantity: item.quantity + quantity,
-        });
-      } else {
-        await axios.post("http://localhost:3000/cart", {
-          productId: product.id,
-          name: productName,
-          img: product.img,
-          price: price,
-          quantity,
-        });
+      if (response.data) {
+        alert("Đã thêm vào giỏ hàng thành công!");
       }
+    } catch (error: any) {
+      console.error("Error adding to cart:", error);
+      
+      // Xử lý lỗi token hết hạn
+      if (error.response?.status === 401) {
+        const errorMessage = error.response?.data?.message || "";
+        if (errorMessage.includes("hết hạn") || errorMessage.includes("không hợp lệ")) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+          navigate("/login");
+          return;
+        }
+      }
+      
+      const errorMessage = error.response?.data?.message || "Không thể thêm vào giỏ hàng";
+      alert(errorMessage);
     }
   };
 

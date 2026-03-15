@@ -11,6 +11,11 @@ import Checkout from "../pages/Checkout";
 import Orders from "../pages/Orders";
 import OrderDetail from "../pages/OrderDetail";
 import OrderSuccess from "../pages/OrderSuccess";
+import PaymentBank from "../pages/PaymentBank";
+import PaymentProcess from "../pages/PaymentProcess";
+import PaymentMock from "../pages/PaymentMock";
+import PaymentSuccess from "../pages/PaymentSuccess";
+import PaymentFailed from "../pages/PaymentFailed";
 
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
@@ -80,6 +85,34 @@ const AppRouter = () => {
         />
 
         <Route path="order-success" element={<OrderSuccess />} />
+
+        {/* PAYMENT */}
+        <Route
+          path="payment/bank"
+          element={
+            <PrivateRoute>
+              <PaymentBank />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="payment/process"
+          element={
+            <PrivateRoute>
+              <PaymentProcess />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="payment/mock"
+          element={
+            <PrivateRoute>
+              <PaymentMock />
+            </PrivateRoute>
+          }
+        />
+        <Route path="payment/success" element={<PaymentSuccess />} />
+        <Route path="payment/failed" element={<PaymentFailed />} />
 
         {/* AUTH */}
         <Route path="login" element={<Login />} />
