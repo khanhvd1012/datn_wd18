@@ -1,6 +1,7 @@
 import Cart from "../models/cart_MD.js";
 import CartItem from "../models/cartItem_MD.js";
 import Product from "../models/product_MD.js";
+import Variant from "../models/variant_MD.js";
 import { addToCartValidator, updateCartItemValidator } from "../validators/cart_VLD.js";
 
 // Lấy giỏ hàng của user
@@ -17,7 +18,9 @@ export const getCart = async (req, res) => {
         const cartItems = await CartItem.find({
             cart_id: cart._id,
             deletedAt: null
-        }).populate("product_id", "name price images"); // Populate thông tin sản phẩm
+        })
+        .populate("product_id", "name price images") // Populate thông tin sản phẩm
+        .populate("variant_id", "name price"); // Populate thông tin variant nếu có
 
         res.status(200).json({
             message: "Lấy giỏ hàng thành công",
@@ -40,12 +43,29 @@ export const addToCart = async (req, res) => {
         const { product_id, quantity, variant_id } = req.body;
         const userId = req.user._id;
 
-        // 1. Kiểm tra sản phẩm tồn tại và lấy giá
+        // 1. Kiểm tra sản phẩm tồn tại
         const product = await Product.findById(product_id);
         if (!product) return res.status(404).json({ message: "Sản phẩm không tồn tại" });
 
-        // TODO: Logic xử lý giá theo variant nếu có
-        const price = product.price;
+        // 2. Lấy giá từ variant nếu có, nếu không thì lấy giá từ product
+        let price = product.price;
+        if (variant_id) {
+            const variant = await Variant.findOne({ 
+                _id: variant_id, 
+                product: product_id,
+                is_active: true 
+            });
+            if (!variant) {
+                return res.status(404).json({ message: "Biến thể không tồn tại hoặc không khả dụng" });
+            }
+            // Kiểm tra tồn kho
+            if (variant.stock < quantity) {
+                return res.status(400).json({ 
+                    message: `Chỉ còn ${variant.stock} sản phẩm trong kho` 
+                });
+            }
+            price = variant.price;
+        }
 
         // 2. Tìm hoặc tạo giỏ hàng
         let cart = await Cart.findOne({ user_id: userId });

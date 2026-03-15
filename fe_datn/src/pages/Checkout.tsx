@@ -2,49 +2,41 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 import {
-Container,
-Typography,
-Box,
-TextField,
-Button,
-Divider,
-Card,
-CardContent,
-Grid,
-Avatar,
-Paper,
-RadioGroup,
-FormControlLabel,
-Radio,
-CircularProgress,
-IconButton,
-Chip,
-InputAdornment,
-Stepper,
-Step,
-StepLabel
+  Container,
+  Typography,
+  Box,
+  TextField,
+  Button,
+  Divider,
+  Card,
+  CardContent,
+  Grid,
+  Avatar,
+  Paper,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  CircularProgress,
+  Snackbar,
+  Alert,
+  IconButton
 } from "@mui/material";
 
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
-import LocalOfferIcon from "@mui/icons-material/LocalOffer";
-import PaymentsIcon from "@mui/icons-material/Payments";
-import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 
 import { useNavigate } from "react-router-dom";
 
-interface CartItem{
-id:number
-name:string
-img:string
-price:number
-quantity:number
+interface CartItem {
+  id: number
+  productId: number
+  name: string
+  img: string
+  price: number
+  quantity: number
 }
 
-const steps = ["Giỏ hàng","Thanh toán","Hoàn tất"]
-
-const Checkout = ()=>{
+const Checkout = () => {
 
 const [cart,setCart] = useState<CartItem[]>([])
 const [name,setName] = useState("")
@@ -55,51 +47,111 @@ const [coupon,setCoupon] = useState("")
 const [couponDiscount,setCouponDiscount] = useState(0)
 const [paymentMethod,setPaymentMethod] = useState("cod")
 const [loading,setLoading] = useState(false)
+const [openSnackbar,setOpenSnackbar] = useState(false)
 
 const navigate = useNavigate()
 
-useEffect(()=>{
+useEffect(() => {
+  const loadCart = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login");
+        return;
+      }
 
-axios.get("http://localhost:3000/cart")
-.then(res=>setCart(res.data))
+      const response = await axios.get("http://localhost:3000/api/cart", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
 
-},[])
+      if (response.data && response.data.cart && response.data.cart.items) {
+        setCart(response.data.cart.items);
+      }
+    } catch (error: any) {
+      console.error("Error loading cart:", error);
+      
+      // Xử lý lỗi token hết hạn
+      if (error.response?.status === 401) {
+        const errorMessage = error.response?.data?.message || "";
+        if (errorMessage.includes("hết hạn") || errorMessage.includes("không hợp lệ")) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+          navigate("/login");
+          return;
+        }
+      }
+      
+      alert("Không thể tải giỏ hàng");
+    }
+  };
+
+  loadCart();
+
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+  if (user) {
+    setName(user.username || user.name || "");
+    setEmail(user.email || "");
+    setPhone(user.phone || "");
+  }
+}, [navigate]);
 
 const subTotal = cart.reduce(
-(sum,item)=> sum + item.price * item.quantity ,0
+  (sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0
 )
 
-const shipping = subTotal > 500000 ? 0 : 30000
+const shippingFee = subTotal > 500000 ? 0 : 30000
+const discount = subTotal > 1000000 ? subTotal * 0.1 : 0
+const total = subTotal + shippingFee - discount - couponDiscount
 
-const total = subTotal + shipping - couponDiscount
+const updateQuantity = async (itemId: string, newQuantity: number) => {
+  if (newQuantity < 1) return;
 
-const updateQuantity = async(id:number,newQuantity:number)=>{
+  try {
+    const token = localStorage.getItem("token");
+    await axios.put(
+      `http://localhost:3000/api/cart/update/${itemId}`,
+      { quantity: newQuantity },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
 
-if(newQuantity < 1) return
+    setCart(prev =>
+      prev.map(item =>
+        item._id === itemId ? { ...item, quantity: newQuantity } : item
+      )
+    );
+  } catch (error) {
+    console.error("Error updating quantity:", error);
+    alert("Không thể cập nhật số lượng");
+  }
+};
 
-await axios.patch(`http://localhost:3000/cart/${id}`,{
-quantity:newQuantity
-})
+const removeItem = async (itemId: string) => {
+  try {
+    const token = localStorage.getItem("token");
+    await axios.delete(`http://localhost:3000/api/cart/remove/${itemId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
 
-setCart(prev =>
-prev.map(item =>
-item.id === id ? {...item,quantity:newQuantity}:item
-)
-)
-
-}
-
-const removeItem = async(id:number)=>{
-
-await axios.delete(`http://localhost:3000/cart/${id}`)
-setCart(prev => prev.filter(item => item.id !== id))
-
-}
+    setCart(prev => prev.filter(item => item._id !== itemId));
+  } catch (error) {
+    console.error("Error removing item:", error);
+    alert("Không thể xóa sản phẩm");
+  }
+};
 
 const applyCoupon = ()=>{
 
 if(coupon === "SALE10"){
-setCouponDiscount(100000)
+setCouponDiscount(subTotal*0.1)
 alert("Áp dụng mã thành công")
 }else{
 alert("Mã không hợp lệ")
@@ -107,196 +159,207 @@ alert("Mã không hợp lệ")
 
 }
 
-const handleOrder = async()=>{
+const handlePlaceOrder = async () => {
+  if (!name || !phone || !address) {
+    alert("Nhập đầy đủ thông tin");
+    return;
+  }
 
-if(cart.length === 0){
-alert("Giỏ hàng trống")
-return
-}
+  if (!email) {
+    alert("Email không được để trống");
+    return;
+  }
 
-if(!name || !phone || !address){
-alert("Nhập đầy đủ thông tin")
-return
-}
+  if (cart.length === 0) {
+    alert("Giỏ hàng trống");
+    return;
+  }
 
-setLoading(true)
+  try {
+    setLoading(true);
 
-await axios.post("http://localhost:3000/orders",{
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
 
-customerName:name,
-email,
-phone,
-address,
-paymentMethod,
-items:cart,
-total,
-status:"pending",
-createdAt:new Date()
+    const response = await axios.post(
+      "http://localhost:3000/api/orders",
+      {
+        shipping_info: {
+          name,
+          email,
+          phone,
+          address
+        },
+        payment_method: paymentMethod,
+        coupon_code: coupon || null,
+        notes: ""
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
 
-})
+    if (response.data && response.data.order) {
+      const orderId = response.data.order._id;
 
-await Promise.all(
-cart.map(item =>
-axios.delete(`http://localhost:3000/cart/${item.id}`)
-)
-)
-
-navigate("/order-success")
-
-}
+      // Xử lý thanh toán theo phương thức
+      if (paymentMethod === "cod") {
+        // COD: Chuyển đến trang thành công
+        setOpenSnackbar(true);
+        setTimeout(() => {
+          navigate("/order-success", { state: { orderId } });
+        }, 1500);
+      } else if (paymentMethod === "bank") {
+        // Bank transfer: Chuyển đến trang hiển thị thông tin chuyển khoản
+        navigate("/payment/bank", { state: { orderId } });
+      } else if (paymentMethod === "vnpay" || paymentMethod === "momo") {
+        // VNPay/MoMo: Chuyển đến trang thanh toán online
+        navigate("/payment/process", { 
+          state: { 
+            orderId, 
+            paymentMethod 
+          } 
+        });
+      }
+    }
+    } catch (error: any) {
+      console.error("Error placing order:", error);
+      
+      // Xử lý lỗi token hết hạn
+      if (error.response?.status === 401) {
+        const errorMessage = error.response?.data?.message || "";
+        if (errorMessage.includes("hết hạn") || errorMessage.includes("không hợp lệ")) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+          navigate("/login");
+          return;
+        }
+      }
+      
+      const errorMessage = error.response?.data?.message || "Lỗi đặt hàng";
+      alert(errorMessage);
+    } finally {
+    setLoading(false);
+  }
+};
 
 return(
 
-<Box
-sx={{
-background:"#f4f6f8",
-minHeight:"100vh",
-display:"flex",
-alignItems:"center",
-justifyContent:"center",
-py:6
-}}
->
+<Box sx={{background:"#f5f5f5",minHeight:"100vh",py:5}}>
 
 <Container maxWidth="lg">
 
-<Typography
-variant="h4"
-fontWeight="bold"
-textAlign="center"
-mb={4}
->
-Thanh toán đơn hàng
+{/* HEADER */}
+
+<Box mb={4}>
+
+<Typography variant="h4" fontWeight="bold">
+Thanh toán
 </Typography>
 
-<Stepper activeStep={1} sx={{mb:5}}>
-{steps.map(step=>(
-<Step key={step}>
-<StepLabel>{step}</StepLabel>
-</Step>
-))}
-</Stepper>
+<Typography color="text.secondary">
+Hoàn tất thông tin để đặt hàng
+</Typography>
 
-<Grid container spacing={4} justifyContent="center">
+</Box>
+
+{/* STEP CHECKOUT */}
+
+<Box
+display="flex"
+justifyContent="center"
+gap={6}
+mb={4}
+>
+
+<Typography color="success.main">
+✓ Giỏ hàng
+</Typography>
+
+<Typography fontWeight="bold">
+● Thanh toán
+</Typography>
+
+<Typography color="gray">
+○ Hoàn tất
+</Typography>
+
+</Box>
+
+<Grid container spacing={4}>
+
+{/* LEFT - CART */}
 
 <Grid item xs={12} md={7}>
 
-<Box
-sx={{
-background:"#e3f2fd",
-p:2,
-borderRadius:2,
-mb:2
-}}
->
-<Typography fontWeight="bold" color="#1976d2">
-🚚 Miễn phí vận chuyển cho đơn trên 500.000₫
-</Typography>
-</Box>
-
-<Card
-sx={{
-borderRadius:4,
-boxShadow:3,
-transition:"0.3s",
-"&:hover":{
-boxShadow:8,
-transform:"translateY(-3px)"
-}
-}}
->
+<Card sx={{borderRadius:3}}>
 
 <CardContent>
 
 <Typography variant="h6" fontWeight="bold" mb={2}>
-Sản phẩm ({cart.length})
+Sản phẩm của bạn
 </Typography>
 
-{cart.map(item=>(
+{cart.map((item) => {
+  const productName = item.product_id?.name || "";
+  const variantName = item.variant_id?.name || "";
+  const displayName = variantName ? `${productName} - ${variantName}` : productName;
+  const imageUrl = item.product_id?.images?.[0] || "";
+  const itemPrice = item.price || 0;
 
-<Box
-key={item.id}
-display="flex"
-justifyContent="space-between"
-alignItems="center"
-py={2}
-sx={{
-borderBottom:"1px solid #eee",
-"&:hover":{background:"#fafafa"}
-}}
->
-
-<Box display="flex" gap={2}>
-
-<Avatar
-src={item.img}
-variant="rounded"
-sx={{width:80,height:80}}
-/>
-
-<Box>
-
-<Box display="flex" alignItems="center" gap={1}>
-
-<Typography fontWeight="bold">
-{item.name}
-</Typography>
-
-<Chip
-icon={<LocalOfferIcon/>}
-label="-10%"
-size="small"
-color="error"
-/>
-
-</Box>
-
-<Typography color="#d70018">
-{item.price.toLocaleString()}₫
-</Typography>
-
-<Box display="flex" alignItems="center">
-
-<IconButton
-onClick={()=>updateQuantity(item.id,item.quantity-1)}
->
-<RemoveIcon/>
-</IconButton>
-
-<Typography mx={1}>
-{item.quantity}
-</Typography>
-
-<IconButton
-onClick={()=>updateQuantity(item.id,item.quantity+1)}
->
-<AddIcon/>
-</IconButton>
-
-</Box>
-
-</Box>
-
-</Box>
-
-<Box textAlign="right">
-
-<Typography fontWeight="bold">
-{(item.price * item.quantity).toLocaleString()}₫
-</Typography>
-
-<IconButton
-color="error"
-onClick={()=>removeItem(item.id)}
->
-<DeleteIcon/>
-</IconButton>
-
-</Box>
-
-</Box>
-
-))}
+  return (
+    <Box
+      key={item._id}
+      display="flex"
+      justifyContent="space-between"
+      alignItems="center"
+      py={2}
+    >
+      <Box display="flex" gap={2}>
+        <Avatar
+          src={imageUrl}
+          variant="rounded"
+          sx={{ width: 70, height: 70 }}
+        />
+        <Box>
+          <Typography fontWeight="bold">
+            {displayName}
+          </Typography>
+          <Typography color="#d70018" fontWeight="bold">
+            {itemPrice.toLocaleString()}₫
+          </Typography>
+          <Box display="flex" alignItems="center">
+            <IconButton
+              onClick={() => updateQuantity(item._id, item.quantity - 1)}
+            >
+              <RemoveIcon />
+            </IconButton>
+            <Typography mx={1}>
+              {item.quantity}
+            </Typography>
+            <IconButton
+              onClick={() => updateQuantity(item._id, item.quantity + 1)}
+            >
+              <AddIcon />
+            </IconButton>
+          </Box>
+        </Box>
+      </Box>
+      <Button
+        color="error"
+        onClick={() => removeItem(item._id)}
+      >
+        Xóa
+      </Button>
+    </Box>
+  );
+})}
 
 </CardContent>
 
@@ -304,13 +367,14 @@ onClick={()=>removeItem(item.id)}
 
 </Grid>
 
+{/* RIGHT - SUMMARY */}
+
 <Grid item xs={12} md={5}>
 
 <Paper
 sx={{
 p:4,
-borderRadius:4,
-boxShadow:5,
+borderRadius:3,
 position:"sticky",
 top:20
 }}
@@ -350,46 +414,12 @@ onChange={e=>setAddress(e.target.value)}
 fullWidth
 />
 
-<TextField
-label="Mã giảm giá"
-value={coupon}
-onChange={e=>setCoupon(e.target.value)}
-InputProps={{
-endAdornment:(
-<InputAdornment position="end">
-<Button onClick={applyCoupon}>
-Áp dụng
-</Button>
-</InputAdornment>
-)
-}}
-/>
-
-<Box mt={1} display="flex" gap={1} flexWrap="wrap">
-
-<Chip
-label="SALE10 - Giảm 100k"
-color="success"
-onClick={()=>{
-setCoupon("SALE10")
-setCouponDiscount(100000)
-}}
-/>
-
-<Chip
-label="FREESHIP"
-color="primary"
-onClick={()=>alert("Miễn phí vận chuyển")}
-/>
-
-</Box>
-
 </Box>
 
 <Divider sx={{my:3}}/>
 
 <Typography fontWeight="bold" mb={2}>
-Thanh toán
+Phương thức thanh toán
 </Typography>
 
 <RadioGroup
@@ -400,23 +430,25 @@ onChange={e=>setPaymentMethod(e.target.value)}
 <FormControlLabel
 value="cod"
 control={<Radio/>}
-label={
-<Box display="flex" alignItems="center" gap={1}>
-<PaymentsIcon/>
-Thanh toán khi nhận hàng
-</Box>
-}
+label="Thanh toán khi nhận hàng"
+/>
+
+<FormControlLabel
+value="bank"
+control={<Radio/>}
+label="Chuyển khoản"
 />
 
 <FormControlLabel
 value="momo"
 control={<Radio/>}
-label={
-<Box display="flex" alignItems="center" gap={1}>
-<AccountBalanceWalletIcon/>
-Ví MoMo
-</Box>
-}
+label="Ví MoMo"
+/>
+
+<FormControlLabel
+value="vnpay"
+control={<Radio/>}
+label="VNPay"
 />
 
 </RadioGroup>
@@ -431,59 +463,38 @@ Ví MoMo
 <Box display="flex" justifyContent="space-between">
 <Typography>Phí ship</Typography>
 <Typography>
-{shipping === 0 ? "Miễn phí" : shipping.toLocaleString()+"₫"}
+{shippingFee === 0 ? "Miễn phí" : shippingFee.toLocaleString()+"₫"}
 </Typography>
 </Box>
-
-{couponDiscount > 0 &&(
-
-<Box display="flex" justifyContent="space-between">
-
-<Typography>Giảm giá</Typography>
-
-<Typography color="green">
--{couponDiscount.toLocaleString()}₫
-</Typography>
-
-</Box>
-
-)}
 
 <Divider sx={{my:2}}/>
 
 <Box display="flex" justifyContent="space-between" mb={3}>
 
-<Typography fontWeight="bold">
+<Typography variant="h6">
 Tổng tiền
 </Typography>
 
 <Typography
-fontWeight="bold"
-fontSize={22}
+variant="h6"
 color="#d70018"
+fontWeight="bold"
 >
 {total.toLocaleString()}₫
 </Typography>
 
 </Box>
 
-<Box mb={2}>
-<Typography fontSize={14} color="text.secondary">
-🚚 Giao hàng dự kiến: 2 - 4 ngày
-</Typography>
-</Box>
-
 <Button
 fullWidth
 variant="contained"
 sx={{
-background:"linear-gradient(45deg,#ff512f,#dd2476)",
+background:"#d70018",
 py:1.5,
-fontSize:16,
 fontWeight:"bold",
-borderRadius:3
+fontSize:16
 }}
-onClick={handleOrder}
+onClick={handlePlaceOrder}
 disabled={loading}
 >
 
@@ -500,6 +511,12 @@ disabled={loading}
 </Grid>
 
 </Container>
+
+<Snackbar open={openSnackbar} autoHideDuration={2000}>
+<Alert severity="success">
+Đặt hàng thành công
+</Alert>
+</Snackbar>
 
 </Box>
 

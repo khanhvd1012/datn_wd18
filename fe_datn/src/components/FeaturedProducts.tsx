@@ -5,24 +5,85 @@ import {
   CardMedia,
   CardContent,
   Typography,
+  Chip,
 } from "@mui/material";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 interface Product {
   id: number;
+  _id?: string;
   name: string;
   img: string;
   price: number;
 }
 
-const FeaturedProducts = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+interface Variant {
+  _id: string;
+  price: number;
+  original_price?: number;
+  is_default?: boolean;
+}
 
+interface ProductWithVariants extends Product {
+  displayPrice?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  hasVariants?: boolean;
+  variantCount?: number;
+}
+
+const FeaturedProducts = () => {
+  const [products, setProducts] = useState<ProductWithVariants[]>([]);
+
+  // Load variants cho mỗi sản phẩm
   useEffect(() => {
-    fetch("http://localhost:3000/products")
-      .then((res) => res.json())
-      .then((data) => setProducts(data))
-      .catch((err) => console.error("Lỗi load products:", err));
+    const loadProductsWithVariants = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/products");
+        const data = await res.json();
+        
+        // Load variants cho từng sản phẩm
+        const productsWithVariants = await Promise.all(
+          data.slice(0, 5).map(async (product: Product) => {
+            try {
+              const productId = product._id || product.id;
+              const variantsRes = await axios.get(
+                `http://localhost:3000/api/variants/product/${productId}`
+              );
+              
+              if (variantsRes.data?.variants && variantsRes.data.variants.length > 0) {
+                const variants: Variant[] = variantsRes.data.variants;
+                const defaultVariant = variants.find(v => v.is_default) || variants[0];
+                const prices = variants.map(v => v.price);
+                const minPrice = Math.min(...prices);
+                const maxPrice = Math.max(...prices);
+                
+                return {
+                  ...product,
+                  displayPrice: defaultVariant.price,
+                  minPrice,
+                  maxPrice,
+                  hasVariants: true,
+                  variantCount: variants.length,
+                };
+              }
+              
+              return { ...product, displayPrice: product.price, hasVariants: false };
+            } catch (error) {
+              // Nếu không có variants hoặc API lỗi, dùng giá mặc định
+              return { ...product, displayPrice: product.price, hasVariants: false };
+            }
+          })
+        );
+        
+        setProducts(productsWithVariants);
+      } catch (err) {
+        console.error("Lỗi load products:", err);
+      }
+    };
+
+    loadProductsWithVariants();
   }, []);
 
   const formatPrice = (price: number) =>
@@ -82,6 +143,7 @@ const FeaturedProducts = () => {
                   height: "100%",
                   transition: "0.3s",
                   cursor: "pointer",
+                  position: "relative",
                   "&:hover": {
                     borderColor: "#ff6a00",
                     transform: "translateY(-6px)",
@@ -89,6 +151,24 @@ const FeaturedProducts = () => {
                   },
                 }}
               >
+                {/* Badge nhiều biến thể */}
+                {item.hasVariants && item.variantCount && item.variantCount > 1 && (
+                  <Chip
+                    label={`${item.variantCount} biến thể`}
+                    size="small"
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      right: 8,
+                      backgroundColor: "#ff6a00",
+                      color: "#fff",
+                      fontSize: "0.7rem",
+                      height: 20,
+                      zIndex: 1,
+                    }}
+                  />
+                )}
+
                 <CardMedia
                   component="img"
                   image={item.img}
@@ -113,15 +193,39 @@ const FeaturedProducts = () => {
                     {item.name}
                   </Typography>
 
-                  <Typography
-                    sx={{
-                      color: "#ff3b3b",
-                      fontWeight: "bold",
-                      fontSize: 16,
-                    }}
-                  >
-                    {formatPrice(item.price)}
-                  </Typography>
+                  {/* Hiển thị giá */}
+                  {item.hasVariants && item.minPrice !== item.maxPrice ? (
+                    <Box>
+                      <Typography
+                        sx={{
+                          color: "#ff3b3b",
+                          fontWeight: "bold",
+                          fontSize: 16,
+                        }}
+                      >
+                        {formatPrice(item.minPrice || item.displayPrice || item.price)} - {formatPrice(item.maxPrice || item.displayPrice || item.price)}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          color: "#999",
+                          fontSize: 12,
+                          mt: 0.5,
+                        }}
+                      >
+                        {item.variantCount} lựa chọn
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Typography
+                      sx={{
+                        color: "#ff3b3b",
+                        fontWeight: "bold",
+                        fontSize: 16,
+                      }}
+                    >
+                      {formatPrice(item.displayPrice || item.price)}
+                    </Typography>
+                  )}
                 </CardContent>
               </Card>
             </Link>

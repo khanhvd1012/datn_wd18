@@ -67,9 +67,9 @@ export const login = async (req, res) => {
             return res.status(400).json({ message: "Email hoặc mật khẩu không đúng" });
         }
 
-        // Generate Token
+        // Generate Token (tăng thời hạn lên 7 ngày)
         const accessToken = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
-            expiresIn: "1d",
+            expiresIn: "7d",
         });
 
         user.password = undefined;

@@ -13,13 +13,12 @@ import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import Footer from "../../components/Footer";
 
 const Register = () => {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    name: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: ""
@@ -37,8 +36,12 @@ const Register = () => {
   const validate = () => {
     const newErrors = {};
 
-    if (!form.name.trim()) {
-      newErrors.name = "Họ và tên không được để trống";
+    if (!form.username.trim()) {
+      newErrors.username = "Tên đăng nhập không được để trống";
+    } else if (form.username.length < 3) {
+      newErrors.username = "Tên đăng nhập phải có ít nhất 3 ký tự";
+    } else if (form.username.length > 30) {
+      newErrors.username = "Tên đăng nhập không được quá 30 ký tự";
     }
 
     if (!form.email) {
@@ -69,29 +72,25 @@ const Register = () => {
     if (!validate()) return;
 
     try {
-      const checkUser = await axios.get(
-        `http://localhost:3000/users?email=${form.email}`
-      );
-
-      if (checkUser.data.length > 0) {
-        alert("Email đã tồn tại");
-        return;
-      }
-
-      const newUser = {
-        name: form.name,
+      // Gọi API backend thật
+      const response = await axios.post("http://localhost:3000/api/auth/register", {
+        username: form.username,
         email: form.email,
         password: form.password,
-        role: "user"
-      };
+        confirmPassword: form.confirmPassword // Backend validator yêu cầu
+      });
 
-      await axios.post("http://localhost:3000/users", newUser);
-
-      alert("Đăng ký thành công");
+      alert(response.data.message || "Đăng ký thành công");
       navigate("/login");
 
     } catch (error) {
-      alert("Lỗi server");
+      // Hiển thị lỗi chi tiết hơn
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.messages?.join(", ") ||
+                          error.message || 
+                          "Lỗi server";
+      alert(errorMessage);
+      console.error("Lỗi đăng ký:", error.response?.data || error);
     }
   };
 
@@ -127,13 +126,13 @@ const Register = () => {
 
           <TextField
             fullWidth
-            label="Họ và tên"
-            name="name"
-            value={form.name}
+            label="Tên đăng nhập"
+            name="username"
+            value={form.username}
             onChange={handleChange}
             margin="normal"
-            error={!!errors.name}
-            helperText={errors.name}
+            error={!!errors.username}
+            helperText={errors.username}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -236,8 +235,6 @@ const Register = () => {
           </Box>
         </Paper>
       </Box>
-
-      <Footer />
     </>
   );
 };

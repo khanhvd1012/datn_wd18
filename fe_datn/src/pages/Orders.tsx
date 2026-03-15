@@ -10,8 +10,7 @@ import {
   Grid,
   Chip,
   Avatar,
-  Stack,
-  CircularProgress
+  Stack
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
@@ -19,56 +18,50 @@ const Orders = () => {
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const navigate = useNavigate();
 
   useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/login");
+          return;
+        }
 
-    const user = JSON.parse(localStorage.getItem("user") || "null");
+        const response = await axios.get("http://localhost:3000/api/orders", {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
 
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-
-    axios
-      .get(`http://localhost:3000/orders?customerName=${user.name}`)
-      .then(res => {
-        setOrders(res.data);
+        if (response.data && response.data.orders) {
+          setOrders(response.data.orders);
+        }
+      } catch (error: any) {
+        console.error("Error loading orders:", error);
+        
+        // Xử lý lỗi token hết hạn
+        if (error.response?.status === 401) {
+          const errorMessage = error.response?.data?.message || "";
+          if (errorMessage.includes("hết hạn") || errorMessage.includes("không hợp lệ")) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+            navigate("/login");
+            return;
+          }
+        }
+        
+        alert("Không thể tải lịch sử đơn hàng");
+      } finally {
         setLoading(false);
-      });
+      }
+    };
 
+    fetchOrders();
   }, [navigate]);
-
-  const getStatus = (status) => {
-
-    switch (status) {
-
-      case "pending":
-        return { label: "Chờ xác nhận", color: "warning" };
-
-      case "shipping":
-        return { label: "Đang giao", color: "info" };
-
-      case "completed":
-        return { label: "Hoàn thành", color: "success" };
-
-      case "cancel":
-        return { label: "Đã hủy", color: "error" };
-
-      default:
-        return { label: "Đã đặt hàng", color: "default" };
-    }
-
-  };
-
-  if (loading)
-    return (
-      <Box textAlign="center" mt={10}>
-        <CircularProgress />
-        <Typography mt={2}>Đang tải đơn hàng...</Typography>
-      </Box>
-    );
 
   return (
 
@@ -83,22 +76,18 @@ const Orders = () => {
         Lịch sử đơn hàng
       </Typography>
 
-      {orders.length === 0 && (
+      {loading ? (
         <Typography textAlign="center">
-          Bạn chưa có đơn hàng nào
+          Đang tải lịch sử đơn hàng...
         </Typography>
-      )}
-
-      <Grid container spacing={3}>
-
-        {orders.map(order => {
-
-          const status = getStatus(order.status);
-
-          return (
-
-            <Grid item xs={12} key={order.id}>
-
+      ) : orders.length === 0 ? (
+        <Typography textAlign="center">
+          Chưa có đơn hàng nào
+        </Typography>
+      ) : (
+        <Grid container spacing={3}>
+          {orders.map((order: any) => (
+            <Grid item xs={12} key={order._id}>
               <Card
                 sx={{
                   borderRadius: 4,
@@ -107,9 +96,7 @@ const Orders = () => {
                   "&:hover": { boxShadow: 10 }
                 }}
               >
-
                 <CardContent>
-
                   <Box
                     display="flex"
                     justifyContent="space-between"
@@ -117,40 +104,34 @@ const Orders = () => {
                     gap={3}
                     alignItems="center"
                   >
-
                     {/* LEFT */}
                     <Box>
-
                       <Typography fontWeight="bold" fontSize={18}>
-                        Đơn hàng #{order.id}
+                        Đơn hàng #{order._id.toString().slice(-6).toUpperCase()}
                       </Typography>
 
                       <Typography color="text.secondary">
-                        Người nhận: {order.customerName}
+                        Người nhận: {order.shipping_info?.name || "N/A"}
                       </Typography>
 
                       <Typography color="text.secondary">
-                        Ngày đặt: {new Date(order.createdAt).toLocaleString()}
+                        Ngày đặt: {new Date(order.createdAt).toLocaleString("vi-VN")}
                       </Typography>
 
                       <Stack direction="row" spacing={1} mt={2}>
-
-                        {order.items?.slice(0, 3).map(item => (
+                        {order.order_items?.slice(0, 3).map((item: any, index: number) => (
                           <Avatar
-                            key={item.id}
-                            src={item.img}
+                            key={index}
+                            src={item.image || ""}
                             variant="rounded"
                             sx={{ width: 50, height: 50 }}
                           />
                         ))}
-
                       </Stack>
-
                     </Box>
 
                     {/* CENTER */}
                     <Box textAlign="center">
-
                       <Typography color="text.secondary">
                         Tổng tiền
                       </Typography>
@@ -160,17 +141,28 @@ const Orders = () => {
                         fontSize={22}
                         color="#ff5722"
                       >
-                        {order.total?.toLocaleString()}₫
+                        {order.total?.toLocaleString("vi-VN")}₫
                       </Typography>
-
                     </Box>
 
                     {/* RIGHT */}
                     <Box textAlign="right">
-
                       <Chip
-                        label={status.label}
-                        color={status.color}
+                        label={
+                          order.order_status === "pending" ? "Chờ xử lý" :
+                          order.order_status === "confirmed" ? "Đã xác nhận" :
+                          order.order_status === "processing" ? "Đang xử lý" :
+                          order.order_status === "shipping" ? "Đang giao hàng" :
+                          order.order_status === "delivered" ? "Đã giao hàng" :
+                          order.order_status === "cancelled" ? "Đã hủy" :
+                          "Chờ xử lý"
+                        }
+                        color={
+                          order.order_status === "delivered" ? "success" :
+                          order.order_status === "cancelled" ? "error" :
+                          order.order_status === "shipping" ? "info" :
+                          "warning"
+                        }
                         sx={{ mb: 2, fontWeight: "bold" }}
                       />
 
@@ -178,7 +170,7 @@ const Orders = () => {
 
                       <Button
                         variant="contained"
-                        onClick={() => navigate(`/orders/${order.id}`)}
+                        onClick={() => navigate(`/orders/${order._id}`)}
                         sx={{
                           background: "#ff5722",
                           borderRadius: 2,
@@ -188,25 +180,16 @@ const Orders = () => {
                       >
                         Xem chi tiết
                       </Button>
-
                     </Box>
-
                   </Box>
-
                 </CardContent>
-
               </Card>
-
             </Grid>
-
-          );
-
-        })}
-
-      </Grid>
+          ))}
+        </Grid>
+      )}
 
     </Container>
-
   );
 };
 
