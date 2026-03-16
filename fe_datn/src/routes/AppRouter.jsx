@@ -18,6 +18,12 @@ import Register from "../pages/auth/Register";
 import Profile from "../pages/Profile";
 import MyAccount from "../pages/account/MyAccount";
 
+/* NEW PAGES */
+import News from "../pages/news/News.tsx";
+import NewsDetail from "../pages/news/NewsDetail.tsx";
+import About from "../pages/about/About.tsx";
+import Contact from "../pages/contact/Contact.tsx";
+
 /* ADMIN */
 import Users from "../pages/admin/Users";
 import AdminProducts from "../pages/admin/AdminProducts";
@@ -43,6 +49,13 @@ const AppRouter = () => {
         <Route index element={<Home />} />
         <Route path="products" element={<ProductList />} />
         <Route path="product/:id" element={<ProductDetail />} />
+
+        {/* NEW PAGES */}
+        <Route path="news" element={<News />} />
+                <Route path="/news/:id" element={<NewsDetail />} />
+        <Route path="about" element={<About />} />
+        <Route path="contact" element={<Contact />} />
+        <Route path="/news/:id" element={<NewsDetail />} />
 
         {/* AUTH */}
         <Route path="login" element={<Login />} />

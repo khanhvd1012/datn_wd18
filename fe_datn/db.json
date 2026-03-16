@@ -1,87 +1,79 @@
 {
   "products": [
     {
-      "id": "1",
-      "name": "Kính cường lực iPhone 15",
+      "id": 1,
+      "name": "Ốp lưng iPhone 15 Silicon",
+      "img": "https://images.unsplash.com/photo-1601597111158-2fceff292cdc",
+      "price": 180000,
+      "category": "iphone",
+      "description": "Ốp lưng silicon cao cấp bảo vệ iPhone khỏi trầy xước và va đập."
+    },
+    {
+      "id": 2,
+      "name": "Kính cường lực iPhone",
       "img": "https://images.unsplash.com/photo-1598327105666-5b89351aff97",
       "price": 120000,
       "category": "iphone",
-      "description": "Kính cường lực bảo vệ màn hình iPhone 15 chống trầy xước."
+      "description": "Kính cường lực 9H bảo vệ màn hình iPhone."
     },
     {
-      "id": "2",
-      "name": "Ốp lưng iPhone Silicon",
-      "img": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9",
-      "price": 180000,
-      "category": "iphone",
-      "description": "Ốp lưng silicon chống sốc cho iPhone."
-    },
-    {
-      "id": "3",
-      "name": "Cáp sạc Lightning",
+      "id": 3,
+      "name": "Cáp sạc Lightning iPhone",
       "img": "https://images.unsplash.com/photo-1580910051074-3eb694886505",
       "price": 150000,
       "category": "iphone",
       "description": "Cáp sạc Lightning hỗ trợ sạc nhanh."
     },
     {
-      "id": "4",
-      "name": "Củ sạc nhanh 20W",
+      "id": 4,
+      "name": "Củ sạc nhanh iPhone 20W",
       "img": "https://images.unsplash.com/photo-1603898037225-1c7f7f7f7c3a",
       "price": 350000,
       "category": "iphone",
-      "description": "Adapter sạc nhanh 20W cho điện thoại."
+      "description": "Adapter sạc nhanh 20W cho iPhone."
     },
     {
-      "id": "5",
-      "name": "Ốp lưng iPhone trong suốt",
-      "img": "https://images.unsplash.com/photo-1606220588913-b3aacb4d2f46",
-      "price": 160000,
+      "id": 5,
+      "name": "Ốp lưng iPhone chống sốc",
+      "img": "https://images.unsplash.com/photo-1592750475338-74b7b21085ab",
+      "price": 200000,
       "category": "iphone",
-      "description": "Ốp lưng trong suốt chống trầy."
+      "description": "Ốp lưng chống sốc bảo vệ điện thoại."
     },
     {
-      "id": "6",
+      "id": 6,
+      "name": "Ốp lưng Samsung chống sốc",
+      "img": "https://images.unsplash.com/photo-1601597111158-2fceff292cdc",
+      "price": 190000,
+      "category": "samsung",
+      "description": "Ốp lưng Samsung chống va đập."
+    },
+    {
+      "id": 7,
       "name": "Kính cường lực Samsung",
-      "img": "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd",
+      "img": "https://images.unsplash.com/photo-1598327105666-5b89351aff97",
       "price": 120000,
       "category": "samsung",
-      "description": "Kính cường lực Samsung chống trầy xước."
+      "description": "Kính cường lực bảo vệ màn hình Samsung."
     },
     {
-      "id": "7",
-      "name": "Ốp lưng Samsung chống sốc",
-      "img": "https://images.unsplash.com/photo-1583573636246-18cb2246697f",
-      "price": 200000,
-      "category": "samsung",
-      "description": "Ốp lưng chống sốc bảo vệ Samsung."
-    },
-    {
-      "id": "8",
-      "name": "Cáp sạc Type-C",
-      "img": "https://images.unsplash.com/photo-1610792516307-ea5acd9c3b00",
+      "id": 8,
+      "name": "Cáp sạc Type C Samsung",
+      "img": "https://images.unsplash.com/photo-1580910051074-3eb694886505",
       "price": 140000,
       "category": "samsung",
-      "description": "Cáp Type-C sạc nhanh."
+      "description": "Cáp sạc Type C hỗ trợ sạc nhanh."
     },
     {
-      "id": "9",
+      "id": 9,
       "name": "Củ sạc nhanh Samsung",
-      "img": "https://images.unsplash.com/photo-1605236453806-6ff36851218e",
+      "img": "https://images.unsplash.com/photo-1603898037225-1c7f7f7f7c3a",
       "price": 320000,
       "category": "samsung",
       "description": "Adapter sạc nhanh Samsung."
     },
     {
-      "id": "10",
-      "name": "Ốp lưng Samsung trong suốt",
-      "img": "https://images.unsplash.com/photo-1592750475338-74b7b21085ab",
-      "price": 150000,
-      "category": "samsung",
-      "description": "Ốp lưng trong suốt cho Samsung."
-    },
-    {
-      "id": "11",
+      "id": 10,
       "name": "Tai nghe Bluetooth",
       "img": "https://images.unsplash.com/photo-1585386959984-a4155224a1ad",
       "price": 900000,
@@ -89,79 +81,47 @@
       "description": "Tai nghe Bluetooth âm thanh sống động."
     },
     {
-      "id": "12",
+      "id": 11,
       "name": "Tai nghe AirPods",
       "img": "https://images.unsplash.com/photo-1518449037947-7d1b2c1f3a8b",
       "price": 4500000,
       "category": "tainghe",
-      "description": "Tai nghe AirPods chất lượng cao."
+      "description": "Tai nghe AirPods không dây cao cấp."
     },
     {
-      "id": "13",
+      "id": 12,
       "name": "Tai nghe Samsung Buds",
       "img": "https://images.unsplash.com/photo-1519677100203-a0e668c92439",
       "price": 2000000,
       "category": "tainghe",
-      "description": "Tai nghe Samsung Buds."
+      "description": "Tai nghe Samsung Buds chất lượng cao."
     },
     {
-      "id": "14",
-      "name": "Tai nghe Sony",
-      "img": "https://images.unsplash.com/photo-1580894894513-541e068a3e2b",
-      "price": 1800000,
-      "category": "tainghe",
-      "description": "Tai nghe Sony âm thanh chất lượng."
-    },
-    {
-      "id": "15",
-      "name": "Tai nghe Gaming",
-      "img": "https://images.unsplash.com/photo-1512058564366-c9e3e046c4e9",
-      "price": 900000,
-      "category": "tainghe",
-      "description": "Tai nghe gaming RGB."
-    },
-    {
-      "id": "16",
-      "name": "Apple Watch",
+      "id": 13,
+      "name": "Apple Watch Series",
       "img": "https://images.unsplash.com/photo-1544117519-31a4b719223d",
       "price": 9500000,
       "category": "dongho",
       "description": "Apple Watch theo dõi sức khỏe."
     },
     {
-      "id": "17",
-      "name": "Apple Watch SE",
-      "img": "https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b",
-      "price": 6500000,
-      "category": "dongho",
-      "description": "Apple Watch SE hiện đại."
-    },
-    {
-      "id": "18",
-      "name": "Samsung Watch",
+      "id": 14,
+      "name": "Samsung Galaxy Watch",
       "img": "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
       "price": 7000000,
       "category": "dongho",
-      "description": "Samsung Galaxy Watch."
+      "description": "Đồng hồ thông minh Samsung."
     },
     {
-      "id": "19",
+      "id": 15,
       "name": "Xiaomi Smart Watch",
       "img": "https://images.unsplash.com/photo-1517423440428-a5a00ad493e8",
       "price": 2500000,
       "category": "dongho",
-      "description": "Đồng hồ Xiaomi."
+      "description": "Đồng hồ Xiaomi theo dõi nhịp tim."
     },
     {
-      "id": "20",
-      "name": "Huawei Watch",
-      "img": "https://images.unsplash.com/photo-1609081219090-a6d81d3085bf",
-      "price": 3500000,
-      "category": "dongho",
-      "description": "Đồng hồ Huawei."
-    },
-    {
-      "id": "21",
+      "id": 16,
       "name": "Pin dự phòng 10000mAh",
       "img": "https://images.unsplash.com/photo-1580894732444-8ecded7900cd",
       "price": 400000,
@@ -169,7 +129,7 @@
       "description": "Pin dự phòng dung lượng 10000mAh."
     },
     {
-      "id": "22",
+      "id": 17,
       "name": "Pin dự phòng 20000mAh",
       "img": "https://images.unsplash.com/photo-1606813902914-5dcf0aeb1a48",
       "price": 600000,
@@ -177,31 +137,7 @@
       "description": "Pin dự phòng dung lượng lớn."
     },
     {
-      "id": "23",
-      "name": "Đế sạc không dây",
-      "img": "https://images.unsplash.com/photo-1587829741301-dc798b83add3",
-      "price": 350000,
-      "category": "sac",
-      "description": "Đế sạc không dây tiện lợi."
-    },
-    {
-      "id": "24",
-      "name": "Giá đỡ điện thoại",
-      "img": "https://images.unsplash.com/photo-1580913428735-bd3c269d6a82",
-      "price": 120000,
-      "category": "phukien",
-      "description": "Giá đỡ điện thoại để bàn."
-    },
-    {
-      "id": "25",
-      "name": "Dây đeo Apple Watch",
-      "img": "https://images.unsplash.com/photo-1546868871-7041f2a55e12",
-      "price": 200000,
-      "category": "dongho",
-      "description": "Dây đeo thay thế Apple Watch."
-    },
-    {
-      "id": "26",
+      "id": 18,
       "name": "Chuột Bluetooth",
       "img": "https://images.unsplash.com/photo-1587829741301-dc798b83add3",
       "price": 250000,
@@ -209,116 +145,1060 @@
       "description": "Chuột Bluetooth không dây."
     },
     {
-      "id": "27",
+      "id": 19,
       "name": "Bàn phím Bluetooth",
-      "img": "https://images.unsplash.com/photo-1587829741301-dc798b83add3",
+      "img": "https://images.unsplash.com/photo-1587202372775-a0be90f7b7d9",
       "price": 450000,
       "category": "phukien",
-      "description": "Bàn phím Bluetooth tiện lợi."
+      "description": "Bàn phím Bluetooth gọn nhẹ."
     },
     {
-      "id": "28",
-      "name": "USB 64GB",
-      "img": "https://images.unsplash.com/photo-1591488320449-011701bb6704",
-      "price": 180000,
-      "category": "phukien",
-      "description": "USB lưu trữ dữ liệu."
-    },
-    {
-      "id": "29",
+      "id": 20,
       "name": "USB 128GB",
       "img": "https://images.unsplash.com/photo-1591488320449-011701bb6704",
       "price": 250000,
       "category": "phukien",
-      "description": "USB dung lượng lớn."
+      "description": "USB lưu trữ dữ liệu."
     },
     {
-      "id": "30",
-      "name": "Cáp HDMI",
-      "img": "https://images.unsplash.com/photo-1580913428735-bd3c269d6a82",
-      "price": 200000,
-      "category": "phukien",
-      "description": "Cáp HDMI kết nối màn hình."
-    },
-    {
-      "id": "31",
-      "name": "Hub USB",
-      "img": "https://images.unsplash.com/photo-1587829741301-dc798b83add3",
-      "price": 550000,
-      "category": "phukien",
-      "description": "Hub mở rộng cổng USB."
-    },
-    {
-      "id": "32",
-      "name": "Sạc ô tô",
-      "img": "https://images.unsplash.com/photo-1580894732444-8ecded7900cd",
-      "price": 220000,
-      "category": "sac",
-      "description": "Sạc điện thoại trên ô tô."
-    },
-    {
-      "id": "33",
-      "name": "Giá đỡ điện thoại ô tô",
-      "img": "https://images.unsplash.com/photo-1580913428735-bd3c269d6a82",
+      "id": 21,
+      "name": "Ốp lưng Xiaomi chống sốc",
+      "img": "https://images.unsplash.com/photo-1601597111158-2fceff292cdc",
       "price": 180000,
-      "category": "phukien",
-      "description": "Giá đỡ điện thoại gắn xe hơi."
+      "category": "xiaomi",
+      "description": "Ốp lưng chống sốc bảo vệ điện thoại Xiaomi."
     },
     {
-      "id": "34",
-      "name": "Cáp USB Type-C",
-      "img": "https://images.unsplash.com/photo-1610792516307-ea5acd9c3b00",
-      "price": 120000,
-      "category": "sac",
-      "description": "Cáp USB Type-C sạc nhanh."
+      "id": 22,
+      "name": "Kính cường lực Xiaomi",
+      "img": "https://images.unsplash.com/photo-1598327105666-5b89351aff97",
+      "price": 110000,
+      "category": "xiaomi",
+      "description": "Kính cường lực bảo vệ màn hình Xiaomi."
     },
     {
-      "id": "35",
-      "name": "Quạt mini USB",
-      "img": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
-      "price": 90000,
-      "category": "phukien",
-      "description": "Quạt mini cắm USB."
+      "id": 23,
+      "name": "Cáp sạc Type C Xiaomi",
+      "img": "https://images.unsplash.com/photo-1580910051074-3eb694886505",
+      "price": 130000,
+      "category": "xiaomi",
+      "description": "Cáp sạc Type C hỗ trợ sạc nhanh."
     },
     {
-      "id": "36",
-      "name": "Đèn LED bàn học",
-      "img": "https://images.unsplash.com/photo-1507473885765-e6ed057f782c",
+      "id": 24,
+      "name": "Củ sạc nhanh Xiaomi",
+      "img": "https://images.unsplash.com/photo-1603898037225-1c7f7f7f7c3a",
       "price": 300000,
-      "category": "phukien",
-      "description": "Đèn LED chống cận."
+      "category": "xiaomi",
+      "description": "Adapter sạc nhanh Xiaomi chính hãng."
     },
     {
-      "id": "37",
-      "name": "Chuột gaming RGB",
-      "img": "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7",
+      "id": 25,
+      "name": "Ốp lưng Oppo chống sốc",
+      "img": "https://images.unsplash.com/photo-1592750475338-74b7b21085ab",
+      "price": 170000,
+      "category": "oppo",
+      "description": "Ốp lưng bảo vệ điện thoại Oppo."
+    },
+    {
+      "id": 26,
+      "name": "Kính cường lực Oppo",
+      "img": "https://images.unsplash.com/photo-1598327105666-5b89351aff97",
+      "price": 100000,
+      "category": "oppo",
+      "description": "Kính cường lực chống trầy màn hình."
+    },
+    {
+      "id": 27,
+      "name": "Cáp sạc Type C Oppo",
+      "img": "https://images.unsplash.com/photo-1580910051074-3eb694886505",
+      "price": 140000,
+      "category": "oppo",
+      "description": "Cáp sạc nhanh cho Oppo."
+    },
+    {
+      "id": 28,
+      "name": "Củ sạc nhanh Oppo",
+      "img": "https://images.unsplash.com/photo-1603898037225-1c7f7f7f7c3a",
+      "price": 320000,
+      "category": "oppo",
+      "description": "Adapter sạc nhanh Oppo."
+    },
+    {
+      "id": 29,
+      "name": "Ốp lưng Huawei",
+      "img": "https://images.unsplash.com/photo-1601597111158-2fceff292cdc",
+      "price": 160000,
+      "category": "huawei",
+      "description": "Ốp lưng bảo vệ Huawei."
+    },
+    {
+      "id": 30,
+      "name": "Kính cường lực Huawei",
+      "img": "https://images.unsplash.com/photo-1598327105666-5b89351aff97",
+      "price": 110000,
+      "category": "huawei",
+      "description": "Kính cường lực bảo vệ màn hình Huawei."
+    },
+    {
+      "id": 31,
+      "name": "Cáp sạc Huawei",
+      "img": "https://images.unsplash.com/photo-1580910051074-3eb694886505",
+      "price": 150000,
+      "category": "huawei",
+      "description": "Cáp sạc nhanh Huawei."
+    },
+    {
+      "id": 32,
+      "name": "Củ sạc Huawei",
+      "img": "https://images.unsplash.com/photo-1603898037225-1c7f7f7f7c3a",
       "price": 350000,
+      "category": "huawei",
+      "description": "Adapter sạc Huawei chính hãng."
+    },
+    {
+      "id": 33,
+      "name": "Tai nghe Bluetooth JBL",
+      "img": "https://images.unsplash.com/photo-1585386959984-a4155224a1ad",
+      "price": 1200000,
+      "category": "tainghe",
+      "description": "Tai nghe Bluetooth JBL âm thanh mạnh mẽ."
+    },
+    {
+      "id": 34,
+      "name": "Tai nghe Sony Bluetooth",
+      "img": "https://images.unsplash.com/photo-1585386959984-a4155224a1ad",
+      "price": 2500000,
+      "category": "tainghe",
+      "description": "Tai nghe Sony chống ồn."
+    },
+    {
+      "id": 35,
+      "name": "Tai nghe Gaming",
+      "img": "https://images.unsplash.com/photo-1587202372775-a0be90f7b7d9",
+      "price": 800000,
+      "category": "tainghe",
+      "description": "Tai nghe gaming âm thanh sống động."
+    },
+    {
+      "id": 36,
+      "name": "Đồng hồ Xiaomi Band",
+      "img": "https://images.unsplash.com/photo-1517423440428-a5a00ad493e8",
+      "price": 1500000,
+      "category": "dongho",
+      "description": "Vòng đeo tay thông minh Xiaomi."
+    },
+    {
+      "id": 37,
+      "name": "Apple Watch Ultra",
+      "img": "https://images.unsplash.com/photo-1544117519-31a4b719223d",
+      "price": 20000000,
+      "category": "dongho",
+      "description": "Apple Watch Ultra cao cấp."
+    },
+    {
+      "id": 38,
+      "name": "Samsung Watch 6",
+      "img": "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
+      "price": 8000000,
+      "category": "dongho",
+      "description": "Đồng hồ Samsung Watch thế hệ mới."
+    },
+    {
+      "id": 39,
+      "name": "Pin dự phòng Xiaomi",
+      "img": "https://images.unsplash.com/photo-1580894732444-8ecded7900cd",
+      "price": 450000,
+      "category": "pin",
+      "description": "Pin dự phòng Xiaomi 10000mAh."
+    },
+    {
+      "id": 40,
+      "name": "Pin dự phòng Samsung",
+      "img": "https://images.unsplash.com/photo-1606813902914-5dcf0aeb1a48",
+      "price": 500000,
+      "category": "pin",
+      "description": "Pin dự phòng Samsung sạc nhanh."
+    },
+    {
+      "id": 41,
+      "name": "USB 256GB",
+      "img": "https://images.unsplash.com/photo-1591488320449-011701bb6704",
+      "price": 350000,
+      "category": "phukien",
+      "description": "USB lưu trữ tốc độ cao."
+    },
+    {
+      "id": 42,
+      "name": "Chuột Gaming",
+      "img": "https://images.unsplash.com/photo-1587829741301-dc798b83add3",
+      "price": 450000,
       "category": "phukien",
       "description": "Chuột gaming RGB."
     },
     {
-      "id": "38",
-      "name": "Bàn phím gaming RGB",
+      "id": 43,
+      "name": "Bàn phím cơ",
       "img": "https://images.unsplash.com/photo-1587202372775-a0be90f7b7d9",
-      "price": 650000,
+      "price": 900000,
       "category": "phukien",
-      "description": "Bàn phím gaming LED."
+      "description": "Bàn phím cơ gaming."
     },
     {
-      "id": "39",
-      "name": "Đế tản nhiệt laptop",
+      "id": 44,
+      "name": "Đế sạc không dây",
+      "img": "https://images.unsplash.com/photo-1583394838336-acd977736f90",
+      "price": 400000,
+      "category": "phukien",
+      "description": "Đế sạc không dây tiện lợi."
+    },
+    {
+      "id": 45,
+      "name": "Giá đỡ điện thoại",
+      "img": "https://images.unsplash.com/photo-1603898037225-1c7f7f7f7c3a",
+      "price": 120000,
+      "category": "phukien",
+      "description": "Giá đỡ điện thoại để bàn."
+    },
+    {
+      "id": 46,
+      "name": "Quạt tản nhiệt điện thoại",
+      "img": "https://images.unsplash.com/photo-1587202372775-a0be90f7b7d9",
+      "price": 250000,
+      "category": "phukien",
+      "description": "Quạt tản nhiệt chơi game."
+    },
+    {
+      "id": 47,
+      "name": "Ốp lưng iPhone trong suốt",
+      "img": "https://images.unsplash.com/photo-1601597111158-2fceff292cdc",
+      "price": 150000,
+      "category": "iphone",
+      "description": "Ốp lưng trong suốt chống trầy."
+    },
+    {
+      "id": 48,
+      "name": "Cáp sạc nhanh 60W",
+      "img": "https://images.unsplash.com/photo-1580910051074-3eb694886505",
+      "price": 180000,
+      "category": "phukien",
+      "description": "Cáp sạc nhanh công suất lớn."
+    },
+    {
+      "id": 49,
+      "name": "Tai nghe Bluetooth Mini",
+      "img": "https://images.unsplash.com/photo-1585386959984-a4155224a1ad",
+      "price": 600000,
+      "category": "tainghe",
+      "description": "Tai nghe nhỏ gọn tiện lợi."
+    },
+    {
+      "id": 50,
+      "name": "Đồng hồ thông minh giá rẻ",
+      "img": "https://images.unsplash.com/photo-1517423440428-a5a00ad493e8",
+      "price": 1200000,
+      "category": "dongho",
+      "description": "Smartwatch giá rẻ cho sinh viên."
+    },
+    {
+      "id": 51,
+      "name": "Ốp lưng iPhone MagSafe",
+      "img": "https://images.unsplash.com/photo-1601597111158-2fceff292cdc",
+      "price": 250000,
+      "category": "iphone",
+      "description": "Ốp lưng MagSafe hỗ trợ sạc không dây cho iPhone."
+    },
+    {
+      "id": 52,
+      "name": "Kính cường lực iPhone 15 Pro",
+      "img": "https://images.unsplash.com/photo-1598327105666-5b89351aff97",
+      "price": 150000,
+      "category": "iphone",
+      "description": "Kính cường lực bảo vệ màn hình iPhone 15 Pro."
+    },
+    {
+      "id": 53,
+      "name": "Cáp sạc Lightning 2m",
+      "img": "https://images.unsplash.com/photo-1580910051074-3eb694886505",
+      "price": 200000,
+      "category": "iphone",
+      "description": "Cáp Lightning dài 2m tiện lợi."
+    },
+    {
+      "id": 54,
+      "name": "Dock sạc iPhone",
+      "img": "https://images.unsplash.com/photo-1583394838336-acd977736f90",
+      "price": 500000,
+      "category": "iphone",
+      "description": "Dock sạc để bàn cho iPhone."
+    },
+    {
+      "id": 55,
+      "name": "Ốp lưng Samsung trong suốt",
+      "img": "https://images.unsplash.com/photo-1592750475338-74b7b21085ab",
+      "price": 150000,
+      "category": "samsung",
+      "description": "Ốp lưng trong suốt cho Samsung."
+    },
+    {
+      "id": 56,
+      "name": "Kính cường lực Samsung S24",
+      "img": "https://images.unsplash.com/photo-1598327105666-5b89351aff97",
+      "price": 140000,
+      "category": "samsung",
+      "description": "Kính bảo vệ màn hình Samsung S24."
+    },
+    {
+      "id": 57,
+      "name": "Cáp sạc Type C 100W",
+      "img": "https://images.unsplash.com/photo-1580910051074-3eb694886505",
+      "price": 220000,
+      "category": "samsung",
+      "description": "Cáp sạc Type C công suất cao."
+    },
+    {
+      "id": 58,
+      "name": "Sạc nhanh Samsung 45W",
+      "img": "https://images.unsplash.com/photo-1603898037225-1c7f7f7f7c3a",
+      "price": 420000,
+      "category": "samsung",
+      "description": "Adapter sạc nhanh 45W."
+    },
+    {
+      "id": 59,
+      "name": "Tai nghe Bluetooth Pro",
+      "img": "https://images.unsplash.com/photo-1585386959984-a4155224a1ad",
+      "price": 1500000,
+      "category": "tainghe",
+      "description": "Tai nghe Bluetooth chống ồn."
+    },
+    {
+      "id": 60,
+      "name": "Tai nghe AirPods Pro",
+      "img": "https://images.unsplash.com/photo-1518449037947-7d1b2c1f3a8b",
+      "price": 6500000,
+      "category": "tainghe",
+      "description": "AirPods Pro chống ồn chủ động."
+    },
+    {
+      "id": 61,
+      "name": "Tai nghe Sony WH1000XM",
+      "img": "https://images.unsplash.com/photo-1519677100203-a0e668c92439",
+      "price": 7500000,
+      "category": "tainghe",
+      "description": "Tai nghe Sony chống ồn cao cấp."
+    },
+    {
+      "id": 62,
+      "name": "Tai nghe Gaming RGB",
+      "img": "https://images.unsplash.com/photo-1587202372775-a0be90f7b7d9",
+      "price": 1200000,
+      "category": "tainghe",
+      "description": "Tai nghe gaming RGB chuyên nghiệp."
+    },
+    {
+      "id": 63,
+      "name": "Apple Watch Series 9",
+      "img": "https://images.unsplash.com/photo-1544117519-31a4b719223d",
+      "price": 11000000,
+      "category": "dongho",
+      "description": "Apple Watch theo dõi sức khỏe."
+    },
+    {
+      "id": 64,
+      "name": "Samsung Galaxy Watch 5",
+      "img": "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
+      "price": 8500000,
+      "category": "dongho",
+      "description": "Đồng hồ Samsung Galaxy Watch."
+    },
+    {
+      "id": 65,
+      "name": "Xiaomi Smart Band 8",
+      "img": "https://images.unsplash.com/photo-1517423440428-a5a00ad493e8",
+      "price": 1200000,
+      "category": "dongho",
+      "description": "Vòng tay thông minh Xiaomi."
+    },
+    {
+      "id": 66,
+      "name": "Pin dự phòng 30000mAh",
+      "img": "https://images.unsplash.com/photo-1580894732444-8ecded7900cd",
+      "price": 750000,
+      "category": "pin",
+      "description": "Pin dự phòng dung lượng lớn."
+    },
+    {
+      "id": 67,
+      "name": "Pin dự phòng sạc nhanh",
+      "img": "https://images.unsplash.com/photo-1606813902914-5dcf0aeb1a48",
+      "price": 650000,
+      "category": "pin",
+      "description": "Pin dự phòng hỗ trợ PD."
+    },
+    {
+      "id": 68,
+      "name": "Chuột Bluetooth Logitech",
+      "img": "https://images.unsplash.com/photo-1587829741301-dc798b83add3",
+      "price": 600000,
+      "category": "phukien",
+      "description": "Chuột không dây Logitech."
+    },
+    {
+      "id": 69,
+      "name": "Bàn phím Bluetooth mini",
+      "img": "https://images.unsplash.com/photo-1587202372775-a0be90f7b7d9",
+      "price": 500000,
+      "category": "phukien",
+      "description": "Bàn phím mini cho tablet."
+    },
+    {
+      "id": 70,
+      "name": "USB 512GB",
+      "img": "https://images.unsplash.com/photo-1591488320449-011701bb6704",
+      "price": 650000,
+      "category": "phukien",
+      "description": "USB dung lượng lớn."
+    },
+    {
+      "id": 71,
+      "name": "Giá đỡ điện thoại ô tô",
+      "img": "https://images.unsplash.com/photo-1603898037225-1c7f7f7f7c3a",
+      "price": 180000,
+      "category": "phukien",
+      "description": "Giá đỡ điện thoại trên ô tô."
+    },
+    {
+      "id": 72,
+      "name": "Sạc không dây 15W",
+      "img": "https://images.unsplash.com/photo-1583394838336-acd977736f90",
+      "price": 350000,
+      "category": "phukien",
+      "description": "Sạc không dây tiện lợi."
+    },
+    {
+      "id": 73,
+      "name": "Quạt tản nhiệt gaming",
+      "img": "https://images.unsplash.com/photo-1587202372775-a0be90f7b7d9",
+      "price": 300000,
+      "category": "phukien",
+      "description": "Quạt tản nhiệt điện thoại."
+    },
+    {
+      "id": 74,
+      "name": "Ốp lưng Xiaomi Redmi",
+      "img": "https://images.unsplash.com/photo-1601597111158-2fceff292cdc",
+      "price": 150000,
+      "category": "xiaomi",
+      "description": "Ốp lưng Xiaomi Redmi chống sốc."
+    },
+    {
+      "id": 75,
+      "name": "Kính cường lực Xiaomi Redmi",
+      "img": "https://images.unsplash.com/photo-1598327105666-5b89351aff97",
+      "price": 110000,
+      "category": "xiaomi",
+      "description": "Kính bảo vệ màn hình Xiaomi."
+    },
+    {
+      "id": 76,
+      "name": "Cáp sạc Xiaomi 120W",
+      "img": "https://images.unsplash.com/photo-1580910051074-3eb694886505",
+      "price": 280000,
+      "category": "xiaomi",
+      "description": "Cáp sạc nhanh Xiaomi."
+    },
+    {
+      "id": 77,
+      "name": "Sạc nhanh Xiaomi 120W",
+      "img": "https://images.unsplash.com/photo-1603898037225-1c7f7f7f7c3a",
+      "price": 850000,
+      "category": "xiaomi",
+      "description": "Adapter sạc nhanh Xiaomi."
+    },
+    {
+      "id": 78,
+      "name": "Ốp lưng Oppo Reno",
+      "img": "https://images.unsplash.com/photo-1592750475338-74b7b21085ab",
+      "price": 160000,
+      "category": "oppo",
+      "description": "Ốp lưng Oppo Reno."
+    },
+    {
+      "id": 79,
+      "name": "Kính cường lực Oppo Reno",
+      "img": "https://images.unsplash.com/photo-1598327105666-5b89351aff97",
+      "price": 110000,
+      "category": "oppo",
+      "description": "Kính bảo vệ Oppo."
+    },
+    {
+      "id": 80,
+      "name": "Cáp sạc Oppo SuperVOOC",
+      "img": "https://images.unsplash.com/photo-1580910051074-3eb694886505",
+      "price": 200000,
+      "category": "oppo",
+      "description": "Cáp sạc nhanh Oppo."
+    },
+    {
+      "id": 81,
+      "name": "Sạc Oppo SuperVOOC",
+      "img": "https://images.unsplash.com/photo-1603898037225-1c7f7f7f7c3a",
+      "price": 500000,
+      "category": "oppo",
+      "description": "Adapter sạc Oppo."
+    },
+    {
+      "id": 82,
+      "name": "Ốp lưng Huawei Mate",
+      "img": "https://images.unsplash.com/photo-1601597111158-2fceff292cdc",
+      "price": 160000,
+      "category": "huawei",
+      "description": "Ốp lưng Huawei Mate."
+    },
+    {
+      "id": 83,
+      "name": "Kính cường lực Huawei Mate",
+      "img": "https://images.unsplash.com/photo-1598327105666-5b89351aff97",
+      "price": 120000,
+      "category": "huawei",
+      "description": "Kính cường lực Huawei."
+    },
+    {
+      "id": 84,
+      "name": "Cáp sạc Huawei 66W",
+      "img": "https://images.unsplash.com/photo-1580910051074-3eb694886505",
+      "price": 220000,
+      "category": "huawei",
+      "description": "Cáp sạc Huawei."
+    },
+    {
+      "id": 85,
+      "name": "Sạc Huawei 66W",
+      "img": "https://images.unsplash.com/photo-1603898037225-1c7f7f7f7c3a",
+      "price": 480000,
+      "category": "huawei",
+      "description": "Adapter sạc Huawei."
+    },
+    {
+      "id": 86,
+      "name": "Tai nghe Bluetooth mini",
+      "img": "https://images.unsplash.com/photo-1585386959984-a4155224a1ad",
+      "price": 500000,
+      "category": "tainghe",
+      "description": "Tai nghe Bluetooth nhỏ gọn."
+    },
+    {
+      "id": 87,
+      "name": "Tai nghe thể thao",
+      "img": "https://images.unsplash.com/photo-1519677100203-a0e668c92439",
+      "price": 700000,
+      "category": "tainghe",
+      "description": "Tai nghe thể thao chống nước."
+    },
+    {
+      "id": 88,
+      "name": "Tai nghe gaming pro",
+      "img": "https://images.unsplash.com/photo-1587202372775-a0be90f7b7d9",
+      "price": 1500000,
+      "category": "tainghe",
+      "description": "Tai nghe gaming chuyên nghiệp."
+    },
+    {
+      "id": 89,
+      "name": "Smartwatch thể thao",
+      "img": "https://images.unsplash.com/photo-1517423440428-a5a00ad493e8",
+      "price": 1800000,
+      "category": "dongho",
+      "description": "Đồng hồ theo dõi sức khỏe."
+    },
+    {
+      "id": 90,
+      "name": "Smartwatch chống nước",
+      "img": "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
+      "price": 2200000,
+      "category": "dongho",
+      "description": "Đồng hồ thông minh chống nước."
+    },
+    {
+      "id": 91,
+      "name": "Pin dự phòng mini",
+      "img": "https://images.unsplash.com/photo-1580894732444-8ecded7900cd",
+      "price": 350000,
+      "category": "pin",
+      "description": "Pin dự phòng nhỏ gọn."
+    },
+    {
+      "id": 92,
+      "name": "Pin dự phòng sạc không dây",
+      "img": "https://images.unsplash.com/photo-1606813902914-5dcf0aeb1a48",
+      "price": 750000,
+      "category": "pin",
+      "description": "Pin dự phòng hỗ trợ sạc không dây."
+    },
+    {
+      "id": 93,
+      "name": "USB Type C 128GB",
+      "img": "https://images.unsplash.com/photo-1591488320449-011701bb6704",
+      "price": 280000,
+      "category": "phukien",
+      "description": "USB Type C tốc độ cao."
+    },
+    {
+      "id": 94,
+      "name": "Chuột Bluetooth mini",
+      "img": "https://images.unsplash.com/photo-1587829741301-dc798b83add3",
+      "price": 300000,
+      "category": "phukien",
+      "description": "Chuột Bluetooth nhỏ gọn."
+    },
+    {
+      "id": 95,
+      "name": "Bàn phím cơ RGB",
+      "img": "https://images.unsplash.com/photo-1587202372775-a0be90f7b7d9",
+      "price": 1200000,
+      "category": "phukien",
+      "description": "Bàn phím cơ RGB gaming."
+    },
+    {
+      "id": 96,
+      "name": "Sạc nhanh đa cổng",
+      "img": "https://images.unsplash.com/photo-1603898037225-1c7f7f7f7c3a",
+      "price": 600000,
+      "category": "phukien",
+      "description": "Sạc nhanh nhiều cổng."
+    },
+    {
+      "id": 97,
+      "name": "Đế sạc Apple Watch",
+      "img": "https://images.unsplash.com/photo-1544117519-31a4b719223d",
+      "price": 400000,
+      "category": "phukien",
+      "description": "Đế sạc cho Apple Watch."
+    },
+    {
+      "id": 98,
+      "name": "Đế sạc Samsung Watch",
+      "img": "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
+      "price": 380000,
+      "category": "phukien",
+      "description": "Đế sạc cho Samsung Watch."
+    },
+    {
+      "id": 99,
+      "name": "Quạt tản nhiệt gaming RGB",
+      "img": "https://images.unsplash.com/photo-1587202372775-a0be90f7b7d9",
+      "price": 350000,
+      "category": "phukien",
+      "description": "Quạt tản nhiệt RGB."
+    },
+    {
+      "id": 100,
+      "name": "Giá đỡ laptop",
+      "img": "https://images.unsplash.com/photo-1587202372775-a0be90f7b7d9",
+      "price": 450000,
+      "category": "phukien",
+      "description": "Giá đỡ laptop tiện lợi."
+    },
+    {
+      "id": 101,
+      "name": "Ốp lưng iPhone da cao cấp",
+      "img": "https://images.unsplash.com/photo-1601597111158-2fceff292cdc",
+      "price": 320000,
+      "category": "iphone",
+      "description": "Ốp lưng da cao cấp cho iPhone sang trọng."
+    },
+    {
+      "id": 102,
+      "name": "Ốp lưng iPhone chống nước",
+      "img": "https://images.unsplash.com/photo-1592750475338-74b7b21085ab",
+      "price": 280000,
+      "category": "iphone",
+      "description": "Ốp lưng chống nước bảo vệ điện thoại."
+    },
+    {
+      "id": 103,
+      "name": "Kính cường lực iPhone full màn",
+      "img": "https://images.unsplash.com/photo-1598327105666-5b89351aff97",
+      "price": 160000,
+      "category": "iphone",
+      "description": "Kính cường lực full màn hình iPhone."
+    },
+    {
+      "id": 104,
+      "name": "Cáp sạc Lightning 3m",
+      "img": "https://images.unsplash.com/photo-1580910051074-3eb694886505",
+      "price": 220000,
+      "category": "iphone",
+      "description": "Cáp Lightning dài 3m tiện lợi."
+    },
+    {
+      "id": 105,
+      "name": "Củ sạc iPhone 30W",
+      "img": "https://images.unsplash.com/photo-1603898037225-1c7f7f7f7c3a",
+      "price": 480000,
+      "category": "iphone",
+      "description": "Adapter sạc nhanh 30W."
+    },
+    {
+      "id": 106,
+      "name": "Ốp lưng Samsung da",
+      "img": "https://images.unsplash.com/photo-1601597111158-2fceff292cdc",
+      "price": 250000,
+      "category": "samsung",
+      "description": "Ốp lưng da cao cấp Samsung."
+    },
+    {
+      "id": 107,
+      "name": "Ốp lưng Samsung chống sốc pro",
+      "img": "https://images.unsplash.com/photo-1592750475338-74b7b21085ab",
+      "price": 220000,
+      "category": "samsung",
+      "description": "Ốp lưng chống sốc cao cấp."
+    },
+    {
+      "id": 108,
+      "name": "Kính cường lực Samsung full",
+      "img": "https://images.unsplash.com/photo-1598327105666-5b89351aff97",
+      "price": 150000,
+      "category": "samsung",
+      "description": "Kính cường lực full màn Samsung."
+    },
+    {
+      "id": 109,
+      "name": "Cáp sạc Samsung 2m",
+      "img": "https://images.unsplash.com/photo-1580910051074-3eb694886505",
+      "price": 190000,
+      "category": "samsung",
+      "description": "Cáp sạc Type C 2m."
+    },
+    {
+      "id": 110,
+      "name": "Sạc nhanh Samsung 65W",
+      "img": "https://images.unsplash.com/photo-1603898037225-1c7f7f7f7c3a",
+      "price": 650000,
+      "category": "samsung",
+      "description": "Adapter sạc nhanh Samsung."
+    },
+    {
+      "id": 111,
+      "name": "Tai nghe Bluetooth Xiaomi",
+      "img": "https://images.unsplash.com/photo-1585386959984-a4155224a1ad",
+      "price": 650000,
+      "category": "tainghe",
+      "description": "Tai nghe Bluetooth Xiaomi."
+    },
+    {
+      "id": 112,
+      "name": "Tai nghe Sony chống ồn",
+      "img": "https://images.unsplash.com/photo-1519677100203-a0e668c92439",
+      "price": 5500000,
+      "category": "tainghe",
+      "description": "Tai nghe Sony chống ồn cao cấp."
+    },
+    {
+      "id": 113,
+      "name": "Tai nghe JBL Bass",
+      "img": "https://images.unsplash.com/photo-1585386959984-a4155224a1ad",
+      "price": 1200000,
+      "category": "tainghe",
+      "description": "Tai nghe JBL bass mạnh."
+    },
+    {
+      "id": 114,
+      "name": "Tai nghe gaming RGB Pro",
+      "img": "https://images.unsplash.com/photo-1587202372775-a0be90f7b7d9",
+      "price": 1600000,
+      "category": "tainghe",
+      "description": "Tai nghe gaming RGB cao cấp."
+    },
+    {
+      "id": 115,
+      "name": "Apple Watch SE",
+      "img": "https://images.unsplash.com/photo-1544117519-31a4b719223d",
+      "price": 7200000,
+      "category": "dongho",
+      "description": "Apple Watch SE theo dõi sức khỏe."
+    },
+    {
+      "id": 116,
+      "name": "Samsung Watch Active",
+      "img": "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
+      "price": 6500000,
+      "category": "dongho",
+      "description": "Samsung Watch Active thể thao."
+    },
+    {
+      "id": 117,
+      "name": "Xiaomi Watch Lite",
+      "img": "https://images.unsplash.com/photo-1517423440428-a5a00ad493e8",
+      "price": 1800000,
+      "category": "dongho",
+      "description": "Đồng hồ Xiaomi nhỏ gọn."
+    },
+    {
+      "id": 118,
+      "name": "Smartwatch AMOLED",
+      "img": "https://images.unsplash.com/photo-1517423440428-a5a00ad493e8",
+      "price": 2400000,
+      "category": "dongho",
+      "description": "Smartwatch màn AMOLED."
+    },
+    {
+      "id": 119,
+      "name": "Pin dự phòng 50000mAh",
+      "img": "https://images.unsplash.com/photo-1580894732444-8ecded7900cd",
+      "price": 1200000,
+      "category": "pin",
+      "description": "Pin dự phòng dung lượng cực lớn."
+    },
+    {
+      "id": 120,
+      "name": "Pin dự phòng sạc siêu nhanh",
+      "img": "https://images.unsplash.com/photo-1606813902914-5dcf0aeb1a48",
+      "price": 850000,
+      "category": "pin",
+      "description": "Pin dự phòng hỗ trợ PD 65W."
+    },
+    {
+      "id": 121,
+      "name": "USB 1TB",
+      "img": "https://images.unsplash.com/photo-1591488320449-011701bb6704",
+      "price": 1200000,
+      "category": "phukien",
+      "description": "USB dung lượng lớn 1TB."
+    },
+    {
+      "id": 122,
+      "name": "Chuột gaming RGB",
+      "img": "https://images.unsplash.com/photo-1587829741301-dc798b83add3",
+      "price": 500000,
+      "category": "phukien",
+      "description": "Chuột gaming RGB."
+    },
+    {
+      "id": 123,
+      "name": "Chuột Bluetooth văn phòng",
+      "img": "https://images.unsplash.com/photo-1587829741301-dc798b83add3",
+      "price": 350000,
+      "category": "phukien",
+      "description": "Chuột Bluetooth văn phòng."
+    },
+    {
+      "id": 124,
+      "name": "Bàn phím cơ Blue Switch",
+      "img": "https://images.unsplash.com/photo-1587202372775-a0be90f7b7d9",
+      "price": 1400000,
+      "category": "phukien",
+      "description": "Bàn phím cơ Blue Switch."
+    },
+    {
+      "id": 125,
+      "name": "Bàn phím cơ Red Switch",
+      "img": "https://images.unsplash.com/photo-1587202372775-a0be90f7b7d9",
+      "price": 1500000,
+      "category": "phukien",
+      "description": "Bàn phím cơ Red Switch."
+    },
+    {
+      "id": 126,
+      "name": "Đế sạc không dây 20W",
+      "img": "https://images.unsplash.com/photo-1583394838336-acd977736f90",
+      "price": 420000,
+      "category": "phukien",
+      "description": "Đế sạc không dây 20W."
+    },
+    {
+      "id": 127,
+      "name": "Đế sạc 3 trong 1",
+      "img": "https://images.unsplash.com/photo-1583394838336-acd977736f90",
+      "price": 850000,
+      "category": "phukien",
+      "description": "Sạc cùng lúc điện thoại và đồng hồ."
+    },
+    {
+      "id": 128,
+      "name": "Giá đỡ điện thoại kim loại",
+      "img": "https://images.unsplash.com/photo-1603898037225-1c7f7f7f7c3a",
+      "price": 200000,
+      "category": "phukien",
+      "description": "Giá đỡ điện thoại kim loại."
+    },
+    {
+      "id": 129,
+      "name": "Giá đỡ laptop nhôm",
+      "img": "https://images.unsplash.com/photo-1587202372775-a0be90f7b7d9",
+      "price": 550000,
+      "category": "phukien",
+      "description": "Giá đỡ laptop bằng nhôm."
+    },
+    {
+      "id": 130,
+      "name": "Quạt tản nhiệt điện thoại Pro",
+      "img": "https://images.unsplash.com/photo-1587202372775-a0be90f7b7d9",
+      "price": 450000,
+      "category": "phukien",
+      "description": "Quạt tản nhiệt chơi game."
+    },
+    {
+      "id": 131,
+      "name": "Cáp sạc đa năng 3 đầu",
+      "img": "https://images.unsplash.com/photo-1580910051074-3eb694886505",
+      "price": 200000,
+      "category": "phukien",
+      "description": "Cáp sạc 3 đầu tiện lợi."
+    },
+    {
+      "id": 132,
+      "name": "Cáp sạc từ tính",
+      "img": "https://images.unsplash.com/photo-1580910051074-3eb694886505",
+      "price": 250000,
+      "category": "phukien",
+      "description": "Cáp sạc từ tính tiện lợi."
+    },
+    {
+      "id": 133,
+      "name": "Củ sạc GaN 65W",
+      "img": "https://images.unsplash.com/photo-1603898037225-1c7f7f7f7c3a",
+      "price": 780000,
+      "category": "phukien",
+      "description": "Sạc GaN công suất lớn."
+    },
+    {
+      "id": 134,
+      "name": "Củ sạc GaN 100W",
+      "img": "https://images.unsplash.com/photo-1603898037225-1c7f7f7f7c3a",
+      "price": 1200000,
+      "category": "phukien",
+      "description": "Sạc GaN 100W cho laptop."
+    },
+    {
+      "id": 135,
+      "name": "Tai nghe Bluetooth giá rẻ",
+      "img": "https://images.unsplash.com/photo-1585386959984-a4155224a1ad",
+      "price": 350000,
+      "category": "tainghe",
+      "description": "Tai nghe Bluetooth giá rẻ."
+    },
+    {
+      "id": 136,
+      "name": "Tai nghe Bluetooth thể thao",
+      "img": "https://images.unsplash.com/photo-1519677100203-a0e668c92439",
+      "price": 650000,
+      "category": "tainghe",
+      "description": "Tai nghe thể thao chống nước."
+    },
+    {
+      "id": 137,
+      "name": "Tai nghe gaming mic rời",
+      "img": "https://images.unsplash.com/photo-1587202372775-a0be90f7b7d9",
+      "price": 1800000,
+      "category": "tainghe",
+      "description": "Tai nghe gaming mic rời."
+    },
+    {
+      "id": 138,
+      "name": "Tai nghe studio",
+      "img": "https://images.unsplash.com/photo-1519677100203-a0e668c92439",
+      "price": 3500000,
+      "category": "tainghe",
+      "description": "Tai nghe studio chuyên nghiệp."
+    },
+    {
+      "id": 139,
+      "name": "Smartwatch thể thao GPS",
+      "img": "https://images.unsplash.com/photo-1517423440428-a5a00ad493e8",
+      "price": 3500000,
+      "category": "dongho",
+      "description": "Smartwatch có GPS."
+    },
+    {
+      "id": 140,
+      "name": "Smartwatch cao cấp AMOLED",
+      "img": "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
+      "price": 4500000,
+      "category": "dongho",
+      "description": "Smartwatch màn AMOLED."
+    },
+    {
+      "id": 141,
+      "name": "Pin dự phòng mini 5000mAh",
+      "img": "https://images.unsplash.com/photo-1580894732444-8ecded7900cd",
+      "price": 280000,
+      "category": "pin",
+      "description": "Pin dự phòng mini."
+    },
+    {
+      "id": 142,
+      "name": "Pin dự phòng sạc nhanh 65W",
+      "img": "https://images.unsplash.com/photo-1606813902914-5dcf0aeb1a48",
+      "price": 950000,
+      "category": "pin",
+      "description": "Pin dự phòng 65W."
+    },
+    {
+      "id": 143,
+      "name": "USB Type C 256GB",
+      "img": "https://images.unsplash.com/photo-1591488320449-011701bb6704",
+      "price": 420000,
+      "category": "phukien",
+      "description": "USB Type C tốc độ cao."
+    },
+    {
+      "id": 144,
+      "name": "Chuột gaming siêu nhẹ",
+      "img": "https://images.unsplash.com/photo-1587829741301-dc798b83add3",
+      "price": 650000,
+      "category": "phukien",
+      "description": "Chuột gaming siêu nhẹ."
+    },
+    {
+      "id": 145,
+      "name": "Bàn phím cơ RGB Pro",
+      "img": "https://images.unsplash.com/photo-1587202372775-a0be90f7b7d9",
+      "price": 1800000,
+      "category": "phukien",
+      "description": "Bàn phím cơ RGB Pro."
+    },
+    {
+      "id": 146,
+      "name": "Đế sạc Apple 3in1",
+      "img": "https://images.unsplash.com/photo-1583394838336-acd977736f90",
+      "price": 950000,
+      "category": "phukien",
+      "description": "Đế sạc Apple 3in1."
+    },
+    {
+      "id": 147,
+      "name": "Giá đỡ điện thoại xoay 360",
+      "img": "https://images.unsplash.com/photo-1603898037225-1c7f7f7f7c3a",
+      "price": 220000,
+      "category": "phukien",
+      "description": "Giá đỡ điện thoại xoay 360."
+    },
+    {
+      "id": 148,
+      "name": "Quạt tản nhiệt RGB",
       "img": "https://images.unsplash.com/photo-1587202372775-a0be90f7b7d9",
       "price": 400000,
       "category": "phukien",
-      "description": "Đế tản nhiệt cho laptop."
+      "description": "Quạt tản nhiệt RGB."
     },
     {
-      "id": "40",
-      "name": "Thẻ nhớ 128GB",
-      "img": "https://images.unsplash.com/photo-1591488320449-011701bb6704",
-      "price": 250000,
+      "id": 149,
+      "name": "Cáp sạc siêu bền",
+      "img": "https://images.unsplash.com/photo-1580910051074-3eb694886505",
+      "price": 210000,
       "category": "phukien",
-      "description": "Thẻ nhớ microSD 128GB."
+      "description": "Cáp sạc siêu bền."
+    },
+    {
+      "id": 150,
+      "name": "Adapter đa cổng USB",
+      "img": "https://images.unsplash.com/photo-1603898037225-1c7f7f7f7c3a",
+      "price": 550000,
+      "category": "phukien",
+      "description": "Adapter USB đa cổng."
     }
   ],
   "users": [
@@ -332,7 +1212,7 @@
       "id": "0c31",
       "name": "Clean Code",
       "email": "ad@gmail.com",
-      "password": "123456789",
+      "password": "1234567890",
       "role": "user"
     }
   ],
@@ -475,5 +1355,6 @@
       "status": "pending",
       "createdAt": "2026-03-15T17:35:33.413Z"
     }
-  ]
+  ],
+    "contacts": []
 }
