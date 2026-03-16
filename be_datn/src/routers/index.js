@@ -14,6 +14,10 @@ import variantRouter from "./variant_RT.js";
 import productRouter from "./product_RT.js";
 import orderRouter from "./order_RT.js";
 import paymentRouter from "./payment_RT.js";
+import userRouter from "./user_RT.js";
+import reviewRouter from "./review_RT.js";
+import chatRouter from "./chat_RT.js";
+import notificationRouter from "./notification_RT.js";
 const router = Router();
 
 router.use("/banners", bannerRouter);
@@ -30,5 +34,9 @@ router.use("/variants", variantRouter);
 router.use("/products", productRouter);
 router.use("/orders", orderRouter);
 router.use("/payment", paymentRouter);
+router.use("/users", userRouter);
+router.use("/reviews", reviewRouter);
+router.use("/chat", chatRouter);
+router.use("/notifications", notificationRouter);
 
 export default router;
