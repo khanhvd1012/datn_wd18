@@ -21,8 +21,8 @@
         {/* ===== FOOTER TOP ===== */}
         <Box
           sx={{
-            backgroundColor: "#1e1e1e",
-            color: "#ccc",
+            backgroundColor: "#ffffff",
+            color: "#2b2828",
             mt: 6 
           }}
         >
@@ -30,7 +30,7 @@
             <Grid container justifyContent="space-between" spacing={3}>
               {/* Cột 1 */}
               <Grid item xs={12} md={3}>
-                <Typography color="#fff" fontWeight="bold" mb={1}>
+                <Typography color="#000000" fontWeight="bold" mb={1}>
                   TÌM CHÚNG TÔI TRÊN FACEBOOK
                 </Typography>
                 <Divider sx={{ width: 40, height: 3, bgcolor: "#ff9800", mb: 2 }} />
@@ -39,7 +39,7 @@
 
               {/* Cột 2 */}
               <Grid item xs={12} md={4}>
-                <Typography color="#fff" fontWeight="bold" mb={1}>
+                <Typography color="#000000" fontWeight="bold" mb={1}>
                   CHÍNH SÁCH & QUY ĐỊNH
                 </Typography>
                 <Divider sx={{ width: 40, height: 3, bgcolor: "#ff9800", mb: 2 }} />
@@ -66,7 +66,7 @@
 
               {/* Cột 3 */}
               <Grid item xs={12} md={3}>
-                <Typography color="#fff" fontWeight="bold" mb={1}>
+                <Typography color="#000000" fontWeight="bold" mb={1}>
                   LIÊN HỆ
                 </Typography>
                 <Divider sx={{ width: 40, height: 3, bgcolor: "#ff9800", mb: 2 }} />
@@ -78,7 +78,7 @@
                   Email: lienhe@phukiendienthoai.com
                 </Typography>
 
-                <Typography color="#fff" fontWeight="bold" mt={2} mb={1}>
+                <Typography color="#000000" fontWeight="bold" mt={2} mb={1}>
                   CÓ THẮC MẮC?
                 </Typography>
 
@@ -92,7 +92,7 @@
         {/* ===== FOOTER BOTTOM ===== */}
         <Box
           sx={{
-            backgroundColor: "#181818",
+            backgroundColor: "#ffffff",
             borderTop: "1px solid #333"
           }}
         >

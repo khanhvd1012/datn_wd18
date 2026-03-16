@@ -10,13 +10,12 @@ import Deal from '../../components/Deal'
 
 const Home = () => {
   return (
-    <div style={{ background: "#2b2b2b" }}>
+    <div style={{ background: "#faf8f8" }}>
       <Banner />
       <FeatureBar/>
       <FeaturedProducts />
       <Deal/>
       <ProductList/>
-      <Footer />
 
       {/* Zalo Floating Button */}
       <Box

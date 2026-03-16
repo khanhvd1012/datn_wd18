@@ -24,7 +24,7 @@ const deals = [
 
 const Deal = () => {
   return (
-    <Box sx={{ background: "#1a1919", py: 4, display: "flex", justifyContent: "center" }}>
+    <Box sx={{ background: "#ede8e8", py: 4, display: "flex", justifyContent: "center" }}>
       
       {/* Container */}
       <Box
@@ -47,15 +47,15 @@ const Deal = () => {
               MOBITECH MALL
             </Typography>
 
-            <Typography sx={{ color: "#fff", fontSize: 14 }}>
+            <Typography sx={{ color: "#1c1c1c", fontSize: 14 }}>
               Trả Hàng Miễn Phí 15 Ngày
             </Typography>
 
-            <Typography sx={{ color: "#fff", fontSize: 14 }}>
+            <Typography sx={{ color: "#1c1c1c", fontSize: 14 }}>
               Hàng Chính Hãng 100%
             </Typography>
 
-            <Typography sx={{ color: "#fff", fontSize: 14 }}>
+            <Typography sx={{ color: "#1c1c1c", fontSize: 14 }}>
               Miễn Phí Vận Chuyển
             </Typography>
           </Box>
