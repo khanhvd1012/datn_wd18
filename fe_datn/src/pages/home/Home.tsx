@@ -16,11 +16,10 @@ const Home = () => {
       <FeaturedProducts />
       <Deal/>
       <ProductList/>
-<<<<<<< HEAD
+
       <LatestNews />
       <Footer />
-=======
->>>>>>> 0eec834b (bg w)
+
 
       {/* Zalo Floating Button */}
       <Box
