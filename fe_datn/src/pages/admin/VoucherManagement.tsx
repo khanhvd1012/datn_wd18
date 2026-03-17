@@ -144,7 +144,6 @@ const VoucherManagement: React.FC = () => {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
-    setSelectedVoucher(null);
   };
 
   const handleCreateVoucher = () => {
@@ -160,7 +159,7 @@ const VoucherManagement: React.FC = () => {
       usage_limit: 0,
       used_count: 0,
       start_date: new Date().toISOString(),
-      end_date: new Date().toISOString(),
+      end_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       status: 'active',
     });
     setOpenDialog(true);
@@ -205,25 +204,42 @@ const VoucherManagement: React.FC = () => {
   const handleSaveVoucher = async () => {
     try {
       const payload = {
-      ...formData,
-      discount_type: formData.discount_type,
-      min_order_amount: formData.min_order_amount ?? 0,
-      max_discount_amount: formData.max_discount_amount ?? 0,
-    };
-    console.log('📤 Save voucher payload:', payload);
+        ...formData,
+        discount_type: formData.discount_type,
+        min_order_amount: formData.min_order_amount ?? 0,
+        max_discount_amount: formData.max_discount_amount ?? 0,
+      };
+      console.log('📤 Save voucher payload:', payload);
 
-    if (dialogMode === 'create') {
-        await api.post('/vouchers', payload);
+      if (dialogMode === 'create') {
+        const response = await api.post('/vouchers', payload);
+        console.log('✅ Create voucher response:', response.data);
         showNotification('Tạo voucher thành công', 'success');
       } else if (dialogMode === 'edit' && selectedVoucher) {
-        await api.put(`/vouchers/${selectedVoucher._id}`, payload);
+        const response = await api.put(`/vouchers/${selectedVoucher._id}`, payload);
+        console.log('✅ Update voucher response:', response.data);
         showNotification('Cập nhật voucher thành công', 'success');
+      } else {
+        showNotification('Không có voucher để cập nhật', 'warning');
       }
+
       setOpenDialog(false);
-      fetchVouchers(); // Refresh data
+      setSelectedVoucher(null);
+      fetchVouchers();
     } catch (error: any) {
       console.error('Error saving voucher:', error);
-      const message = error.response?.data?.message || 'Không thể lưu voucher';
+      let message = 'Không thể lưu voucher';
+      if (error.response?.data?.message) {
+        message = error.response.data.message;
+      } else if (error.response?.data?.errors) {
+        if (Array.isArray(error.response.data.errors)) {
+          message = error.response.data.errors[0]?.message || message;
+        } else if (typeof error.response.data.errors === 'string') {
+          message = error.response.data.errors;
+        }
+      } else if (error.message) {
+        message = error.message;
+      }
       showNotification(message, 'error');
     }
   };

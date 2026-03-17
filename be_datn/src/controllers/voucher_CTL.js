@@ -318,10 +318,10 @@ export const updateVoucher = async (req, res) => {
         // Validate dates
         const startDate = req.body.start_date || voucher.start_date;
         const endDate = req.body.end_date || voucher.end_date;
-        if (new Date(startDate) >= new Date(endDate)) {
+        if (new Date(startDate) > new Date(endDate)) {
             return res.status(400).json({
                 success: false,
-                message: 'Ngày kết thúc phải sau ngày bắt đầu'
+                message: 'Ngày kết thúc phải cùng ngày hoặc sau ngày bắt đầu'
             });
         }
 

@@ -39,9 +39,9 @@ const voucherSchema = Joi.object({
         'date.base': 'Ngày bắt đầu không hợp lệ',
         'any.required': 'Ngày bắt đầu là bắt buộc'
     }),
-    end_date: Joi.date().greater(Joi.ref('start_date')).required().messages({
+    end_date: Joi.date().min(Joi.ref('start_date')).required().messages({
         'date.base': 'Ngày kết thúc không hợp lệ',
-        'date.greater': 'Ngày kết thúc phải sau ngày bắt đầu',
+        'date.min': 'Ngày kết thúc phải cùng ngày hoặc sau ngày bắt đầu',
         'any.required': 'Ngày kết thúc là bắt buộc'
     }),
     usage_limit: Joi.number().integer().min(0).allow(null).optional().messages({
