@@ -80,10 +80,11 @@ const NewsManagement: React.FC = () => {
   const [newsForm, setNewsForm] = useState({
     title: '',
     content: '',
+    status: 'draft' as 'draft' | 'published' | 'archived',
     images: [] as File[],
     existingImages: [] as string[],
-    status: 'published' as 'draft' | 'published' | 'archived',
   });
+  const [newsFormErrors, setNewsFormErrors] = useState({ title: '', content: '' });
   const [notification, setNotification] = useState({
     open: false,
     message: '',
@@ -144,8 +145,13 @@ const NewsManagement: React.FC = () => {
     handleMenuClose();
   };
 
+  const resetNewsErrors = () => {
+    setNewsFormErrors({ title: '', content: '' });
+  };
+
   const openCreateNewsDialog = () => {
-    setNewsForm({ title: '', content: '', images: [], existingImages: [], status: 'published' });
+    setNewsForm({ title: '', content: '', status: 'draft', images: [], existingImages: [] });
+    resetNewsErrors();
     setOpenCreateDialog(true);
   };
 
@@ -154,20 +160,33 @@ const NewsManagement: React.FC = () => {
     setNewsForm({
       title: news.title,
       content: news.content,
+      status: news.status || 'draft',
       images: [],
-      existingImages: news.images || [],
-      status: news.status || 'published'
+      existingImages: news.images || []
     });
     setOpenEditDialog(true);
     handleMenuClose();
   };
 
   const handleCreateNews = async () => {
-    if (!newsForm.title.trim() || !newsForm.content.trim()) {
-      showNotification('Tiêu đề và nội dung không được để trống', 'error');
+    const errors = { title: '', content: '' };
+    if (!newsForm.title.trim()) {
+      errors.title = 'Tiêu đề không được để trống';
+    } else if (newsForm.title.trim().length < 5) {
+      errors.title = 'Tiêu đề phải có ít nhất 5 ký tự';
+    }
+    if (!newsForm.content.trim()) {
+      errors.content = 'Nội dung không được để trống';
+    } else if (newsForm.content.trim().length < 10) {
+      errors.content = 'Nội dung phải có ít nhất 10 ký tự';
+    }
+
+    if (errors.title || errors.content) {
+      setNewsFormErrors(errors);
       return;
     }
 
+    resetNewsErrors();
     try {
       const formData = new FormData();
       formData.append('title', newsForm.title);
@@ -175,29 +194,19 @@ const NewsManagement: React.FC = () => {
       formData.append('status', newsForm.status);
       newsForm.images.forEach((file) => formData.append('images', file));
 
-      console.log('Create news payload', {
-        title: newsForm.title,
-        content: newsForm.content,
-        status: newsForm.status,
-        images: newsForm.images.map((f) => f.name),
-      });
-
       const response = await api.post('/news', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       console.log('Create news response', response.data);
       showNotification('Tạo bài viết thành công', 'success');
       setOpenCreateDialog(false);
-      setNewsForm({ title: '', content: '', images: [], existingImages: [], status: 'published' });
+      setNewsForm({ title: '', content: '', status: 'draft', images: [], existingImages: [] });
       fetchNewsItems();
     } catch (error: any) {
       console.error('Error creating news:', error);
       let message = 'Không thể tạo bài viết';
       if (error.response?.data?.message) {
         message = error.response.data.message;
-      }
-      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
-        message = error.response.data.errors.map((e: any) => e.message).join(' | ');
       }
       showNotification(message, 'error');
     }
@@ -208,6 +217,23 @@ const NewsManagement: React.FC = () => {
       showNotification('Không có bài viết để cập nhật', 'error');
       return;
     }
+
+    const errors = { title: '', content: '' };
+    if (!newsForm.title.trim()) {
+      errors.title = 'Tiêu đề không được để trống';
+    } else if (newsForm.title.trim().length < 5) {
+      errors.title = 'Tiêu đề phải có ít nhất 5 ký tự';
+    }
+    if (!newsForm.content.trim()) {
+      errors.content = 'Nội dung không được để trống';
+    } else if (newsForm.content.trim().length < 10) {
+      errors.content = 'Nội dung phải có ít nhất 10 ký tự';
+    }
+    if (errors.title || errors.content) {
+      setNewsFormErrors(errors);
+      return;
+    }
+    resetNewsErrors();
     try {
       const formData = new FormData();
       formData.append('title', newsForm.title);
@@ -226,13 +252,7 @@ const NewsManagement: React.FC = () => {
       fetchNewsItems();
     } catch (error: any) {
       console.error('Error updating news:', error);
-      let message = 'Không thể cập nhật bài viết';
-      if (error.response?.data?.message) {
-        message = error.response.data.message;
-      }
-      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
-        message = error.response.data.errors.map((e: any) => e.message).join(' | ');
-      }
+      const message = error.response?.data?.message || 'Không thể cập nhật bài viết';
       showNotification(message, 'error');
     }
   };
@@ -577,21 +597,21 @@ const NewsManagement: React.FC = () => {
       </Dialog>
 
       {/* Create Dialog */}
-      <Dialog open={openCreateDialog} onClose={() => setOpenCreateDialog(false)} maxWidth="md" fullWidth>
+      <Dialog open={openCreateDialog} onClose={() => { setOpenCreateDialog(false); resetNewsErrors(); }} maxWidth="md" fullWidth>
         <DialogTitle>Viết bài mới</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField label="Tiêu đề" fullWidth value={newsForm.title} onChange={(e) => setNewsForm({...newsForm, title: e.target.value})} />
-            <TextField label="Nội dung" fullWidth multiline minRows={4} value={newsForm.content} onChange={(e) => setNewsForm({...newsForm, content: e.target.value})} />
+            <TextField label="Tiêu đề" fullWidth value={newsForm.title} onChange={(e) => setNewsForm({...newsForm, title: e.target.value})} error={!!newsFormErrors.title} helperText={newsFormErrors.title} />
+            <TextField label="Nội dung" fullWidth multiline minRows={4} value={newsForm.content} onChange={(e) => setNewsForm({...newsForm, content: e.target.value})} error={!!newsFormErrors.content} helperText={newsFormErrors.content} />
             <FormControl fullWidth>
               <InputLabel>Trạng thái</InputLabel>
               <Select
                 value={newsForm.status}
                 label="Trạng thái"
-                onChange={(e) => setNewsForm({ ...newsForm, status: e.target.value as 'draft' | 'published' | 'archived' })}
+                onChange={(e) => setNewsForm({...newsForm, status: e.target.value as 'draft' | 'published' | 'archived'})}
               >
-                <MenuItem value="published">Đã đăng</MenuItem>
                 <MenuItem value="draft">Bản nháp</MenuItem>
+                <MenuItem value="published">Đã đăng</MenuItem>
                 <MenuItem value="archived">Lưu trữ</MenuItem>
               </Select>
             </FormControl>
@@ -620,21 +640,21 @@ const NewsManagement: React.FC = () => {
       </Dialog>
 
       {/* Edit Dialog */}
-      <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)} maxWidth="md" fullWidth>
+      <Dialog open={openEditDialog} onClose={() => { setOpenEditDialog(false); resetNewsErrors(); }} maxWidth="md" fullWidth>
         <DialogTitle>Chỉnh sửa bài viết</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField label="Tiêu đề" fullWidth value={newsForm.title} onChange={(e) => setNewsForm({...newsForm, title: e.target.value})} />
-            <TextField label="Nội dung" fullWidth multiline minRows={4} value={newsForm.content} onChange={(e) => setNewsForm({...newsForm, content: e.target.value})} />
+            <TextField label="Tiêu đề" fullWidth value={newsForm.title} onChange={(e) => setNewsForm({...newsForm, title: e.target.value})} error={!!newsFormErrors.title} helperText={newsFormErrors.title} />
+            <TextField label="Nội dung" fullWidth multiline minRows={4} value={newsForm.content} onChange={(e) => setNewsForm({...newsForm, content: e.target.value})} error={!!newsFormErrors.content} helperText={newsFormErrors.content} />
             <FormControl fullWidth>
               <InputLabel>Trạng thái</InputLabel>
               <Select
                 value={newsForm.status}
                 label="Trạng thái"
-                onChange={(e) => setNewsForm({ ...newsForm, status: e.target.value as 'draft' | 'published' | 'archived' })}
+                onChange={(e) => setNewsForm({...newsForm, status: e.target.value as 'draft' | 'published' | 'archived'})}
               >
-                <MenuItem value="published">Đã đăng</MenuItem>
                 <MenuItem value="draft">Bản nháp</MenuItem>
+                <MenuItem value="published">Đã đăng</MenuItem>
                 <MenuItem value="archived">Lưu trữ</MenuItem>
               </Select>
             </FormControl>

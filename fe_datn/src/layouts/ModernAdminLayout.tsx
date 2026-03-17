@@ -90,6 +90,12 @@ const menuItems = [
     badge: 0,
   },
   {
+    title: 'Phản hồi',
+    path: '/admin/contacts',
+    icon: <Message />,
+    badge: 0,
+  },
+  {
     title: 'Người dùng',
     path: '/admin/users',
     icon: <People />,

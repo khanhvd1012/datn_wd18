@@ -21,6 +21,10 @@ import Register from "../pages/auth/Register";
 import Profile from "../pages/Profile";
 import MyAccount from "../pages/account/MyAccount";
 
+/* NEW PAGES */
+import About from "../pages/about/About.tsx";
+import Contact from "../pages/contact/Contact.tsx";
+
 /* ADMIN */
 import Users from "../pages/admin/Users";
 import ProductManagement from "../pages/admin/ProductManagement";
@@ -32,6 +36,7 @@ import InventoryManagement from "../pages/admin/InventoryManagement";
 import NewsManagement from "../pages/admin/NewsManagement";
 import ModernDashboard from "../pages/admin/ModernDashboard";
 import AdminBanner from "../pages/admin/AdminBanner";
+import AdminFeedback from "../pages/admin/AdminFeedback";
 import Category from "../pages/admin/Category";
 import Dashboard from "../pages/admin/Dashboard";
 
@@ -56,6 +61,10 @@ const AppRouter = () => {
         <Route path="product/:id" element={<ProductDetail />} />
         <Route path="news" element={<News />} />
         <Route path="news/:id" element={<NewsDetail />} />
+
+        {/* NEW PAGES */}
+        <Route path="about" element={<About />} />
+        <Route path="contact" element={<Contact />} />
 
         {/* AUTH */}
         <Route path="login" element={<Login />} />
@@ -148,6 +157,7 @@ const AppRouter = () => {
         <Route path="vouchers" element={<VoucherManagement />} />
         <Route path="news" element={<NewsManagement />} />
         <Route path="banners" element={<AdminBanner />} />
+        <Route path="contacts" element={<AdminFeedback />} />
         <Route path="users" element={<Users />} />
       </Route>
 

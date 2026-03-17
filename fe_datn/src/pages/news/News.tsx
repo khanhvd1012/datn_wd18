@@ -8,7 +8,7 @@ import {
   Grid,
   Breadcrumbs,
   Link as MuiLink,
-  Pagination
+  Pagination,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 
@@ -34,19 +34,29 @@ const NewsPage = () => {
   }, []);
 
   const totalPages = Math.ceil(news.length / itemsPerPage);
-  const displayedNews = news.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+  const displayedNews = news.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage,
+  );
 
   return (
     <Box sx={{ background: "#111", minHeight: "100vh", py: 4 }}>
       <Box sx={{ maxWidth: 1200, mx: "auto", px: 2 }}>
         <Breadcrumbs sx={{ color: "#aaa", mb: 4 }}>
-          <MuiLink component={Link} to="/" sx={{ color: "#aaa", textDecoration: "none" }}>
+          <MuiLink
+            component={Link}
+            to="/"
+            sx={{ color: "#aaa", textDecoration: "none" }}
+          >
             Trang chủ
           </MuiLink>
           <Typography color="#fff">Tin tức</Typography>
         </Breadcrumbs>
 
-        <Typography variant="h4" sx={{ color: "#fff", fontWeight: "bold", mb: 4 }}>
+        <Typography
+          variant="h4"
+          sx={{ color: "#fff", fontWeight: "bold", mb: 4 }}
+        >
           TIN TỨC CÔNG NGHỆ
         </Typography>
 
@@ -67,15 +77,22 @@ const NewsPage = () => {
                   },
                 }}
               >
-                <Link to={`/news/${item._id}`} style={{ textDecoration: "none" }}>
+                <Link
+                  to={`/news/${item._id}`}
+                  style={{ textDecoration: "none" }}
+                >
                   <CardMedia
                     component="img"
                     height="240"
-                    image={item.images[0] || "https://via.placeholder.com/400x240"}
+                    image={
+                      item.images[0] || "https://via.placeholder.com/400x240"
+                    }
                     alt={item.title}
                   />
                 </Link>
-                <CardContent sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
+                <CardContent
+                  sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
+                >
                   <Typography
                     variant="h6"
                     component={Link}
@@ -107,8 +124,16 @@ const NewsPage = () => {
                   >
                     {item.excerpt}
                   </Typography>
-                  <Box sx={{ mt: "auto", pt: 2, borderTop: "1px solid #333", display: "flex", justifyContent: "space-between" }}>
-                     <Typography variant="caption" sx={{ color: "#666" }}>
+                  <Box
+                    sx={{
+                      mt: "auto",
+                      pt: 2,
+                      borderTop: "1px solid #333",
+                      display: "flex",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <Typography variant="caption" sx={{ color: "#666" }}>
                       Bởi: {item.author}
                     </Typography>
                     <Typography variant="caption" sx={{ color: "#666" }}>
@@ -128,8 +153,14 @@ const NewsPage = () => {
               page={page}
               onChange={(_, value) => setPage(value)}
               sx={{
-                "& .MuiPaginationItem-root": { color: "#fff", borderColor: "#333" },
-                "& .Mui-selected": { backgroundColor: "#ff6a00 !important", color: "#fff" }
+                "& .MuiPaginationItem-root": {
+                  color: "#fff",
+                  borderColor: "#333",
+                },
+                "& .Mui-selected": {
+                  backgroundColor: "#ff6a00 !important",
+                  color: "#fff",
+                },
               }}
             />
           </Box>

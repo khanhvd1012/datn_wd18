@@ -41,8 +41,9 @@ const Header = () => {
 
   }, []);
 
-  // ================= LOAD CART COUNT =================
+  // ================= LOAD CART =================
   const loadCartCount = async () => {
+
     try {
 
       const res = await fetch("http://localhost:3000/api/cart");
@@ -56,14 +57,17 @@ const Header = () => {
       setCartCount(total);
 
     } catch (error) {
+
       console.error("Load cart error:", error);
+
     }
+
   };
 
   useEffect(() => {
+
     loadCartCount();
 
-    // cập nhật khi localStorage thay đổi
     window.addEventListener("storage", loadCartCount);
 
     return () => {
@@ -103,6 +107,7 @@ const Header = () => {
 
     <AppBar position="static" sx={{ backgroundColor: "#222" }}>
 
+      {/* TOP HEADER */}
       <Toolbar sx={{ justifyContent: "space-between" }}>
 
         {/* LOGO */}
@@ -115,7 +120,13 @@ const Header = () => {
             textDecoration: "none"
           }}
         >
-          <img src={logo3} alt="Logo" style={{ height: 48 }} />
+
+          <img
+            src={logo3}
+            alt="Logo"
+            style={{ height: 48 }}
+          />
+
         </Box>
 
         {/* SEARCH */}
@@ -159,16 +170,20 @@ const Header = () => {
               color: "#fff"
             }}
           >
+
             <PhoneIcon sx={{ color: "#ff9800" }} />
+
             <Typography fontSize={14}>
               0987.65.4321
             </Typography>
+
           </Box>
 
           {/* ACCOUNT */}
           {user ? (
 
             <>
+
               <IconButton onClick={openMenu}>
 
                 <Avatar
@@ -215,7 +230,10 @@ const Header = () => {
               component={Link}
               to="/login"
               variant="outlined"
-              sx={{ color: "#fff", borderColor: "#ff9800" }}
+              sx={{
+                color: "#fff",
+                borderColor: "#ff9800"
+              }}
             >
               Đăng nhập
             </Button>
@@ -229,7 +247,10 @@ const Header = () => {
             sx={{ color: "#ded2ac" }}
           >
 
-            <Badge badgeContent={cartCount} color="error">
+            <Badge
+              badgeContent={cartCount}
+              color="error"
+            >
 
               <ShoppingCartIcon />
 
@@ -241,9 +262,63 @@ const Header = () => {
 
       </Toolbar>
 
+      {/* MENU NAVIGATION */}
+      <Box
+        sx={{
+          background: "#111",
+          display: "flex",
+          justifyContent: "center",
+          gap: 5,
+          py: 1
+        }}
+      >
+
+        <Button
+          component={Link}
+          to="/"
+          sx={{ color: "#fff" }}
+        >
+          Trang chủ
+        </Button>
+
+        <Button
+          component={Link}
+          to="/products"
+          sx={{ color: "#fff" }}
+        >
+          Sản phẩm
+        </Button>
+
+        <Button
+          component={Link}
+          to="/news"
+          sx={{ color: "#fff" }}
+        >
+          Tin tức
+        </Button>
+
+        <Button
+          component={Link}
+          to="/about"
+          sx={{ color: "#fff" }}
+        >
+          Giới thiệu
+        </Button>
+
+        <Button
+          component={Link}
+          to="/contact"
+          sx={{ color: "#fff" }}
+        >
+          Liên hệ
+        </Button>
+
+      </Box>
+
     </AppBar>
 
   );
+
 };
 
 export default Header;

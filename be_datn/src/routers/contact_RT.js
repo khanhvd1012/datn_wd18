@@ -4,9 +4,10 @@ import { validateContact } from "../validators/contact_VLD.js";
 import { checkPermission } from "../middleware/checkPermission.js";
 const contactRouter = Router();
 
-// Gửi liên hệ: không bắt buộc phải đăng nhập
-contactRouter.post("/", validateContact, checkPermission,createContact);
-contactRouter.get("/", checkPermission,getAllContacts)
-contactRouter.delete("/:id", checkPermission,deleteContact);
+// Gửi liên hệ: không cần đăng nhập
+contactRouter.post("/", validateContact, createContact);
+// Quản lý liên hệ chỉ admin
+contactRouter.get("/", checkPermission, getAllContacts);
+contactRouter.delete("/:id", checkPermission, deleteContact);
 
 export default contactRouter;
