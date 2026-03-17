@@ -22,11 +22,13 @@ const Cart = () => {
   const navigate = useNavigate();
 
   const fetchCart = async () => {
-
-    const res = await axios.get("http://localhost:3000/cart");
-
-    setCart(res.data);
-
+    const res = await axios.get("http://localhost:3000/api/cart");
+    // Ensure each item has a consistent 'id' property
+    const mappedCart = res.data.map((item: any) => ({
+      ...item,
+      id: item._id || item.id
+    }));
+    setCart(mappedCart);
   };
 
   useEffect(() => {
@@ -34,11 +36,10 @@ const Cart = () => {
   }, []);
 
   // UPDATE QUANTITY
-  const updateQuantity = async (id: number, newQuantity: number) => {
-
+  const updateQuantity = async (id: any, newQuantity: number) => {
     if (newQuantity < 1) return;
 
-    await axios.patch(`http://localhost:3000/cart/${id}`, {
+    await axios.patch(`http://localhost:3000/api/cart/${id}`, {
       quantity: newQuantity
     });
 
@@ -56,9 +57,8 @@ const Cart = () => {
   };
 
   // REMOVE ITEM
-  const removeItem = async (id: number) => {
-
-    await axios.delete(`http://localhost:3000/cart/${id}`);
+  const removeItem = async (id: any) => {
+    await axios.delete(`http://localhost:3000/api/cart/${id}`);
 
     setCart(prev =>
       prev.filter(item => item.id !== id)

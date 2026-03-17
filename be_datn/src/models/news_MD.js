@@ -6,7 +6,6 @@ const newsSchema = new mongoose.Schema(
         content: { type: String, required: true },
         images: [{
             type: String,
-            required: true,
             trim: true
         }],
         author: {
@@ -14,6 +13,15 @@ const newsSchema = new mongoose.Schema(
             ref: 'User',
             required: true
         },
+        status: {
+            type: String,
+            enum: ['draft', 'published', 'archived'],
+            default: 'published'
+        },
+        views: { type: Number, default: 0 },
+        shares: { type: Number, default: 0 },
+        tags: [{ type: String }],
+        published_at: { type: Date, default: Date.now },
     },
     { timestamps: true }
 );

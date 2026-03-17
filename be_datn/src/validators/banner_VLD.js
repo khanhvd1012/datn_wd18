@@ -21,7 +21,7 @@ export const bannerSchema = Joi.object({
         }),
     image: Joi.string().optional(),
 
-    status: Joi.boolean().messages({
+    status: Joi.boolean().truthy('active').falsy('inactive').default(true).messages({
         "boolean.base": "Trạng thái phải là true hoặc false"
     }),
 });

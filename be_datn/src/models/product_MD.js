@@ -25,7 +25,8 @@ const productSchema = new mongoose.Schema({
     price: { type: Number, required: true },
     original_price: { type: Number },
     images: [{ type: String }],
-    countInStock: { type: Number, default: 0 }
+    countInStock: { type: Number, default: 0 },
+    is_active: { type: Boolean, default: true }
 }, { timestamps: true });
 
 // Plugin hỗ trợ phân trang

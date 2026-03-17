@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  Box,
-  Typography,
-  Grid,
-} from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 import deal1 from "../img/deal_1.jpg";
 import deal2 from "../img/deal_cap_sac.webp";
@@ -62,10 +58,8 @@ const Deal = () => {
         </Box>
 
         {/* Content */}
-        <Grid container spacing={3} justifyContent="center">
-          
-          {/* Banner */}
-          <Grid item xs={12} md={4}>
+        <Box sx={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: 16, alignItems: "start" }}>
+          <Box sx={{ gridColumn: "span 12", '@media (min-width: 900px)': { gridColumn: 'span 4' } }}>
             <Box
               component="img"
               src={deal1}
@@ -77,13 +71,13 @@ const Deal = () => {
                 objectFit: "cover",
               }}
             />
-          </Grid>
+          </Box>
 
           {/* Deals */}
-          <Grid item xs={12} md={8}>
-            <Grid container spacing={2}>
+          <Box sx={{ gridColumn: 'span 12', '@media (min-width: 900px)': { gridColumn: 'span 8' } }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
               {deals.map((item, index) => (
-                <Grid item xs={6} key={index}>
+                <Box key={index} sx={{}}>
                   <Box
                     sx={{
                       background: "#fff",
@@ -111,21 +105,14 @@ const Deal = () => {
                       }}
                     />
 
-                    <Typography
-                      sx={{
-                        fontSize: 13,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {item.name}
-                    </Typography>
+                    <Typography sx={{ fontSize: 13, fontWeight: 600 }}>{item.name}</Typography>
                   </Box>
-                </Grid>
+                </Box>
               ))}
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
-        </Grid>
+        </Box>
       </Box>
     </Box>
   );

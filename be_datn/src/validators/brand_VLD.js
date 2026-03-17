@@ -30,7 +30,7 @@ export const validateBrand = async (req, res, next) => {
         }
 
         // Validate dữ liệu
-        const { error } = brandSchema.validate(req.body, { abortEarly: false });
+        const { error } = brandSchema.validate(req.body, { abortEarly: false, allowUnknown: true });
         if (error) {
             //Nếu có file upload và lỗi => xóa file
             if (req.file) {

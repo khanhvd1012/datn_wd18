@@ -4,16 +4,15 @@ let isConnected = false;
 let listenersAttached = false;
 
 export default async function connectDB(dbUrl) {
+    if (!dbUrl) {
+        throw new Error('Missing MongoDB URI. Set MONGO_URI in your .env to a real MongoDB connection string. Do not use in-memory DB for production.');
+    }
+
+    if (isConnected) {
+        return;
+    }
+
     try {
-        if (!dbUrl) {
-            throw new Error('MongoDB connection URL is not provided');
-        }
-
-        // Tránh kết nối lại nếu đã kết nối rồi
-        if (isConnected) {
-            return;
-        }
-
         await mongoose.connect(dbUrl, {
             maxPoolSize: 10,
             serverSelectionTimeoutMS: 5000,
@@ -22,7 +21,6 @@ export default async function connectDB(dbUrl) {
 
         isConnected = true;
 
-        // Gắn listener chỉ một lần duy nhất
         if (!listenersAttached) {
             mongoose.connection.on('error', (err) => {
                 console.error('MongoDB connection error:', err);

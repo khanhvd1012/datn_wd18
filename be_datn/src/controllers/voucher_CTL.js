@@ -109,7 +109,7 @@ export const getVoucherByCode = async (req, res) => {
         }
 
         // Kiểm tra số lần sử dụng
-        if (voucher.usage_limit && voucher.used_count >= voucher.usage_limit) {
+        if (voucher.usage_limit > 0 && voucher.used_count >= voucher.usage_limit) {
             return res.status(400).json({
                 success: false,
                 message: 'Mã voucher đã hết lượt sử dụng'
@@ -167,6 +167,37 @@ export const createVoucher = async (req, res) => {
                 success: false,
                 message: 'Ngày kết thúc phải sau ngày bắt đầu'
             });
+        }
+
+        // Normalize input fields
+        if (req.body.discount_type === 'fixed') {
+            req.body.discount_type = 'fixed_amount';
+        }
+        if (req.body.min_order_value !== undefined) {
+            req.body.min_order_amount = Number(req.body.min_order_value);
+        }
+        if (req.body.max_discount !== undefined) {
+            req.body.max_discount_amount = Number(req.body.max_discount);
+        }
+
+        const numericFields = ['discount_value', 'min_order_amount', 'max_discount_amount', 'usage_limit', 'user_limit'];
+        numericFields.forEach(field => {
+            if (req.body[field] !== undefined && req.body[field] !== null && req.body[field] !== '') {
+                const v = Number(req.body[field]);
+                if (!Number.isNaN(v)) {
+                    req.body[field] = v;
+                }
+            }
+        });
+
+        if (req.body.min_order_amount === undefined || req.body.min_order_amount === null || req.body.min_order_amount === '') {
+            req.body.min_order_amount = 0;
+        }
+        if (req.body.max_discount_amount === undefined || req.body.max_discount_amount === null || req.body.max_discount_amount === '') {
+            req.body.max_discount_amount = 0;
+        }
+        if (req.body.usage_limit === undefined || req.body.usage_limit === null || req.body.usage_limit === '') {
+            req.body.usage_limit = 0;
         }
 
         // Gán created_by nếu có user
@@ -227,6 +258,37 @@ export const updateVoucher = async (req, res) => {
                 success: false,
                 message: 'Voucher không tồn tại'
             });
+        }
+
+        // Normalize input fields
+        if (req.body.discount_type === 'fixed') {
+            req.body.discount_type = 'fixed_amount';
+        }
+        if (req.body.min_order_value !== undefined) {
+            req.body.min_order_amount = Number(req.body.min_order_value);
+        }
+        if (req.body.max_discount !== undefined) {
+            req.body.max_discount_amount = Number(req.body.max_discount);
+        }
+
+        const numericFields = ['discount_value', 'min_order_amount', 'max_discount_amount', 'usage_limit', 'user_limit'];
+        numericFields.forEach(field => {
+            if (req.body[field] !== undefined && req.body[field] !== null && req.body[field] !== '') {
+                const v = Number(req.body[field]);
+                if (!Number.isNaN(v)) {
+                    req.body[field] = v;
+                }
+            }
+        });
+
+        if (req.body.min_order_amount === undefined || req.body.min_order_amount === null || req.body.min_order_amount === '') {
+            req.body.min_order_amount = 0;
+        }
+        if (req.body.max_discount_amount === undefined || req.body.max_discount_amount === null || req.body.max_discount_amount === '') {
+            req.body.max_discount_amount = 0;
+        }
+        if (req.body.usage_limit === undefined || req.body.usage_limit === null || req.body.usage_limit === '') {
+            req.body.usage_limit = 0;
         }
 
         // Nếu cập nhật code, kiểm tra trùng
@@ -361,7 +423,7 @@ export const useVoucher = async (req, res) => {
             });
         }
 
-        if (voucher.usage_limit && voucher.used_count >= voucher.usage_limit) {
+        if (voucher.usage_limit > 0 && voucher.used_count >= voucher.usage_limit) {
             return res.status(400).json({
                 success: false,
                 message: 'Voucher đã hết lượt sử dụng'

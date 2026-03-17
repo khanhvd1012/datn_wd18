@@ -1,4 +1,4 @@
-  import { Box, Grid, Typography, Divider } from "@mui/material";
+  import { Box, Typography, Divider } from "@mui/material";
   const iconStyle = {
     width: 28,
     height: 28,
@@ -27,65 +27,37 @@
           }}
         >
           <Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 3, md: 4 }, py: 5 }}>
-            <Grid container justifyContent="space-between" spacing={3}>
-              {/* Cột 1 */}
-              <Grid item xs={12} md={3}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, justifyContent: "space-between" }}>
+              <Box sx={{ flex: "1 1 220px" }}>
                 <Typography color="#fff" fontWeight="bold" mb={1}>
                   TÌM CHÚNG TÔI TRÊN FACEBOOK
                 </Typography>
                 <Divider sx={{ width: 40, height: 3, bgcolor: "#ff9800", mb: 2 }} />
                 <Typography fontSize={14}>Phukiendienthoai</Typography>
-              </Grid>
+              </Box>
 
-              {/* Cột 2 */}
-              <Grid item xs={12} md={4}>
+              <Box sx={{ flex: "1 1 220px" }}>
                 <Typography color="#fff" fontWeight="bold" mb={1}>
                   CHÍNH SÁCH & QUY ĐỊNH
                 </Typography>
                 <Divider sx={{ width: 40, height: 3, bgcolor: "#ff9800", mb: 2 }} />
-
-                {[
-                  "Hướng dẫn mua online",
-                  "Cam kết bán hàng",
-                  "Bảo hành, đổi trả",
-                  "Chính sách bảo mật",
-                  "Chính sách với người tiêu dùng",
-                  "Chính sách giao hàng",
-                  "Kênh thông tin RSS"
-                ].map((item, i) => (
-                  <Typography
-                    key={i}
-                    fontSize={14}
-                    mb={0.8}
-                    sx={{ "&:hover": { color: "#ff9800", cursor: "pointer" } }}
-                  >
-                    {item}
-                  </Typography>
+                {["Hướng dẫn mua online","Cam kết bán hàng","Bảo hành, đổi trả","Chính sách bảo mật","Chính sách với người tiêu dùng","Chính sách giao hàng","Kênh thông tin RSS"].map((item, i) => (
+                  <Typography key={i} fontSize={14} mb={0.8} sx={{ "&:hover": { color: "#ff9800", cursor: "pointer" } }}>{item}</Typography>
                 ))}
-              </Grid>
+              </Box>
 
-              {/* Cột 3 */}
-              <Grid item xs={12} md={3}>
+              <Box sx={{ flex: "1 1 220px" }}>
                 <Typography color="#fff" fontWeight="bold" mb={1}>
                   LIÊN HỆ
                 </Typography>
                 <Divider sx={{ width: 40, height: 3, bgcolor: "#ff9800", mb: 2 }} />
-
-                <Typography fontSize={14} mb={1}>
-                  Cơ sở 1: Số 24 - Ngõ 70 Thái Hà - Đống Đa - Hà Nội
-                </Typography>
-                <Typography fontSize={14} mb={1}>
-                  Email: lienhe@phukiendienthoai.com
-                </Typography>
-
-                <Typography color="#fff" fontWeight="bold" mt={2} mb={1}>
-                  CÓ THẮC MẮC?
-                </Typography>
-
+                <Typography fontSize={14} mb={1}>Cơ sở 1: Số 24 - Ngõ 70 Thái Hà - Đống Đa - Hà Nội</Typography>
+                <Typography fontSize={14} mb={1}>Email: lienhe@phukiendienthoai.com</Typography>
+                <Typography color="#fff" fontWeight="bold" mt={2} mb={1}>CÓ THẮC MẮC?</Typography>
                 <Typography fontSize={14}>📞 0987 65 4321</Typography>
                 <Typography fontSize={14}>📞 0987 65 1234</Typography>
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
           </Box>
         </Box>
 

@@ -40,6 +40,7 @@ export const getAllNews = async (req, res) => {
 
     const formatted = newsList.map((news) => ({
       ...news.toObject(),
+      author: news.author?.username || "Admin",
       excerpt: truncate(news.content, 150, { ellipsis: "..." })
     }));
 

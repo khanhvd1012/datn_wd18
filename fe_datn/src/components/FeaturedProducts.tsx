@@ -19,9 +19,22 @@ const FeaturedProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:3000/products")
+    fetch("http://localhost:3000/api/products")
       .then((res) => res.json())
-      .then((data) => setProducts(data))
+      .then((data) => {
+        // Handle array or paginated object
+        const list = Array.isArray(data) ? data : (data.docs || data.data || []);
+        
+        // Map data to match local interface if needed
+        const mappedList = list.map((item: any) => ({
+          id: item._id || item.id,
+          name: item.name,
+          img: item.img || (item.images && item.images[0]) || "https://via.placeholder.com/200",
+          price: item.price
+        }));
+        
+        setProducts(mappedList);
+      })
       .catch((err) => console.error("Lỗi load products:", err));
   }, []);
 

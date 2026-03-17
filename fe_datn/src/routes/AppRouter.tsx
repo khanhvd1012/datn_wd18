@@ -12,6 +12,9 @@ import Orders from "../pages/Orders";
 import OrderDetail from "../pages/OrderDetail";
 import OrderSuccess from "../pages/OrderSuccess";
 
+import News from "../pages/news/News";
+import NewsDetail from "../pages/news/NewsDetail";
+
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 
@@ -20,17 +23,25 @@ import MyAccount from "../pages/account/MyAccount";
 
 /* ADMIN */
 import Users from "../pages/admin/Users";
-import AdminProducts from "../pages/admin/AdminProducts";
-import Banner from "../pages/admin/Banner";
+import ProductManagement from "../pages/admin/ProductManagement";
+import ProductVariantManagement from "../pages/admin/ProductVariantManagement";
+import OrderManagement from "../pages/admin/OrderManagement";
+import CategoryBrandManagement from "../pages/admin/CategoryBrandManagement";
+import VoucherManagement from "../pages/admin/VoucherManagement";
+import InventoryManagement from "../pages/admin/InventoryManagement";
+import NewsManagement from "../pages/admin/NewsManagement";
+import ModernDashboard from "../pages/admin/ModernDashboard";
+import AdminBanner from "../pages/admin/AdminBanner";
 import Category from "../pages/admin/Category";
 import Dashboard from "../pages/admin/Dashboard";
 
 /* LAYOUT */
 import ClientLayout from "../layouts/ClientLayout";
-import AdminLayout from "../layouts/AdminLayout";
+import ModernAdminLayout from "../layouts/ModernAdminLayout";
 
 import NotFound from "../pages/NotFound";
 import PrivateRoute from "./PrivateRoute";
+import AdminRoute from "./AdminRoute";
 
 const AppRouter = () => {
   return (
@@ -43,6 +54,8 @@ const AppRouter = () => {
         <Route index element={<Home />} />
         <Route path="products" element={<ProductList />} />
         <Route path="product/:id" element={<ProductDetail />} />
+        <Route path="news" element={<News />} />
+        <Route path="news/:id" element={<NewsDetail />} />
 
         {/* AUTH */}
         <Route path="login" element={<Login />} />
@@ -117,14 +130,25 @@ const AppRouter = () => {
       </Route>
 
       {/* ADMIN */}
-      <Route path="/admin" element={<AdminLayout />}>
-
-        <Route index element={<Dashboard />} />
-        <Route path="products" element={<AdminProducts />} />
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <ModernAdminLayout />
+          </AdminRoute>
+        }
+      >
+        <Route index element={<ModernDashboard />} />
+        <Route path="products" element={<ProductVariantManagement />} />
+        <Route path="product-variants" element={<ProductVariantManagement />} />
+        <Route path="categories" element={<CategoryBrandManagement />} />
+        <Route path="brands" element={<CategoryBrandManagement />} />
+        <Route path="inventory" element={<InventoryManagement />} />
+        <Route path="orders" element={<OrderManagement />} />
+        <Route path="vouchers" element={<VoucherManagement />} />
+        <Route path="news" element={<NewsManagement />} />
+        <Route path="banners" element={<AdminBanner />} />
         <Route path="users" element={<Users />} />
-        <Route path="banner" element={<Banner />} />
-        <Route path="category" element={<Category />} />
-
       </Route>
 
       {/* 404 */}

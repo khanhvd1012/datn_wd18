@@ -88,10 +88,12 @@ export const updateBanner = async (req, res) => {
     }
 
     if (req.file) {
-      if (banner.image) {
+      if (banner.image && banner.image.includes("/uploads/")) {
         const oldFilename = banner.image.split("/uploads/")[1];
-        const oldPath = path.join(__dirname, "../../public/uploads", oldFilename);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+        if (oldFilename) {
+          const oldPath = path.join(__dirname, "../../public/uploads", oldFilename);
+          if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+        }
       }
       req.body.image = `http://localhost:3000/uploads/${req.file.filename}`;
     }
@@ -116,10 +118,12 @@ export const deleteBanner = async (req, res) => {
     const banner = await banner_MD.findById(req.params.id);
     if (!banner) return res.status(404).json({ message: "Banner không tồn tại" });
 
-    if (banner.image) {
+    if (banner.image && banner.image.includes("/uploads/")) {
       const filename = banner.image.split("/uploads/")[1];
-      const filePath = path.join(__dirname, "../../public/uploads", filename);
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      if (filename) {
+        const filePath = path.join(__dirname, "../../public/uploads", filename);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      }
     }
 
     await banner_MD.findByIdAndDelete(req.params.id);

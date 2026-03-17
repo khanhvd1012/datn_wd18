@@ -44,7 +44,27 @@ export const getAllProducts = async (req, res) => {
             limit: parseInt(limit),
             populate: [
                 { path: 'category', select: 'name' },
-                { path: 'brand', select: 'name' }
+                { path: 'brand', select: 'name' },
+                { 
+                    path: 'variants',
+                    transform: (variant) => {
+                    const attrs = variant.attributes || {};
+                    const getAttr = (key) => {
+                        if (!attrs) return '';
+                        if (typeof attrs.get === 'function') return attrs.get(key) || '';
+                        return attrs[key] || '';
+                    };
+                    return {
+                        ...variant.toObject(),
+                        is_active: variant.is_active !== undefined ? variant.is_active : true,
+                        countInStock: variant.stock || 0,
+                        color: variant.color || getAttr('color') || '',
+                        size: variant.size || getAttr('size') || '',
+                        storage: variant.storage || getAttr('storage') || '',
+                        material: variant.material || getAttr('material') || ''
+                    };
+                }
+                }
             ],
             sort: { createdAt: -1 }
         };
@@ -57,7 +77,13 @@ export const getAllProducts = async (req, res) => {
             _id: p._id.toString(),
             name: p.name,
             img: p.images && p.images.length > 0 ? p.images[0] : '',
-            images: p.images,
+            images: Array.isArray(p.images)
+                ? p.images.filter((img) => typeof img === 'string' && img.trim())
+                : [],
+            img:
+                Array.isArray(p.images) && p.images.filter((img) => typeof img === 'string' && img.trim()).length > 0
+                    ? p.images.filter((img) => typeof img === 'string' && img.trim())[0]
+                    : '',
             price: p.price,
             original_price: p.original_price,
             description: p.description,
@@ -66,7 +92,10 @@ export const getAllProducts = async (req, res) => {
             countInStock: p.countInStock,
             sold: 0,
             rating: 4.5,
-            discount: p.original_price ? Math.round(((p.original_price - p.price) / p.original_price) * 100) : 0
+            discount: p.original_price ? Math.round(((p.original_price - p.price) / p.original_price) * 100) : 0,
+            variants: p.variants || [], // Include variants in response
+            is_active: p.is_active !== undefined ? p.is_active : true, // Default to true for existing products
+            slug: p.slug || p.name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').trim() // Generate slug if missing
         })));
     } catch (error) {
         console.error('Lỗi khi lấy danh sách sản phẩm:', error);
@@ -89,8 +118,25 @@ export const getProductById = async (req, res) => {
         const product = await Product.findById(id)
             .populate('category', 'name')
             .populate('brand', 'name')
-            .populate('variants');
-
+            .populate({
+                path: 'variants',
+                transform: (variant) => {
+                    const attrs = variant.attributes || {};
+                    const getAttr = (key) => {
+                        if (!attrs) return '';
+                        if (typeof attrs.get === 'function') return attrs.get(key) || '';
+                        return attrs[key] || '';
+                    };
+                    return {
+                        ...variant.toObject(),
+                        is_active: variant.is_active !== undefined ? variant.is_active : true,
+                        color: variant.color || getAttr('color') || '',
+                        size: variant.size || getAttr('size') || '',
+                        storage: variant.storage || getAttr('storage') || '',
+                        material: variant.material || getAttr('material') || ''
+                    };
+                }
+            });
         if (!product) {
             return res.status(404).json({ message: 'Sản phẩm không tồn tại' });
         }
@@ -103,6 +149,59 @@ export const getProductById = async (req, res) => {
             error: error.message 
         });
     }
+};
+
+// Helper: build image URLs from upload files or request body
+const buildImageUrls = (req, oldImages = []) => {
+    const host = req.get('host') || 'localhost:3000';
+    const protocol = req.protocol || 'http';
+    let images = [];
+
+    // parse existingImages if provided (JSON string or array)
+    if (req.body.existingImages !== undefined) {
+        if (Array.isArray(req.body.existingImages)) {
+            images = req.body.existingImages.filter((img) => typeof img === 'string' && img.trim());
+        } else if (typeof req.body.existingImages === 'string') {
+            try {
+                const parsed = JSON.parse(req.body.existingImages);
+                if (Array.isArray(parsed)) {
+                    images = parsed.filter((img) => typeof img === 'string' && img.trim());
+                } else if (typeof parsed === 'string' && parsed.trim()) {
+                    images = [parsed.trim()];
+                }
+            } catch {
+                if (req.body.existingImages.trim()) {
+                    images = [req.body.existingImages.trim()];
+                }
+            }
+        }
+    }
+
+    // fallback to req.body.images (repeated field) for compatibility
+    if ((!images || images.length === 0) && req.body.images !== undefined) {
+        if (Array.isArray(req.body.images)) {
+            images = req.body.images.filter((img) => typeof img === 'string' && img.trim());
+        } else if (typeof req.body.images === 'string' && req.body.images.trim()) {
+            images = [req.body.images.trim()];
+        }
+    }
+
+    // if no explicit list provided, preserve old images in update mode
+    if (images.length === 0 && Array.isArray(oldImages) && oldImages.length > 0) {
+        images = oldImages;
+    }
+
+    // add uploaded files
+    if (req.files && req.files.length > 0) {
+        const uploaded = req.files.map((file) => `${protocol}://${host}/uploads/${file.filename}`);
+        images = [...images, ...uploaded];
+    } else if (req.file) {
+        images = [...images, `${protocol}://${host}/uploads/${req.file.filename}`];
+    }
+
+    images = images.filter((img) => typeof img === 'string' && img.trim() !== '');
+
+    return images;
 };
 
 // Helper function để xóa file ảnh
@@ -122,15 +221,11 @@ export const createProduct = async (req, res) => {
         let productData = { ...req.body };
 
         // Xử lý ảnh upload
-        if (req.files && req.files.length > 0) {
-            productData.images = req.files.map(file => 
-                `http://localhost:3000/uploads/${file.filename}`
-            );
-        } else if (req.body.images) {
-            // Nếu gửi qua body dạng array string
-            productData.images = Array.isArray(req.body.images) 
-                ? req.body.images 
-                : [req.body.images];
+        const uploadImages = buildImageUrls(req);
+        if (uploadImages && uploadImages.length > 0) {
+            productData.images = uploadImages;
+        } else {
+            productData.images = [];
         }
 
         // Kiểm tra slug unique
@@ -191,21 +286,16 @@ export const updateProduct = async (req, res) => {
         }
 
         // Xử lý ảnh upload
-        if (req.files && req.files.length > 0) {
-            // Xóa ảnh cũ nếu có
-            if (existingProduct.images && existingProduct.images.length > 0) {
-                existingProduct.images.forEach(img => deleteImageFile(img));
-            }
-            
-            // Thêm ảnh mới
-            updateData.images = req.files.map(file => 
-                `http://localhost:3000/uploads/${file.filename}`
-            );
-        } else if (req.body.images) {
-            // Nếu gửi qua body
-            updateData.images = Array.isArray(req.body.images) 
-                ? req.body.images 
-                : [req.body.images];
+        const oldImages = Array.isArray(existingProduct.images) ? existingProduct.images : [];
+        const newImages = buildImageUrls(req, oldImages);
+        if (newImages !== undefined) {
+            // Delete files that were removed by user
+            oldImages.forEach((oldImg) => {
+                if (!newImages.includes(oldImg)) {
+                    deleteImageFile(oldImg);
+                }
+            });
+            updateData.images = newImages;
         }
 
         const product = await Product.findByIdAndUpdate(
