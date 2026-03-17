@@ -42,7 +42,7 @@ const FeaturedProducts = () => {
     price.toLocaleString("vi-VN") + " đ";
 
   return (
-    <Box sx={{ backgroundColor: "#111", py: 4 }}>
+    <Box sx={{ backgroundColor: "#f3f3f3", py: 4 }}>
       {/* Container */}
       <Box
         sx={{
@@ -90,8 +90,8 @@ const FeaturedProducts = () => {
             >
               <Card
                 sx={{
-                  backgroundColor: "#1a1a1a",
-                  border: "1px solid #2a2a2a",
+                  backgroundColor: "#2f2e2e",
+                  border: "1px solid #dcdcdc",
                   height: "100%",
                   transition: "0.3s",
                   cursor: "pointer",

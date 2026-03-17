@@ -105,7 +105,7 @@ const Header = () => {
 
   return (
 
-    <AppBar position="static" sx={{ backgroundColor: "#222" }}>
+    <AppBar position="static" sx={{ backgroundColor: "#ffffff" }}>
 
       {/* TOP HEADER */}
       <Toolbar sx={{ justifyContent: "space-between" }}>
@@ -146,7 +146,7 @@ const Header = () => {
             placeholder="Nhập tên sản phẩm cần tìm?"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            sx={{ flex: 1 }}
+            sx={{ flex: 1,border: "1px solid #ccc", borderRadius: 3, px: 2, py: 0.5 }}
           />
 
           <IconButton onClick={handleSearch}>
@@ -167,7 +167,7 @@ const Header = () => {
               alignItems: "center",
               gap: 0.5,
               textDecoration: "none",
-              color: "#fff"
+              color: "#000000"
             }}
           >
 
@@ -231,8 +231,8 @@ const Header = () => {
               to="/login"
               variant="outlined"
               sx={{
-                color: "#fff",
-                borderColor: "#ff9800"
+                color: "#170000",
+                borderColor: "#f19916"
               }}
             >
               Đăng nhập
@@ -244,7 +244,7 @@ const Header = () => {
           <IconButton
             component={Link}
             to="/cart"
-            sx={{ color: "#ded2ac" }}
+            sx={{ color: "#f45454" }}
           >
 
             <Badge
@@ -263,7 +263,7 @@ const Header = () => {
       </Toolbar>
 
       {/* MENU NAVIGATION */}
-      <Box
+      {/* <Box
         sx={{
           background: "#111",
           display: "flex",
@@ -313,7 +313,7 @@ const Header = () => {
           Liên hệ
         </Button>
 
-      </Box>
+      </Box> */}
 
     </AppBar>
 

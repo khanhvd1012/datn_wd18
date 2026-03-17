@@ -21,23 +21,36 @@
         {/* ===== FOOTER TOP ===== */}
         <Box
           sx={{
-            backgroundColor: "#1e1e1e",
-            color: "#ccc",
+            backgroundColor: "#ffffff",
+            color: "#2b2828",
             mt: 6 
           }}
         >
           <Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 3, md: 4 }, py: 5 }}>
+<<<<<<< HEAD
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, justifyContent: "space-between" }}>
               <Box sx={{ flex: "1 1 220px" }}>
                 <Typography color="#fff" fontWeight="bold" mb={1}>
+=======
+            <Grid container justifyContent="space-between" spacing={3}>
+              {/* Cột 1 */}
+              <Grid item xs={12} md={3}>
+                <Typography color="#000000" fontWeight="bold" mb={1}>
+>>>>>>> 0eec834b (bg w)
                   TÌM CHÚNG TÔI TRÊN FACEBOOK
                 </Typography>
                 <Divider sx={{ width: 40, height: 3, bgcolor: "#ff9800", mb: 2 }} />
                 <Typography fontSize={14}>Phukiendienthoai</Typography>
               </Box>
 
+<<<<<<< HEAD
               <Box sx={{ flex: "1 1 220px" }}>
                 <Typography color="#fff" fontWeight="bold" mb={1}>
+=======
+              {/* Cột 2 */}
+              <Grid item xs={12} md={4}>
+                <Typography color="#000000" fontWeight="bold" mb={1}>
+>>>>>>> 0eec834b (bg w)
                   CHÍNH SÁCH & QUY ĐỊNH
                 </Typography>
                 <Divider sx={{ width: 40, height: 3, bgcolor: "#ff9800", mb: 2 }} />
@@ -46,6 +59,7 @@
                 ))}
               </Box>
 
+<<<<<<< HEAD
               <Box sx={{ flex: "1 1 220px" }}>
                 <Typography color="#fff" fontWeight="bold" mb={1}>
                   LIÊN HỆ
@@ -54,6 +68,26 @@
                 <Typography fontSize={14} mb={1}>Cơ sở 1: Số 24 - Ngõ 70 Thái Hà - Đống Đa - Hà Nội</Typography>
                 <Typography fontSize={14} mb={1}>Email: lienhe@phukiendienthoai.com</Typography>
                 <Typography color="#fff" fontWeight="bold" mt={2} mb={1}>CÓ THẮC MẮC?</Typography>
+=======
+              {/* Cột 3 */}
+              <Grid item xs={12} md={3}>
+                <Typography color="#000000" fontWeight="bold" mb={1}>
+                  LIÊN HỆ
+                </Typography>
+                <Divider sx={{ width: 40, height: 3, bgcolor: "#ff9800", mb: 2 }} />
+
+                <Typography fontSize={14} mb={1}>
+                  Cơ sở 1: Số 24 - Ngõ 70 Thái Hà - Đống Đa - Hà Nội
+                </Typography>
+                <Typography fontSize={14} mb={1}>
+                  Email: lienhe@phukiendienthoai.com
+                </Typography>
+
+                <Typography color="#000000" fontWeight="bold" mt={2} mb={1}>
+                  CÓ THẮC MẮC?
+                </Typography>
+
+>>>>>>> 0eec834b (bg w)
                 <Typography fontSize={14}>📞 0987 65 4321</Typography>
                 <Typography fontSize={14}>📞 0987 65 1234</Typography>
               </Box>
@@ -64,7 +98,7 @@
         {/* ===== FOOTER BOTTOM ===== */}
         <Box
           sx={{
-            backgroundColor: "#181818",
+            backgroundColor: "#ffffff",
             borderTop: "1px solid #333"
           }}
         >
