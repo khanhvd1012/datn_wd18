@@ -1,9 +1,6 @@
 import React from "react";
-import {
-  Box,
-  Typography,
-  Grid,
-} from "@mui/material";
+import { Box, Typography, Grid } from "@mui/material";
+import { Link } from "react-router-dom";
 
 import deal1 from "../img/deal_1.jpg";
 import deal2 from "../img/deal_cap_sac.webp";
@@ -14,117 +11,175 @@ import deal6 from "../img/deal_pin_du_phong.webp";
 import deal7 from "../img/deal_tainghe.webp";
 
 const deals = [
-  { img: deal2, name: "Cáp sạc nhanh" },
-  { img: deal3, name: "Đế sạc không dây" },
-  { img: deal4, name: "Giá đỡ chống xoay" },
-  { img: deal5, name: "Giá đỡ iPad" },
-  { img: deal6, name: "Pin dự phòng" },
-  { img: deal7, name: "Tai nghe Bluetooth" },
+  { img: deal2, name: "Cáp sạc nhanh", link: "/product/1" },
+  { img: deal3, name: "Đế sạc không dây", link: "/product/2" },
+  { img: deal4, name: "Giá đỡ chống xoay", link: "/product/3" },
+  { img: deal5, name: "Giá đỡ iPad", link: "/product/4" },
+  { img: deal6, name: "Pin dự phòng", link: "/product/5" },
+  { img: deal7, name: "Tai nghe Bluetooth", link: "/product/6" },
 ];
 
 const Deal = () => {
   return (
-    <Box sx={{ background: "#1a1919", py: 4, display: "flex", justifyContent: "center" }}>
-      
-      {/* Container */}
+    <Box
+      sx={{
+        background: "#f3f4f6",
+        py: 8,
+        display: "flex",
+        justifyContent: "center",
+      }}
+    >
+      {/* CONTAINER */}
       <Box
         sx={{
           width: "100%",
-          maxWidth: "1200px",
+          maxWidth: 1200,
           px: 2,
         }}
       >
-        {/* Header */}
-        <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-          <Box sx={{ display: "flex", gap: 3, alignItems: "center" }}>
-            <Typography
-              sx={{
-                color: "#ee4d2d",
-                fontWeight: "bold",
-                fontSize: 22,
-              }}
-            >
-              MOBITECH MALL
-            </Typography>
+        {/* HEADER */}
+        <Box sx={{ textAlign: "center", mb: 5 }}>
+          <Typography
+            sx={{
+              fontSize: 28,
+              fontWeight: 800,
+              color: "#ee4d2d",
+            }}
+          >
+            ⚡ FLASH SALE
+          </Typography>
 
-            <Typography sx={{ color: "#fff", fontSize: 14 }}>
-              Trả Hàng Miễn Phí 15 Ngày
-            </Typography>
-
-            <Typography sx={{ color: "#fff", fontSize: 14 }}>
-              Hàng Chính Hãng 100%
-            </Typography>
-
-            <Typography sx={{ color: "#fff", fontSize: 14 }}>
-              Miễn Phí Vận Chuyển
-            </Typography>
-          </Box>
+          <Typography sx={{ color: "#666", fontSize: 14 }}>
+            Săn deal giá tốt mỗi ngày
+          </Typography>
         </Box>
 
-        {/* Content */}
-        <Grid container spacing={3} justifyContent="center">
-          
-          {/* Banner */}
-          <Grid item xs={12} md={4}>
+        {/* CONTENT CENTER */}
+        <Grid
+          container
+          spacing={3}
+          justifyContent="center"
+          alignItems="center"
+        >
+          {/* BANNER */}
+          <Grid item xs={12} md={5}>
             <Box
-              component="img"
-              src={deal1}
-              alt="Banner"
+              component={Link}
+              to="/sale"
               sx={{
-                width: "100%",
+                borderRadius: 4,
+                overflow: "hidden",
+                position: "relative",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
                 height: "100%",
-                borderRadius: 2,
-                objectFit: "cover",
               }}
-            />
+            >
+              <Box
+                component="img"
+                src={deal1}
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+              />
+
+              <Box
+                sx={{
+                  position: "absolute",
+                  inset: 0,
+                  background:
+                    "linear-gradient(to right, rgba(0,0,0,0.6), transparent)",
+                }}
+              />
+
+              <Box
+                sx={{
+                  position: "absolute",
+                  left: 20,
+                  bottom: 20,
+                  color: "#fff",
+                }}
+              >
+                <Typography fontSize={22} fontWeight="bold">
+                  Deal cực sốc
+                </Typography>
+              </Box>
+            </Box>
           </Grid>
 
-          {/* Deals */}
-          <Grid item xs={12} md={8}>
-            <Grid container spacing={2}>
+          {/* DEAL GRID */}
+          <Grid item xs={12} md={7}>
+            <Grid
+              container
+              spacing={2}
+              justifyContent="center"
+            >
               {deals.map((item, index) => (
-                <Grid item xs={6} key={index}>
+                <Grid item xs={6} sm={4} key={index}>
                   <Box
+                    component={Link}
+                    to={item.link}
                     sx={{
-                      background: "#fff",
-                      borderRadius: 2,
-                      textAlign: "center",
-                      p: 2,
-                      height: "100%",
-                      cursor: "pointer",
-                      transition: "0.3s",
-                      "&:hover": {
-                        transform: "translateY(-5px)",
-                        boxShadow: "0 6px 20px rgba(0,0,0,0.2)",
-                      },
+                      textDecoration: "none",
+                      display: "flex",
+                      justifyContent: "center",
                     }}
                   >
                     <Box
-                      component="img"
-                      src={item.img}
-                      alt={item.name}
                       sx={{
                         width: "100%",
-                        height: 110,
-                        objectFit: "contain",
-                        mb: 1,
-                      }}
-                    />
+                        maxWidth: 180,
+                        background: "#fff",
+                        borderRadius: 3,
+                        p: 2,
+                        textAlign: "center",
+                        transition: "0.25s",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
 
-                    <Typography
-                      sx={{
-                        fontSize: 13,
-                        fontWeight: 600,
+                        "&:hover": {
+                          transform: "translateY(-6px)",
+                          boxShadow: "0 12px 30px rgba(0,0,0,0.15)",
+                        },
                       }}
                     >
-                      {item.name}
-                    </Typography>
+                      {/* badge */}
+                      <Box
+                        sx={{
+                          background: "#ee4d2d",
+                          color: "#fff",
+                          fontSize: 11,
+                          px: 1,
+                          borderRadius: 1,
+                          display: "inline-block",
+                          mb: 1,
+                        }}
+                      >
+                        HOT
+                      </Box>
+
+                      {/* image */}
+                      <Box
+                        component="img"
+                        src={item.img}
+                        sx={{
+                          width: "100%",
+                          height: 100,
+                          objectFit: "contain",
+                          mb: 1,
+                        }}
+                      />
+
+                      {/* name */}
+                      <Typography fontSize={13} color="#333">
+                        {item.name}
+                      </Typography>
+                    </Box>
                   </Box>
                 </Grid>
               ))}
             </Grid>
           </Grid>
-
         </Grid>
       </Box>
     </Box>
