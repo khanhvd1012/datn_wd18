@@ -135,7 +135,6 @@ const NewsManagement: React.FC = () => {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
-    setSelectedNews(null);
   };
 
   const handleViewNews = (news: NewsItem) => {
@@ -181,7 +180,10 @@ const NewsManagement: React.FC = () => {
   };
 
   const handleUpdateNews = async () => {
-    if (!selectedNews) return;
+    if (!selectedNews) {
+      showNotification('Không có bài viết để cập nhật', 'error');
+      return;
+    }
     try {
       const formData = new FormData();
       formData.append('title', newsForm.title);
@@ -189,15 +191,18 @@ const NewsManagement: React.FC = () => {
       newsForm.existingImages.forEach((url) => formData.append('existingImages', url));
       newsForm.images.forEach((file) => formData.append('images', file));
 
-      await api.put(`/news/${selectedNews._id}`, formData, {
+      const response = await api.put(`/news/${selectedNews._id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+      console.log('Updated news response', response.data);
       showNotification('Cập nhật bài viết thành công', 'success');
       setOpenEditDialog(false);
+      setSelectedNews(null);
       fetchNewsItems();
     } catch (error: any) {
       console.error('Error updating news:', error);
-      showNotification(error.response?.data?.message || 'Không thể cập nhật bài viết', 'error');
+      const message = error.response?.data?.message || 'Không thể cập nhật bài viết';
+      showNotification(message, 'error');
     }
   };
 
