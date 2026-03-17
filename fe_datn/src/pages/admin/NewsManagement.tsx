@@ -82,6 +82,7 @@ const NewsManagement: React.FC = () => {
     content: '',
     images: [] as File[],
     existingImages: [] as string[],
+    status: 'published' as 'draft' | 'published' | 'archived',
   });
   const [notification, setNotification] = useState({
     open: false,
@@ -144,7 +145,7 @@ const NewsManagement: React.FC = () => {
   };
 
   const openCreateNewsDialog = () => {
-    setNewsForm({ title: '', content: '', images: [], existingImages: [] });
+    setNewsForm({ title: '', content: '', images: [], existingImages: [], status: 'published' });
     setOpenCreateDialog(true);
   };
 
@@ -154,28 +155,51 @@ const NewsManagement: React.FC = () => {
       title: news.title,
       content: news.content,
       images: [],
-      existingImages: news.images || []
+      existingImages: news.images || [],
+      status: news.status || 'published'
     });
     setOpenEditDialog(true);
     handleMenuClose();
   };
 
   const handleCreateNews = async () => {
+    if (!newsForm.title.trim() || !newsForm.content.trim()) {
+      showNotification('Tiêu đề và nội dung không được để trống', 'error');
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append('title', newsForm.title);
       formData.append('content', newsForm.content);
+      formData.append('status', newsForm.status);
       newsForm.images.forEach((file) => formData.append('images', file));
 
-      await api.post('/news', formData, {
+      console.log('Create news payload', {
+        title: newsForm.title,
+        content: newsForm.content,
+        status: newsForm.status,
+        images: newsForm.images.map((f) => f.name),
+      });
+
+      const response = await api.post('/news', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+      console.log('Create news response', response.data);
       showNotification('Tạo bài viết thành công', 'success');
       setOpenCreateDialog(false);
+      setNewsForm({ title: '', content: '', images: [], existingImages: [], status: 'published' });
       fetchNewsItems();
     } catch (error: any) {
       console.error('Error creating news:', error);
-      showNotification(error.response?.data?.message || 'Không thể tạo bài viết', 'error');
+      let message = 'Không thể tạo bài viết';
+      if (error.response?.data?.message) {
+        message = error.response.data.message;
+      }
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        message = error.response.data.errors.map((e: any) => e.message).join(' | ');
+      }
+      showNotification(message, 'error');
     }
   };
 
@@ -188,6 +212,7 @@ const NewsManagement: React.FC = () => {
       const formData = new FormData();
       formData.append('title', newsForm.title);
       formData.append('content', newsForm.content);
+      formData.append('status', newsForm.status);
       newsForm.existingImages.forEach((url) => formData.append('existingImages', url));
       newsForm.images.forEach((file) => formData.append('images', file));
 
@@ -201,7 +226,13 @@ const NewsManagement: React.FC = () => {
       fetchNewsItems();
     } catch (error: any) {
       console.error('Error updating news:', error);
-      const message = error.response?.data?.message || 'Không thể cập nhật bài viết';
+      let message = 'Không thể cập nhật bài viết';
+      if (error.response?.data?.message) {
+        message = error.response.data.message;
+      }
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        message = error.response.data.errors.map((e: any) => e.message).join(' | ');
+      }
       showNotification(message, 'error');
     }
   };
@@ -552,9 +583,32 @@ const NewsManagement: React.FC = () => {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <TextField label="Tiêu đề" fullWidth value={newsForm.title} onChange={(e) => setNewsForm({...newsForm, title: e.target.value})} />
             <TextField label="Nội dung" fullWidth multiline minRows={4} value={newsForm.content} onChange={(e) => setNewsForm({...newsForm, content: e.target.value})} />
+            <FormControl fullWidth>
+              <InputLabel>Trạng thái</InputLabel>
+              <Select
+                value={newsForm.status}
+                label="Trạng thái"
+                onChange={(e) => setNewsForm({ ...newsForm, status: e.target.value as 'draft' | 'published' | 'archived' })}
+              >
+                <MenuItem value="published">Đã đăng</MenuItem>
+                <MenuItem value="draft">Bản nháp</MenuItem>
+                <MenuItem value="archived">Lưu trữ</MenuItem>
+              </Select>
+            </FormControl>
             <Box>
-              <Button variant="contained" component="label">Chọn ảnh</Button>
-              <input type="file" multiple accept="image/*" hidden onChange={(e) => setNewsForm({...newsForm, images: Array.from(e.target.files || [])})} />
+              <Button variant="contained" component="label" htmlFor="news-create-images">Chọn ảnh</Button>
+              <input
+                id="news-create-images"
+                type="file"
+                multiple
+                accept="image/*"
+                hidden
+                onChange={(e) => {
+                  const files = e.target.files ? Array.from(e.target.files) : [];
+                  console.log('Selected create news files', files);
+                  setNewsForm({ ...newsForm, images: files });
+                }}
+              />
             </Box>
             <Typography variant="body2">Ảnh đã chọn: {newsForm.images.length}</Typography>
           </Box>
@@ -572,6 +626,18 @@ const NewsManagement: React.FC = () => {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <TextField label="Tiêu đề" fullWidth value={newsForm.title} onChange={(e) => setNewsForm({...newsForm, title: e.target.value})} />
             <TextField label="Nội dung" fullWidth multiline minRows={4} value={newsForm.content} onChange={(e) => setNewsForm({...newsForm, content: e.target.value})} />
+            <FormControl fullWidth>
+              <InputLabel>Trạng thái</InputLabel>
+              <Select
+                value={newsForm.status}
+                label="Trạng thái"
+                onChange={(e) => setNewsForm({ ...newsForm, status: e.target.value as 'draft' | 'published' | 'archived' })}
+              >
+                <MenuItem value="published">Đã đăng</MenuItem>
+                <MenuItem value="draft">Bản nháp</MenuItem>
+                <MenuItem value="archived">Lưu trữ</MenuItem>
+              </Select>
+            </FormControl>
             <Box>
               <Typography variant="body2">Ảnh hiện có: {newsForm.existingImages.length}</Typography>
               {newsForm.existingImages.map((img, idx) => (
@@ -581,7 +647,21 @@ const NewsManagement: React.FC = () => {
                 </Box>
               ))}
             </Box>
-            <Box><Button variant="contained" component="label">Thêm ảnh mới<input type="file" multiple accept="image/*" hidden onChange={(e) => setNewsForm({...newsForm, images: [...newsForm.images, ...Array.from(e.target.files || [])]})} /></Button></Box>
+            <Box>
+              <Button variant="contained" component="label" htmlFor="news-edit-images">Thêm ảnh mới</Button>
+              <input
+                id="news-edit-images"
+                type="file"
+                multiple
+                accept="image/*"
+                hidden
+                onChange={(e) => {
+                  const files = e.target.files ? Array.from(e.target.files) : [];
+                  console.log('Selected edit news files', files);
+                  setNewsForm({ ...newsForm, images: [...newsForm.images, ...files] });
+                }}
+              />
+            </Box>
             <Typography variant="body2">Ảnh mới: {newsForm.images.length}</Typography>
           </Box>
         </DialogContent>

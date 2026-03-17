@@ -33,10 +33,29 @@ const deleteImages = (files = []) => {
 // GET tất cả tin tức
 export const getAllNews = async (req, res) => {
   try {
+    const { search, status, page = 1, limit = 10 } = req.query;
+    const filter = {};
+
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { content: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    if (status) {
+      filter.status = status;
+    }
+
+    const skip = (Number(page) - 1) * Number(limit);
+    const total = await news_MD.countDocuments(filter);
+
     const newsList = await news_MD
-      .find()
+      .find(filter)
       .populate({ path: "author", select: "username" })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit));
 
     const formatted = newsList.map((news) => ({
       ...news.toObject(),
@@ -44,7 +63,7 @@ export const getAllNews = async (req, res) => {
       excerpt: truncate(news.content, 150, { ellipsis: "..." })
     }));
 
-    res.status(200).json(formatted);
+    res.status(200).json({ data: formatted, total });
   } catch (error) {
     console.error("Lỗi khi lấy danh sách tin tức:", error);
     res.status(500).json({ message: "Lỗi máy chủ nội bộ" });
