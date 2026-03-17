@@ -178,7 +178,7 @@ const ModernAdminLayout: React.FC = () => {
                 },
               }}
               selected={
-                location.pathname === item.path || 
+                location.pathname === item.path ||
                 (item.path === '/admin/categories' && location.pathname === '/admin/brands')
               }
             >
@@ -233,11 +233,11 @@ const ModernAdminLayout: React.FC = () => {
           >
             <MenuIcon />
           </IconButton>
-          
+
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
             <TrendingUp sx={{ color: 'primary.main', fontSize: 28 }} />
-            <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 'bold' }}>
-              Hệ thống Quản trị
+            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+              Hệ thống Quản trị Mobitech
             </Typography>
           </Box>
 
@@ -249,7 +249,7 @@ const ModernAdminLayout: React.FC = () => {
                 </Badge>
               </IconButton>
             </Tooltip>
-            
+
             <Tooltip title="Cài đặt">
               <IconButton color="inherit">
                 <Settings />
@@ -327,7 +327,7 @@ const ModernAdminLayout: React.FC = () => {
         >
           {drawer}
         </Drawer>
-        
+
         <Drawer
           variant="permanent"
           sx={{
@@ -358,7 +358,7 @@ const ModernAdminLayout: React.FC = () => {
         }}
       >
         <Toolbar />
-        <Box sx={{ 
+        <Box sx={{
           flex: 1,
           width: '100%',
           maxWidth: 'none',

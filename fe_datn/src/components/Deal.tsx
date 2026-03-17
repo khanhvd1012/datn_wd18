@@ -20,96 +20,116 @@ const deals = [
 
 const Deal = () => {
   return (
-    <Box sx={{ background: "#1a1919", py: 4, display: "flex", justifyContent: "center" }}>
+    <Box sx={{ background: "#f5f5f5", py: 5 }}>
       
-      {/* Container */}
-      <Box
-        sx={{
-          width: "100%",
-          maxWidth: "1200px",
-          px: 2,
-        }}
-      >
-        {/* Header */}
-        <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-          <Box sx={{ display: "flex", gap: 3, alignItems: "center" }}>
-            <Typography
-              sx={{
-                color: "#ee4d2d",
-                fontWeight: "bold",
-                fontSize: 22,
-              }}
-            >
-              MOBITECH MALL
-            </Typography>
+      <Box sx={{ maxWidth: 1200, mx: "auto", px: 2 }}>
 
-            <Typography sx={{ color: "#fff", fontSize: 14 }}>
-              Trả Hàng Miễn Phí 15 Ngày
-            </Typography>
+        {/* HEADER */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 3,
+            mb: 3,
+            flexWrap: "wrap",
+          }}
+        >
+          <Typography
+            sx={{
+              color: "#ee4d2d",
+              fontWeight: 700,
+              fontSize: 22,
+            }}
+          >
+            MOBITECH MALL
+          </Typography>
 
-            <Typography sx={{ color: "#fff", fontSize: 14 }}>
-              Hàng Chính Hãng 100%
-            </Typography>
+          <Typography sx={{ fontSize: 14 }}>
+            🔁 Trả Hàng Miễn Phí 15 Ngày
+          </Typography>
 
-            <Typography sx={{ color: "#fff", fontSize: 14 }}>
-              Miễn Phí Vận Chuyển
-            </Typography>
-          </Box>
+          <Typography sx={{ fontSize: 14 }}>
+            ✔ Hàng Chính Hãng 100%
+          </Typography>
+
+          <Typography sx={{ fontSize: 14 }}>
+            🚚 Miễn Phí Vận Chuyển
+          </Typography>
         </Box>
 
-        {/* Content */}
-        <Box sx={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: 16, alignItems: "start" }}>
-          <Box sx={{ gridColumn: "span 12", '@media (min-width: 900px)': { gridColumn: 'span 4' } }}>
-            <Box
-              component="img"
-              src={deal1}
-              alt="Banner"
-              sx={{
-                width: "100%",
-                height: "100%",
-                borderRadius: 2,
-                objectFit: "cover",
-              }}
-            />
-          </Box>
+        {/* MAIN GRID */}
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              md: "400px 1fr",
+            },
+            gap: 2,
+          }}
+        >
 
-          {/* Deals */}
-          <Box sx={{ gridColumn: 'span 12', '@media (min-width: 900px)': { gridColumn: 'span 8' } }}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-              {deals.map((item, index) => (
-                <Box key={index} sx={{}}>
-                  <Box
-                    sx={{
-                      background: "#fff",
-                      borderRadius: 2,
-                      textAlign: "center",
-                      p: 2,
-                      height: "100%",
-                      cursor: "pointer",
-                      transition: "0.3s",
-                      "&:hover": {
-                        transform: "translateY(-5px)",
-                        boxShadow: "0 6px 20px rgba(0,0,0,0.2)",
-                      },
-                    }}
-                  >
-                    <Box
-                      component="img"
-                      src={item.img}
-                      alt={item.name}
-                      sx={{
-                        width: "100%",
-                        height: 110,
-                        objectFit: "contain",
-                        mb: 1,
-                      }}
-                    />
+          {/* LEFT BANNER */}
+          <Box
+            component="img"
+            src={deal1}
+            alt="deal banner"
+            sx={{
+              width: "100%",
+              height: "100%",
+              borderRadius: 2,
+              objectFit: "cover",
+            }}
+          />
 
-                    <Typography sx={{ fontSize: 13, fontWeight: 600 }}>{item.name}</Typography>
-                  </Box>
-                </Box>
-              ))}
-            </Box>
+          {/* DEAL ITEMS */}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3,1fr)",
+              gap: 2,
+            }}
+          >
+            {deals.map((item, index) => (
+              <Box
+                key={index}
+                sx={{
+                  background: "#fff",
+                  borderRadius: 2,
+                  textAlign: "center",
+                  p: 2,
+                  cursor: "pointer",
+                  transition: "0.25s",
+                  border: "1px solid #eee",
+
+                  "&:hover": {
+                    transform: "translateY(-6px)",
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+                  },
+                }}
+              >
+                <Box
+                  component="img"
+                  src={item.img}
+                  alt={item.name}
+                  sx={{
+                    width: "100%",
+                    height: 100,
+                    objectFit: "contain",
+                    mb: 1,
+                  }}
+                />
+
+                <Typography
+                  sx={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                  }}
+                >
+                  {item.name}
+                </Typography>
+              </Box>
+            ))}
           </Box>
 
         </Box>
