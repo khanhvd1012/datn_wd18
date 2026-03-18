@@ -22,7 +22,7 @@
         <Box
           sx={{
             backgroundColor: "#ffffff",
-            color: "#2b2828",
+            color: "#000000",
             mt: 6 
           }}
         >
@@ -78,7 +78,7 @@
                   Email: lienhe@phukiendienthoai.com
                 </Typography>
 
-                <Typography color="#000000" fontWeight="bold" mt={2} mb={1}>
+                <Typography color="#fff" fontWeight="bold" mt={2} mb={1}>
                   CÓ THẮC MẮC?
                 </Typography>
 
@@ -128,7 +128,7 @@
                 25/04/2011
               </Typography>
 
-              <Typography fontSize={13}>Thiết kế web: Tuan Lak</Typography>
+              <Typography fontSize={13}>Thiết kế web: Mo</Typography>
             </Box>
 
             {/* Right */}

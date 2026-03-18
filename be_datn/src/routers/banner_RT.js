@@ -7,8 +7,8 @@ const bannerRouter = Router();
 
 bannerRouter.get("/", getAllBanners);
 bannerRouter.get("/:id", getBannerById);
-bannerRouter.post("/", upload.single("image"),checkPermission, validateBanner, createBanner);
-bannerRouter.put("/:id", upload.single("image"),checkPermission, validateBanner, updateBanner);
+bannerRouter.post("/", checkPermission, upload.single("image"), validateBanner, createBanner);
+bannerRouter.put("/:id", checkPermission, upload.single("image"), validateBanner, updateBanner);
 bannerRouter.delete("/:id",checkPermission , deleteBanner);
 bannerRouter.put("/:id/toggle-status",checkPermission, toggleBannerStatus);
 

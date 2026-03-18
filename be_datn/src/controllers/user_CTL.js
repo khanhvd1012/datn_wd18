@@ -1,87 +1,66 @@
+import mongoose from "mongoose";
 import User from "../models/user_MD.js";
-import { updateUserValidator } from "../validators/user_VLD.js";
+import { ROLES } from "../config/roles.js";
 
-// Lấy danh sách toàn bộ Users
 export const getAllUsers = async (req, res) => {
     try {
         const users = await User.find().select("-password");
-        if (!users || users.length === 0) {
-            return res.status(404).json({ message: "Không tìm thấy người dùng nào" });
-        }
-        return res.status(200).json({
-            message: "Lấy danh sách người dùng thành công",
-            data: users,
-        });
+        return res.status(200).json({ data: users });
     } catch (error) {
-        return res.status(500).json({
-            message: "Lỗi server: " + error.message,
-        });
+        return res.status(500).json({ message: "Lỗi server", error: error.message });
     }
 };
 
-// Lấy thông tin chi tiết một User
-export const getUserById = async (req, res) => {
+export const updateUserRole = async (req, res) => {
     try {
-        const user = await User.findById(req.params.id).select("-password");
+        const { id } = req.params;
+        const { role } = req.body;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "ID người dùng không hợp lệ" });
+        }
+
+        if (!role || !Object.values(ROLES).includes(role)) {
+            return res.status(400).json({ message: "Vai trò không hợp lệ" });
+        }
+
+        const user = await User.findById(id);
         if (!user) {
             return res.status(404).json({ message: "Không tìm thấy người dùng" });
         }
-        return res.status(200).json({
-            message: "Lấy thông tin người dùng thành công",
-            data: user,
-        });
+
+        user.role = role;
+        await user.save();
+
+        const userResponse = user.toObject();
+        delete userResponse.password;
+
+        return res.status(200).json({ message: "Cập nhật vai trò thành công", user: userResponse });
     } catch (error) {
-        return res.status(500).json({
-            message: "Lỗi server: " + error.message,
-        });
+        return res.status(500).json({ message: "Lỗi server", error: error.message });
     }
 };
 
-// Cập nhật thông tin User (Profile)
-export const updateUser = async (req, res) => {
-    try {
-        const { error } = updateUserValidator.validate(req.body, { abortEarly: false });
-        if (error) {
-            const errors = error.details.map((err) => err.message);
-            return res.status(400).json({ message: errors });
-        }
-
-        const { username, avatar } = req.body;
-        // Chỉ cho cập nhật một số thông tin cơ bản, không cập nhật password hay role ở đây
-        const updatedUser = await User.findByIdAndUpdate(
-            req.params.id,
-            { username, avatar },
-            { new: true }
-        ).select("-password");
-
-        if (!updatedUser) {
-            return res.status(404).json({ message: "Không tìm thấy người dùng để cập nhật" });
-        }
-        return res.status(200).json({
-            message: "Cập nhật thông tin người dùng thành công",
-            data: updatedUser,
-        });
-    } catch (error) {
-        return res.status(500).json({
-            message: "Lỗi server: " + error.message,
-        });
-    }
-};
-
-// Xoá User
 export const deleteUser = async (req, res) => {
     try {
-        const deletedUser = await User.findByIdAndDelete(req.params.id);
-        if (!deletedUser) {
-            return res.status(404).json({ message: "Không tìm thấy người dùng để xoá" });
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "ID người dùng không hợp lệ" });
         }
-        return res.status(200).json({
-            message: "Xoá người dùng thành công",
-            data: deletedUser,
-        });
+
+        if (req.user && req.user._id.toString() === id.toString()) {
+            return res.status(400).json({ message: "Bạn không thể xoá chính mình" });
+        }
+
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: "Không tìm thấy người dùng" });
+        }
+
+        await User.findByIdAndDelete(id);
+        return res.status(200).json({ message: "Xoá người dùng thành công" });
     } catch (error) {
-        return res.status(500).json({
-            message: "Lỗi server: " + error.message,
-        });
+        return res.status(500).json({ message: "Lỗi server", error: error.message });
     }
 };

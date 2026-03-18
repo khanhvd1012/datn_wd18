@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import axios from "axios";
 import {
   Box,
   Button,
@@ -15,17 +16,31 @@ import { useNavigate } from "react-router-dom";
 import { registerAPI } from "../../services/authService";
 import Footer from "../../components/Footer";
 
+interface RegisterForm {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+interface RegisterErrors {
+  name?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+}
+
 const Register = () => {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<RegisterForm>({
     name: "",
     email: "",
     password: "",
     confirmPassword: ""
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<RegisterErrors>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({
@@ -35,7 +50,7 @@ const Register = () => {
   };
 
   const validate = () => {
-    const newErrors: Record<string, string> = {};
+    const newErrors: RegisterErrors = {};
 
     if (!form.name.trim()) {
       newErrors.name = "Họ và tên không được để trống";
@@ -63,28 +78,24 @@ const Register = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     if (!validate()) return;
 
     try {
-      await registerAPI({
+      const res = await axios.post("http://localhost:3000/api/auth/register", {
         username: form.name,
         email: form.email,
         password: form.password
       });
 
-      alert("Đăng ký thành công");
-      navigate("/login");
-
-    } catch (error: any) {
-      const message =
-        error?.response?.data?.message ||
-        (Array.isArray(error?.response?.data?.messages) ? error.response.data.messages[0] : undefined) ||
-        "Lỗi server";
-
-      alert(message);
+      if (res.status === 201) {
+        alert("Đăng ký thành công");
+        navigate("/login");
+      } else {
+        alert("Đăng ký thất bại. Vui lòng thử lại.");
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || "Lỗi server");
     }
   };
 

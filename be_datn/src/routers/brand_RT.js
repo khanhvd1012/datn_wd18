@@ -10,14 +10,14 @@ brandRouter.get("/", getAllBrands);
 brandRouter.get("/:id", getBrandById);
 
 brandRouter.post("/",
+    checkPermission,
     upload.single("logo_image"),
     validateBrand,
-    checkPermission,
     createBrand);
 brandRouter.put("/:id",
+    checkPermission,
     upload.single("logo_image"),
     validateBrand,
-    checkPermission,
     updateBrand);
 brandRouter.delete("/:id",
     checkPermission,

@@ -31,28 +31,28 @@ const voucherSchema = Joi.object({
         'number.base': 'Giá trị đơn hàng tối thiểu phải là số',
         'number.min': 'Giá trị đơn hàng tối thiểu không được nhỏ hơn 0'
     }),
-    max_discount_amount: Joi.number().positive().allow(null).optional().messages({
+    max_discount_amount: Joi.number().min(0).allow(null).optional().messages({
         'number.base': 'Giảm giá tối đa phải là số',
-        'number.positive': 'Giảm giá tối đa phải lớn hơn 0'
+        'number.min': 'Giảm giá tối đa phải lớn hơn hoặc bằng 0'
     }),
     start_date: Joi.date().required().messages({
         'date.base': 'Ngày bắt đầu không hợp lệ',
         'any.required': 'Ngày bắt đầu là bắt buộc'
     }),
-    end_date: Joi.date().greater(Joi.ref('start_date')).required().messages({
+    end_date: Joi.date().min(Joi.ref('start_date')).required().messages({
         'date.base': 'Ngày kết thúc không hợp lệ',
-        'date.greater': 'Ngày kết thúc phải sau ngày bắt đầu',
+        'date.min': 'Ngày kết thúc phải cùng ngày hoặc sau ngày bắt đầu',
         'any.required': 'Ngày kết thúc là bắt buộc'
     }),
-    usage_limit: Joi.number().integer().positive().allow(null).optional().messages({
+    usage_limit: Joi.number().integer().min(0).allow(null).optional().messages({
         'number.base': 'Giới hạn sử dụng phải là số',
         'number.integer': 'Giới hạn sử dụng phải là số nguyên',
-        'number.positive': 'Giới hạn sử dụng phải lớn hơn 0'
+        'number.min': 'Giới hạn sử dụng phải lớn hơn hoặc bằng 0'
     }),
-    user_limit: Joi.number().integer().min(1).default(1).messages({
+    user_limit: Joi.number().integer().min(0).default(1).messages({
         'number.base': 'Giới hạn mỗi user phải là số',
         'number.integer': 'Giới hạn mỗi user phải là số nguyên',
-        'number.min': 'Giới hạn mỗi user phải lớn hơn hoặc bằng 1'
+        'number.min': 'Giới hạn mỗi user phải lớn hơn hoặc bằng 0'
     }),
     applicable_products: Joi.array().items(
         Joi.string().custom((value, helpers) => {
@@ -84,6 +84,11 @@ const voucherSchema = Joi.object({
     ).optional().messages({
         'any.invalid': 'ID thương hiệu không hợp lệ'
     }),
+    used_count: Joi.number().integer().min(0).default(0).optional().messages({
+        'number.base': 'Số lần đã dùng phải là số',
+        'number.integer': 'Số lần đã dùng phải là số nguyên',
+        'number.min': 'Số lần đã dùng không được âm'
+    }),
     status: Joi.string().valid('active', 'inactive', 'expired').optional().messages({
         'any.only': 'Trạng thái phải là active, inactive hoặc expired'
     })
@@ -91,6 +96,39 @@ const voucherSchema = Joi.object({
 
 export const validateVoucher = async (req, res, next) => {
     try {
+        // Normalize field names from UI
+        if (req.body.discount_type === 'fixed') {
+            req.body.discount_type = 'fixed_amount';
+        }
+        if (req.body.min_order_value !== undefined) {
+            req.body.min_order_amount = Number(req.body.min_order_value);
+        }
+        if (req.body.max_discount !== undefined) {
+            req.body.max_discount_amount = Number(req.body.max_discount);
+        }
+
+        // Convert numeric-like strings to numbers
+        const numericFields = ['discount_value', 'min_order_amount', 'max_discount_amount', 'usage_limit', 'user_limit'];
+        numericFields.forEach(field => {
+            if (req.body[field] !== undefined && req.body[field] !== null && req.body[field] !== '') {
+                const parsed = Number(req.body[field]);
+                if (!Number.isNaN(parsed)) {
+                    req.body[field] = parsed;
+                }
+            }
+        });
+
+        // Ensure defaults for optional numeric fields can stay 0
+        if (req.body.min_order_amount === undefined || req.body.min_order_amount === null || req.body.min_order_amount === '') {
+            req.body.min_order_amount = 0;
+        }
+        if (req.body.max_discount_amount === undefined || req.body.max_discount_amount === null || req.body.max_discount_amount === '') {
+            req.body.max_discount_amount = 0;
+        }
+        if (req.body.usage_limit === undefined || req.body.usage_limit === null || req.body.usage_limit === '') {
+            req.body.usage_limit = 0;
+        }
+
         // Validate discount_value dựa trên discount_type
         if (req.body.discount_type === 'percentage' && req.body.discount_value > 100) {
             return res.status(400).json({
@@ -99,13 +137,15 @@ export const validateVoucher = async (req, res, next) => {
             });
         }
 
-        const { error } = voucherSchema.validate(req.body, { abortEarly: false });
+        const { error } = voucherSchema.validate(req.body, { abortEarly: false, allowUnknown: true });
+        console.log('🔍 validateVoucher req.body:', req.body);
         
         if (error) {
             const errors = error.details.map(detail => ({
                 field: detail.context.key,
                 message: detail.message
             }));
+            console.log('❌ voucher validation errors:', errors);
             return res.status(400).json({
                 success: false,
                 errors

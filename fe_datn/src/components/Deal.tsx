@@ -1,131 +1,228 @@
-import React from "react";
-import {
-  Box,
-  Typography,
-  Grid,
-} from "@mui/material";
 
-import deal1 from "../img/deal_1.jpg";
-import deal2 from "../img/deal_cap_sac.webp";
-import deal3 from "../img/deal_de sac_k_day.webp";
-import deal4 from "../img/deal_gia_do_chong_xoay.webp";
-import deal5 from "../img/deal_gia_do_ipa.webp";
-import deal6 from "../img/deal_pin_du_phong.webp";
-import deal7 from "../img/deal_tainghe.webp";
+import React, { useEffect, useState } from "react";
+import { Box, Typography, IconButton } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
-const deals = [
-  { img: deal2, name: "Cáp sạc nhanh" },
-  { img: deal3, name: "Đế sạc không dây" },
-  { img: deal4, name: "Giá đỡ chống xoay" },
-  { img: deal5, name: "Giá đỡ iPad" },
-  { img: deal6, name: "Pin dự phòng" },
-  { img: deal7, name: "Tai nghe Bluetooth" },
-];
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+
 
 const Deal = () => {
+  const navigate = useNavigate();
+
+  const [categories, setCategories] = useState<
+    { _id: string; name: string; image?: string; logo_image?: string }[]
+  >([]);
+
+  const [banners, setBanners] = useState<
+    { _id: string; image: string; status?: boolean }[]
+  >([]);
+
+  const [index, setIndex] = useState(0);
+  const [hover, setHover] = useState(false);
+
+  // 👉 FETCH GIỐNG BANNER
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [catRes, banRes] = await Promise.all([
+          fetch("http://localhost:3000/api/categories"),
+          fetch("http://localhost:3000/api/banners"),
+        ]);
+
+        const cats = await catRes.json();
+        const bans = await banRes.json();
+
+        setCategories(Array.isArray(cats) ? cats : []);
+        setBanners(
+          Array.isArray(bans) ? bans.filter((b: any) => b.status !== false) : []
+        );
+      } catch (err) {
+        console.error("Lỗi load deal:", err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // 👉 AUTO SLIDER
+  useEffect(() => {
+    if (hover || banners.length === 0) return;
+
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % banners.length);
+    }, 3000);
+
+    return () => clearInterval(timer);
+  }, [hover, banners]);
+
+  // 👉 FIX index khi data đổi
+  useEffect(() => {
+    if (index >= banners.length) setIndex(0);
+  }, [banners]);
+
+  const next = () => {
+    if (banners.length === 0) return;
+    setIndex((prev) => (prev + 1) % banners.length);
+  };
+
+  const prev = () => {
+    if (banners.length === 0) return;
+    setIndex((prev) =>
+      prev === 0 ? banners.length - 1 : prev - 1
+    );
+  };
+
+  const goCategory = (id: string) => {
+    navigate(`/products?category=${id}`);
+  };
+
+  const getImage = (item: any) => {
+    return (
+      item.logo_image ||
+      item.image ||
+      "https://via.placeholder.com/100"
+    );
+  };
+
   return (
-    <Box sx={{ background: "#ede8e8", py: 4, display: "flex", justifyContent: "center" }}>
-      
-      {/* Container */}
-      <Box
-        sx={{
-          width: "100%",
-          maxWidth: "1200px",
-          px: 2,
-        }}
-      >
-        {/* Header */}
-        <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-          <Box sx={{ display: "flex", gap: 3, alignItems: "center" }}>
-            <Typography
+
+    <Box sx={{ background: "#f5f5f5", py: 5 }}>
+      <Box sx={{ maxWidth: 1200, mx: "auto", px: 2 }}>
+        {/* HEADER */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 3,
+            mb: 3,
+            flexWrap: "wrap",
+          }}
+        >
+          <Typography sx={{ color: "#ee4d2d", fontWeight: 700, fontSize: 22 }}>
+            MOBITECH MALL
+          </Typography>
+
+          <Typography sx={{ fontSize: 14 }}>
+            🔁 Trả Hàng Miễn Phí 15 Ngày
+          </Typography>
+
+          <Typography sx={{ fontSize: 14 }}>
+            ✔ Hàng Chính Hãng 100%
+          </Typography>
+
+          <Typography sx={{ fontSize: 14 }}>
+            🚚 Miễn Phí Vận Chuyển
+          </Typography>
+        </Box>
+
+        {/* MAIN GRID */}
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              md: "400px 1fr",
+            },
+            gap: 2,
+          }}
+        >
+          {/* 🔥 LEFT BANNER SLIDER */}
+          <Box
+            onMouseEnter={() => setHover(true)}
+            onMouseLeave={() => setHover(false)}
+            sx={{
+              width: "100%",
+              height: "100%",
+              overflow: "hidden",
+              borderRadius: 2,
+              position: "relative",
+              background: "#000",
+            }}
+          >
+            <Box
               sx={{
-                color: "#ee4d2d",
-                fontWeight: "bold",
-                fontSize: 22,
+                display: "flex",
+                width: `${(banners.length || 1) * 100}%`,
+                transform: `translateX(-${index * 100}%)`,
+                transition: "0.5s",
               }}
             >
-              MOBITECH MALL
-            </Typography>
+              {banners.length > 0 ? (
+                banners.map((item) => (
+                  <Box
+                    key={item._id}
+                    component="img"
+                    src={item.image}
+                    sx={{
+                      width: "100%",
+                      height: 300,
+                      objectFit: "cover",
+                    }}
+                  />
+                ))
+              ) : (
+                <Box
+                  component="img"
+                  src="https://via.placeholder.com/400"
+                  sx={{ width: "100%", height: 300 }}
+                />
+              )}
+            </Box>
+          </Box>
+          {/* CATEGORY GRID */}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3,1fr)",
+              gap: 2,
+            }}
+          >
+            {categories.length > 0 ? (
+              categories.slice(0, 6).map((item) => (
+                <Box
+                  key={item._id}
+                  onClick={() => goCategory(item._id)}
+                  sx={{
+                    background: "#fff",
+                    borderRadius: 2,
+                    textAlign: "center",
+                    p: 2,
+                    cursor: "pointer",
+                    transition: "0.25s",
+                    border: "1px solid #eee",
 
-            <Typography sx={{ color: "#1c1c1c", fontSize: 14 }}>
-              Trả Hàng Miễn Phí 15 Ngày
-            </Typography>
+                    "&:hover": {
+                      transform: "translateY(-6px)",
+                      boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+                    },
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={getImage(item)}
+                    onError={(e: any) => {
+                      e.target.src = "https://via.placeholder.com/100";
+                    }}
+                    sx={{
+                      width: "100%",
+                      height: 90,
+                      objectFit: "contain",
+                      mb: 1,
+                    }}
+                  />
 
-            <Typography sx={{ color: "#1c1c1c", fontSize: 14 }}>
-              Hàng Chính Hãng 100%
-            </Typography>
-
-            <Typography sx={{ color: "#1c1c1c", fontSize: 14 }}>
-              Miễn Phí Vận Chuyển
-            </Typography>
+                  <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
+                    {item.name}
+                  </Typography>
+                </Box>
+              ))
+            ) : (
+              <Typography>Không có danh mục</Typography>
+            )}
           </Box>
         </Box>
 
-        {/* Content */}
-        <Grid container spacing={3} justifyContent="center">
-          
-          {/* Banner */}
-          <Grid item xs={12} md={4}>
-            <Box
-              component="img"
-              src={deal1}
-              alt="Banner"
-              sx={{
-                width: "100%",
-                height: "100%",
-                borderRadius: 2,
-                objectFit: "cover",
-              }}
-            />
-          </Grid>
-
-          {/* Deals */}
-          <Grid item xs={12} md={8}>
-            <Grid container spacing={2}>
-              {deals.map((item, index) => (
-                <Grid item xs={6} key={index}>
-                  <Box
-                    sx={{
-                      background: "#fff",
-                      borderRadius: 2,
-                      textAlign: "center",
-                      p: 2,
-                      height: "100%",
-                      cursor: "pointer",
-                      transition: "0.3s",
-                      "&:hover": {
-                        transform: "translateY(-5px)",
-                        boxShadow: "0 6px 20px rgba(0,0,0,0.2)",
-                      },
-                    }}
-                  >
-                    <Box
-                      component="img"
-                      src={item.img}
-                      alt={item.name}
-                      sx={{
-                        width: "100%",
-                        height: 110,
-                        objectFit: "contain",
-                        mb: 1,
-                      }}
-                    />
-
-                    <Typography
-                      sx={{
-                        fontSize: 13,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {item.name}
-                    </Typography>
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
-          </Grid>
-
-        </Grid>
       </Box>
     </Box>
   );

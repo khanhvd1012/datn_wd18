@@ -18,7 +18,7 @@ import {
   Alert,
   Chip,
   IconButton,
-  InputAdornment
+  InputAdornment,
 } from "@mui/material";
 
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
@@ -39,176 +39,171 @@ interface Product {
   rating?: number;
 }
 
-const ProductList = () => {
+const FALLBACK_IMAGE =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23e0e0e0'/%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23777' font-size='20'%3ENo Image%3C/text%3E%3C/svg%3E";
 
-  const [products,setProducts] = useState<Product[]>([]);
-  const [page,setPage] = useState(1);
-  const [search,setSearch] = useState("");
-  const [sortType,setSortType] = useState("default");
-  const [open,setOpen] = useState(false);
+const ProductList = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [sortType, setSortType] = useState("default");
+  const [open, setOpen] = useState(false);
 
   const productsPerPage = 8;
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const category = searchParams.get("category");
+  const searchFromUrl = searchParams.get("search") || "";
 
-  useEffect(()=>{
+  useEffect(() => {
+    setSearch(searchFromUrl);
+  }, [searchFromUrl]);
 
-    fetch("http://localhost:3000/products")
-      .then(res=>res.json())
-      .then(data=>setProducts(data))
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        let url = "http://localhost:3000/api/products?";
+        if (category) url += `category=${category}&`;
+        if (searchFromUrl) url += `search=${searchFromUrl}&`;
 
-  },[])
+        const res = await fetch(url);
+        const data = await res.json();
 
-  const formatPrice = (price:number)=>
-    price.toLocaleString("vi-VN")+" đ";
+        // Handle array or paginated object
+        const list = Array.isArray(data) ? data : data.docs || data.data || [];
 
-  const filteredProducts = useMemo(()=>{
+        const mappedList = list.map((item: any) => ({
+          ...item,
+          id: item._id || item.id,
+          img:
+            item.img ||
+            (item.images && item.images[0]) ||
+            "https://via.placeholder.com/200",
+        }));
 
+        setProducts(mappedList);
+      } catch (err) {
+        console.error("Lỗi load products:", err);
+      }
+    };
+    fetchProducts();
+  }, [category, search]); // Re-fetch when category or search changes
+
+  const formatPrice = (price: number) => price.toLocaleString("vi-VN") + " đ";
+
+  const filteredProducts = useMemo(() => {
     let filtered = [...products];
 
-    // lọc category
-    if(category){
-      filtered = filtered.filter(p=>p.category===category)
-    }
-
-    // search
-    if(search){
-      filtered = filtered.filter(p=>
-        p.name.toLowerCase().includes(search.toLowerCase())
-      )
-    }
+    // sort (vẫn giữ sort ở client cho nhanh)
 
     // sort
-    if(sortType==="priceAsc")
-      filtered.sort((a,b)=>a.price-b.price)
+    if (sortType === "priceAsc") filtered.sort((a, b) => a.price - b.price);
 
-    if(sortType==="priceDesc")
-      filtered.sort((a,b)=>b.price-a.price)
+    if (sortType === "priceDesc") filtered.sort((a, b) => b.price - a.price);
 
-    return filtered
+    return filtered;
+  }, [products, search, sortType, category]);
 
-  },[products,search,sortType,category])
-
-  const totalPages = Math.ceil(filteredProducts.length/productsPerPage)
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
 
   const displayedProducts = filteredProducts.slice(
-    (page-1)*productsPerPage,
-    page*productsPerPage
-  )
+    (page - 1) * productsPerPage,
+    page * productsPerPage,
+  );
 
-  const addToCart = async(product:Product)=>{
-
+  const addToCart = async (product: Product) => {
     const res = await fetch(
-      `http://localhost:3000/cart?productId=${product.id}`
-    )
+      `http://localhost:3000/cart?productId=${product.id}`,
+    );
 
-    const data = await res.json()
+    const data = await res.json();
 
-    if(data.length>0){
+    if (data.length > 0) {
+      const item = data[0];
 
-      const item = data[0]
-
-      await fetch(`http://localhost:3000/cart/${item.id}`,{
-        method:"PATCH",
-        headers:{ "Content-Type":"application/json" },
-        body:JSON.stringify({
-          quantity:item.quantity+1
-        })
-      })
-
-    }else{
-
-      await fetch(`http://localhost:3000/cart`,{
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body:JSON.stringify({
-          productId:product.id,
-          name:product.name,
-          img:product.img,
-          price:product.price,
-          quantity:1
-        })
-      })
-
+      await fetch(`http://localhost:3000/cart/${item.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quantity: item.quantity + 1,
+        }),
+      });
+    } else {
+      await fetch(`http://localhost:3000/cart`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: product.id,
+          name: product.name,
+          img: product.img,
+          price: product.price,
+          quantity: 1,
+        }),
+      });
     }
 
     // 🔥 cập nhật số giỏ hàng header
-    window.dispatchEvent(new Event("cartUpdated"))
+    window.dispatchEvent(new Event("cartUpdated"));
 
-    setOpen(true)
+    setOpen(true);
+  };
 
-  }
-
-  return(
-
-    <Box sx={{maxWidth:1300,mx:"auto",p:3,background:"#fafafa"}}>
-
+  return (
+    <Box sx={{ maxWidth: 1300, mx: "auto", p: 3, background: "#fafafa" }}>
       {/* CATEGORY FILTER */}
 
       {category && (
-
         <Stack direction="row" spacing={2} mb={2}>
+          <Chip label={`Danh mục: ${category}`} color="primary" />
 
-          <Chip
-            label={`Danh mục: ${category}`}
-            color="primary"
-          />
-
-          <Button
-            variant="outlined"
-            onClick={()=>navigate("/products")}
-          >
+          <Button variant="outlined" onClick={() => navigate("/products")}>
             Xóa lọc
           </Button>
-
         </Stack>
-
       )}
 
       {/* SEARCH + SORT */}
 
       <Stack
-        direction={{ xs:"column", md:"row" }}
+        direction={{ xs: "column", md: "row" }}
         spacing={2}
         mb={4}
         justifyContent="space-between"
         alignItems="center"
         sx={{
-          background:"#fff",
-          padding:"18px",
-          borderRadius:"12px",
-          boxShadow:"0 4px 12px rgba(0,0,0,0.05)"
+          background: "#fff",
+          padding: "18px",
+          borderRadius: "12px",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
         }}
       >
-
         <TextField
           size="small"
           placeholder="Tìm sản phẩm..."
           value={search}
-          onChange={(e)=>setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           sx={{
-            width:{ xs:"100%", md:320 },
-            background:"#f5f5f5",
-            borderRadius:"8px"
+            width: { xs: "100%", md: 320 },
+            background: "#f5f5f5",
+            borderRadius: "8px",
           }}
           InputProps={{
-            startAdornment:(
+            startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon/>
+                <SearchIcon />
               </InputAdornment>
-            )
+            ),
           }}
         />
 
         <FormControl
           size="small"
           sx={{
-            width:200,
-            background:"#f5f5f5",
-            borderRadius:"8px"
+            width: 200,
+            background: "#f5f5f5",
+            borderRadius: "8px",
           }}
         >
           <InputLabel>Sắp xếp</InputLabel>
@@ -216,132 +211,118 @@ const ProductList = () => {
           <Select
             value={sortType}
             label="Sắp xếp"
-            onChange={(e)=>setSortType(e.target.value)}
+            onChange={(e) => setSortType(e.target.value)}
           >
             <MenuItem value="default">Mặc định</MenuItem>
             <MenuItem value="priceAsc">Giá tăng dần</MenuItem>
             <MenuItem value="priceDesc">Giá giảm dần</MenuItem>
           </Select>
-
         </FormControl>
-
       </Stack>
 
       {/* PRODUCT GRID */}
 
       <Box
         sx={{
-          display:"grid",
-          gridTemplateColumns:{
-            xs:"repeat(2,1fr)",
-            sm:"repeat(3,1fr)",
-            md:"repeat(4,1fr)"
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "repeat(2,1fr)",
+            sm: "repeat(3,1fr)",
+            md: "repeat(4,1fr)",
           },
-          gap:3
+          gap: 3,
         }}
       >
-
-        {displayedProducts.map(item=>(
-
+        {displayedProducts.map((item) => (
           <Card
             key={item.id}
             sx={{
-              borderRadius:3,
-              overflow:"hidden",
-              background:"#fff",
-              border:"1px solid #eee",
-              position:"relative",
-              transition:"all .3s",
-              "&:hover":{
-                transform:"translateY(-6px)",
-                boxShadow:"0 12px 25px rgba(0,0,0,0.12)"
-              }
+              borderRadius: 3,
+              overflow: "hidden",
+              background: "#fff",
+              border: "1px solid #eee",
+              position: "relative",
+              transition: "all .3s",
+              "&:hover": {
+                transform: "translateY(-6px)",
+                boxShadow: "0 12px 25px rgba(0,0,0,0.12)",
+              },
             }}
           >
-
-            {item.discount &&(
-
+            {item.discount && (
               <Chip
                 label={`-${item.discount}%`}
                 color="error"
                 size="small"
                 sx={{
-                  position:"absolute",
-                  top:10,
-                  left:10,
-                  fontWeight:"bold"
+                  position: "absolute",
+                  top: 10,
+                  left: 10,
+                  fontWeight: "bold",
                 }}
               />
-
             )}
 
             <IconButton
               sx={{
-                position:"absolute",
-                top:8,
-                right:8,
-                bgcolor:"#fff"
+                position: "absolute",
+                top: 8,
+                right: 8,
+                bgcolor: "#fff",
               }}
             >
-              <FavoriteBorderIcon/>
+              <FavoriteBorderIcon />
             </IconButton>
 
             <Link to={`/product/${item.id}`}>
-
               <CardMedia
                 component="img"
-                image={item.img}
-                onError={(e:any)=>{
-                  e.target.src="https://via.placeholder.com/200"
+                image={item.img || FALLBACK_IMAGE}
+                onError={(e: any) => {
+                  e.target.src = FALLBACK_IMAGE;
                 }}
                 sx={{
-                  height:200,
-                  objectFit:"contain",
-                  p:2
+                  height: 200,
+                  objectFit: "contain",
+                  p: 2,
                 }}
               />
-
             </Link>
 
             <CardContent>
-
               <Typography
                 sx={{
-                  fontSize:15,
-                  fontWeight:500,
-                  minHeight:40
+                  fontSize: 15,
+                  fontWeight: 500,
+                  minHeight: 40,
                 }}
               >
                 {item.name}
               </Typography>
 
-              <Rating
-                value={item.rating || 4}
-                readOnly
-                size="small"
-              />
+              <Rating value={item.rating || 4} readOnly size="small" />
 
               <Typography
                 sx={{
-                  fontSize:13,
-                  color:"#666",
-                  display:"flex",
-                  alignItems:"center",
-                  gap:0.5
+                  fontSize: 13,
+                  color: "#666",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
                 }}
               >
                 <LocalFireDepartmentIcon
-                  sx={{fontSize:16,color:"#ff6d00"}}
+                  sx={{ fontSize: 16, color: "#ff6d00" }}
                 />
                 Đã bán {item.sold || 0}
               </Typography>
 
               <Typography
                 sx={{
-                  color:"#d70018",
-                  fontWeight:700,
-                  fontSize:18,
-                  mt:1
+                  color: "#d70018",
+                  fontWeight: 700,
+                  fontSize: 18,
+                  mt: 1,
                 }}
               >
                 {formatPrice(item.price)}
@@ -350,35 +331,29 @@ const ProductList = () => {
               <Button
                 fullWidth
                 variant="contained"
-                startIcon={<ShoppingCartIcon/>}
+                startIcon={<ShoppingCartIcon />}
                 sx={{
-                  mt:1.5,
-                  backgroundColor:"#d70018",
-                  textTransform:"none"
+                  mt: 1.5,
+                  backgroundColor: "#d70018",
+                  textTransform: "none",
                 }}
-                onClick={()=>addToCart(item)}
+                onClick={() => addToCart(item)}
               >
                 Thêm vào giỏ
               </Button>
-
             </CardContent>
-
           </Card>
-
         ))}
-
       </Box>
 
       {/* PAGINATION */}
 
-      <Box sx={{display:"flex",justifyContent:"center",mt:4}}>
-
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
         <Pagination
           count={totalPages}
           page={page}
-          onChange={(e,value)=>setPage(value)}
+          onChange={(e, value) => setPage(value)}
         />
-
       </Box>
 
       {/* ALERT */}
@@ -386,17 +361,12 @@ const ProductList = () => {
       <Snackbar
         open={open}
         autoHideDuration={2000}
-        onClose={()=>setOpen(false)}
+        onClose={() => setOpen(false)}
       >
-        <Alert severity="success">
-          Đã thêm sản phẩm vào giỏ hàng
-        </Alert>
+        <Alert severity="success">Đã thêm sản phẩm vào giỏ hàng</Alert>
       </Snackbar>
-
     </Box>
+  );
+};
 
-  )
-
-}
-
-export default ProductList
+export default ProductList;

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Box,
   Button,
@@ -11,15 +11,25 @@ import {
 import { useNavigate } from "react-router-dom";
 import { loginAPI } from "../../services/authService";
 
+interface LoginForm {
+  email: string;
+  password: string;
+}
+
+interface LoginErrors {
+  email?: string;
+  password?: string;
+}
+
 const Login = () => {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<LoginForm>({
     email: "",
     password: "",
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<LoginErrors>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({
@@ -29,7 +39,7 @@ const Login = () => {
   };
 
   const validate = () => {
-    const newErrors: Record<string, string> = {};
+    const newErrors: LoginErrors = {};
 
     if (!form.email) {
       newErrors.email = "Email không được để trống";
@@ -47,31 +57,30 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!validate()) return;
 
     try {
-      const data = await loginAPI({
+      const res = await loginAPI({
         email: form.email,
         password: form.password,
       });
 
-      if (data?.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
-        window.dispatchEvent(new Event("userUpdated"));
-      }
-
+      const user = {
+        ...res.user,
+        token: res.accessToken,
+      };
+      localStorage.setItem("user", JSON.stringify(user));
       alert("Đăng nhập thành công!");
-      navigate("/");
-    } catch (error: any) {
-      const message =
-        error?.response?.data?.message ||
-        (Array.isArray(error?.response?.data?.messages) ? error.response.data.messages[0] : undefined) ||
-        "Không kết nối được server!";
-
-      alert(message);
+      if (user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || "Không kết nối được server!");
     }
   };
 
