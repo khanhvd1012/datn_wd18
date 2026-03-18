@@ -221,7 +221,7 @@ const Banner = () => {
 
         </Box>
 
-        {/* RIGHT ADS */}
+        {/* RIGHT ADS
 
         <Box
           sx={{
@@ -262,9 +262,9 @@ const Banner = () => {
                 transform:"scale(1.05)"
               }
             }}
-          />
+          /> */}
 
-        </Box>
+        {/* </Box> */}
 
       </Box>
 
