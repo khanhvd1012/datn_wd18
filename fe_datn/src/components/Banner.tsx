@@ -247,24 +247,48 @@ const Banner = () => {
         </Box>
 
         {/* ADS */}
-        <Box sx={{ width: 250, display: "flex", flexDirection: "column", gap: 2 }}>
-          {rightAds.map((img, i) => (
-            <Box
-              key={i}
-              component="img"
-              src={img}
-              sx={{
-                width: "100%",
-                height: 190,
-                borderRadius: 3,
-                objectFit: "cover",
-                transition: "0.3s",
-                "&:hover": { transform: "scale(1.05)" }
-              }}
-            />
-          ))}
-        </Box>
+<Box sx={{ width: 250, display: "flex", flexDirection: "column", gap: 2 }}>
+  {rightAds.map((img, i) => (
+    <Box
+      key={i}
+      component="img"
+      src={img}
+      sx={{
+        width: "100%",
+        height: 190,
+        borderRadius: 3,
+        objectFit: "cover",
 
+        // 👉 floating + shadow động
+        animation: `floatY 4s ease-in-out infinite ${i * 1.5}s`,
+
+        transition: "0.3s",
+
+        "&:hover": {
+          transform: "scale(1.05)"
+        }
+      }}
+    />
+  ))}
+</Box>
+<style>
+{`
+@keyframes floatY {
+  0% {
+    transform: translateY(0);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  }
+  50% {
+    transform: translateY(5px);
+    box-shadow: 0 20px 35px rgba(0,0,0,0.25);
+  }
+  100% {
+    transform: translateY(0);
+    box-shadow: 0 6px 122px rgba(0,0,0,0.15);
+  }
+}
+`}
+</style>
       </Box>
     </Box>
   );

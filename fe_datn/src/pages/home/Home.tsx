@@ -16,7 +16,6 @@ const Home = () => {
       <FeaturedProducts />
       <Deal/>
       <ProductList/>
-      <Footer />
 
       {/* Zalo Floating Button */}
       <Box
