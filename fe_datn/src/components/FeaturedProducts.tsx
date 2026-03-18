@@ -22,7 +22,7 @@ const FeaturedProducts = () => {
     fetch("http://localhost:3000/api/products")
       .then((res) => res.json())
       .then((data) => {
-<<<<<<< HEAD
+
         // Handle array or paginated object
         const list = Array.isArray(data) ? data : (data.docs || data.data || []);
         
@@ -37,22 +37,13 @@ const FeaturedProducts = () => {
         setProducts(mappedList);
       })
       .catch((err) => console.error("Lỗi load products:", err));
-=======
-        // 👉 fake thêm giá cũ để đẹp UI
-        const fake = data.map((p: Product) => ({
-          ...p,
-          oldPrice: p.price * 1.3
-        }));
-        setProducts(fake);
-      });
->>>>>>> eadc387cb669490d5a9694d97cda59cd5982f6fa
   }, []);
 
   const formatPrice = (price: number) =>
     price.toLocaleString("vi-VN") + " đ";
 
   return (
-<<<<<<< HEAD
+
     <Box sx={{ backgroundColor: "#f3f3f3", py: 4 }}>
       {/* Container */}
       <Box
@@ -62,11 +53,6 @@ const FeaturedProducts = () => {
           px: 2,
         }}
       >
-=======
-    <Box sx={{ background: "#f5f5f5", py: 6 }}>
-      <Box sx={{ maxWidth: 1300, mx: "auto", px: 2 }}>
-
->>>>>>> eadc387cb669490d5a9694d97cda59cd5982f6fa
         {/* HEADER */}
         <Box sx={{ mb: 4 }}>
           <Typography
@@ -95,7 +81,7 @@ const FeaturedProducts = () => {
             gap: 2
           }}
         >
-<<<<<<< HEAD
+
           {products.slice(0, 5).map((item) => (
             <Link
               key={item.id}
@@ -115,18 +101,6 @@ const FeaturedProducts = () => {
                     boxShadow: "0 8px 25px rgba(0,0,0,0.5)",
                   },
                 }}
-=======
-          {products.slice(0, 10).map((item) => {
-            const discount = Math.round(
-              ((item.oldPrice! - item.price) / item.oldPrice!) * 100
-            );
-
-            return (
-              <Link
-                key={item.id}
-                to={`/product/${item.id}`}
-                style={{ textDecoration: "none" }}
->>>>>>> eadc387cb669490d5a9694d97cda59cd5982f6fa
               >
                 <Card
                   sx={{

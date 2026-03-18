@@ -12,8 +12,7 @@ import Orders from "../pages/Orders";
 import OrderDetail from "../pages/OrderDetail";
 import OrderSuccess from "../pages/OrderSuccess";
 
-import News from "../pages/news/News";
-import NewsDetail from "../pages/news/NewsDetail";
+
 
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
@@ -22,11 +21,10 @@ import Profile from "../pages/Profile";
 import MyAccount from "../pages/account/MyAccount";
 
 /* NEW PAGES */
-<<<<<<< HEAD:fe_datn/src/routes/AppRouter.tsx
-=======
+
 import News from "../pages/news/News.tsx";
 import NewsDetail from "../pages/news/NewsDetail.tsx";
->>>>>>> eadc387cb669490d5a9694d97cda59cd5982f6fa:fe_datn/src/routes/AppRouter.jsx
+
 import About from "../pages/about/About.tsx";
 import Contact from "../pages/contact/Contact.tsx";
 
