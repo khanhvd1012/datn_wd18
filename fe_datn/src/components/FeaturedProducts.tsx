@@ -19,40 +19,25 @@ const FeaturedProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/products")
+    fetch("http://localhost:3000/products")
       .then((res) => res.json())
       .then((data) => {
-
-        // Handle array or paginated object
-        const list = Array.isArray(data) ? data : (data.docs || data.data || []);
-        
-        // Map data to match local interface if needed
-        const mappedList = list.map((item: any) => ({
-          id: item._id || item.id,
-          name: item.name,
-          img: item.img || (item.images && item.images[0]) || "https://via.placeholder.com/200",
-          price: item.price
+        // 👉 fake thêm giá cũ để đẹp UI
+        const fake = data.map((p: Product) => ({
+          ...p,
+          oldPrice: p.price * 1.3
         }));
-        
-        setProducts(mappedList);
-      })
-      .catch((err) => console.error("Lỗi load products:", err));
+        setProducts(fake);
+      });
   }, []);
 
   const formatPrice = (price: number) =>
     price.toLocaleString("vi-VN") + " đ";
 
   return (
+    <Box sx={{ background: "#f5f5f5", py: 6 }}>
+      <Box sx={{ maxWidth: 1300, mx: "auto", px: 2 }}>
 
-    <Box sx={{ backgroundColor: "#f3f3f3", py: 4 }}>
-      {/* Container */}
-      <Box
-        sx={{
-          maxWidth: "1300px",
-          margin: "auto",
-          px: 2,
-        }}
-      >
         {/* HEADER */}
         <Box sx={{ mb: 4 }}>
           <Typography
@@ -81,26 +66,16 @@ const FeaturedProducts = () => {
             gap: 2
           }}
         >
+          {products.slice(0, 10).map((item) => {
+            const discount = Math.round(
+              ((item.oldPrice! - item.price) / item.oldPrice!) * 100
+            );
 
-          {products.slice(0, 5).map((item) => (
-            <Link
-              key={item.id}
-              to={`/product/${item.id}`}
-              style={{ textDecoration: "none" }}
-            >
-              <Card
-                sx={{
-                  backgroundColor: "#2f2e2e",
-                  border: "1px solid #dcdcdc",
-                  height: "100%",
-                  transition: "0.3s",
-                  cursor: "pointer",
-                  "&:hover": {
-                    borderColor: "#ff6a00",
-                    transform: "translateY(-6px)",
-                    boxShadow: "0 8px 25px rgba(0,0,0,0.5)",
-                  },
-                }}
+            return (
+              <Link
+                key={item.id}
+                to={`/product/${item.id}`}
+                style={{ textDecoration: "none" }}
               >
                 <Card
                   sx={{
