@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import {
   Box,
   Card,
-  CardMedia,
-  CardContent,
   Typography,
+  Chip,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 
@@ -13,6 +12,7 @@ interface Product {
   name: string;
   img: string;
   price: number;
+  oldPrice?: number;
 }
 
 const FeaturedProducts = () => {
@@ -22,6 +22,7 @@ const FeaturedProducts = () => {
     fetch("http://localhost:3000/api/products")
       .then((res) => res.json())
       .then((data) => {
+<<<<<<< HEAD
         // Handle array or paginated object
         const list = Array.isArray(data) ? data : (data.docs || data.data || []);
         
@@ -36,12 +37,22 @@ const FeaturedProducts = () => {
         setProducts(mappedList);
       })
       .catch((err) => console.error("Lỗi load products:", err));
+=======
+        // 👉 fake thêm giá cũ để đẹp UI
+        const fake = data.map((p: Product) => ({
+          ...p,
+          oldPrice: p.price * 1.3
+        }));
+        setProducts(fake);
+      });
+>>>>>>> eadc387cb669490d5a9694d97cda59cd5982f6fa
   }, []);
 
   const formatPrice = (price: number) =>
     price.toLocaleString("vi-VN") + " đ";
 
   return (
+<<<<<<< HEAD
     <Box sx={{ backgroundColor: "#f3f3f3", py: 4 }}>
       {/* Container */}
       <Box
@@ -51,22 +62,24 @@ const FeaturedProducts = () => {
           px: 2,
         }}
       >
+=======
+    <Box sx={{ background: "#f5f5f5", py: 6 }}>
+      <Box sx={{ maxWidth: 1300, mx: "auto", px: 2 }}>
+
+>>>>>>> eadc387cb669490d5a9694d97cda59cd5982f6fa
         {/* HEADER */}
-        <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-          <Box
+        <Box sx={{ mb: 4 }}>
+          <Typography
             sx={{
-              backgroundColor: "#ff6a00",
-              color: "#fff",
-              px: 5,
-              py: 1,
-              fontWeight: "bold",
-              fontSize: 18,
-              clipPath:
-                "polygon(0 0, 90% 0, 100% 50%, 90% 100%, 0 100%)",
+              fontSize: 22,
+              fontWeight: 700,
+              color: "#ee4d2d",
+              borderLeft: "5px solid #ee4d2d",
+              pl: 2
             }}
           >
-            PHỤ KIỆN NỔI BẬT
-          </Box>
+            🔥 SẢN PHẨM NỔI BẬT
+          </Typography>
         </Box>
 
         {/* GRID */}
@@ -74,14 +87,15 @@ const FeaturedProducts = () => {
           sx={{
             display: "grid",
             gridTemplateColumns: {
-              xs: "repeat(1, 1fr)",
-              sm: "repeat(2, 1fr)",
-              md: "repeat(3, 1fr)",
-              lg: "repeat(5, 1fr)", // 5 sản phẩm / 1 hàng
+              xs: "repeat(2,1fr)",
+              sm: "repeat(3,1fr)",
+              md: "repeat(4,1fr)",
+              lg: "repeat(5,1fr)"
             },
-            gap: 2,
+            gap: 2
           }}
         >
+<<<<<<< HEAD
           {products.slice(0, 5).map((item) => (
             <Link
               key={item.id}
@@ -101,44 +115,141 @@ const FeaturedProducts = () => {
                     boxShadow: "0 8px 25px rgba(0,0,0,0.5)",
                   },
                 }}
+=======
+          {products.slice(0, 10).map((item) => {
+            const discount = Math.round(
+              ((item.oldPrice! - item.price) / item.oldPrice!) * 100
+            );
+
+            return (
+              <Link
+                key={item.id}
+                to={`/product/${item.id}`}
+                style={{ textDecoration: "none" }}
+>>>>>>> eadc387cb669490d5a9694d97cda59cd5982f6fa
               >
-                <CardMedia
-                  component="img"
-                  image={item.img}
-                  alt={item.name}
+                <Card
                   sx={{
-                    height: 200,
-                    objectFit: "contain",
-                    backgroundColor: "#fff",
-                    p: 2,
+                    borderRadius: 2,
+                    overflow: "hidden",
+                    background: "#fff",
+                    position: "relative",
+                    transition: "0.3s",
+                    "&:hover": {
+                      transform: "translateY(-6px)",
+                      boxShadow: "0 10px 25px rgba(0,0,0,0.15)"
+                    }
                   }}
-                />
+                >
 
-                <CardContent>
-                  <Typography
-                    variant="body2"
+                  {/* SALE BADGE */}
+                  <Box
                     sx={{
-                      color: "#eee",
-                      minHeight: 48,
-                      mb: 1,
+                      position: "absolute",
+                      top: 10,
+                      left: 10,
+                      background: "#ee4d2d",
+                      color: "#fff",
+                      fontSize: 12,
+                      px: 1,
+                      borderRadius: 1,
+                      zIndex: 2
                     }}
                   >
-                    {item.name}
-                  </Typography>
+                    -{discount}%
+                  </Box>
 
-                  <Typography
+                  {/* HOT */}
+                  <Chip
+                    label="HOT"
+                    size="small"
                     sx={{
-                      color: "#ff3b3b",
-                      fontWeight: "bold",
-                      fontSize: 16,
+                      position: "absolute",
+                      top: 10,
+                      right: 10,
+                      bgcolor: "#ff9800",
+                      color: "#fff",
+                      fontWeight: 600
+                    }}
+                  />
+
+                  {/* IMAGE */}
+                  <Box
+                    sx={{
+                      height: 180,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      p: 2,
+                      overflow: "hidden"
                     }}
                   >
-                    {formatPrice(item.price)}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+                    <Box
+                      component="img"
+                      src={item.img}
+                      sx={{
+                        maxWidth: "100%",
+                        maxHeight: "100%",
+                        objectFit: "contain",
+                        transition: "0.4s",
+                        "&:hover": {
+                          transform: "scale(1.1)"
+                        }
+                      }}
+                    />
+                  </Box>
+
+                  {/* INFO */}
+                  <Box sx={{ p: 1.5 }}>
+                    <Typography
+                      sx={{
+                        fontSize: 13,
+                        color: "#333",
+                        height: 40,
+                        overflow: "hidden"
+                      }}
+                    >
+                      {item.name}
+                    </Typography>
+
+                    {/* PRICE */}
+                    <Box sx={{ mt: 1 }}>
+                      <Typography
+                        sx={{
+                          color: "#ee4d2d",
+                          fontWeight: 700,
+                          fontSize: 16
+                        }}
+                      >
+                        {formatPrice(item.price)}
+                      </Typography>
+
+                      <Typography
+                        sx={{
+                          fontSize: 12,
+                          color: "#999",
+                          textDecoration: "line-through"
+                        }}
+                      >
+                        {formatPrice(item.oldPrice!)}
+                      </Typography>
+                    </Box>
+
+                    {/* SOLD */}
+                    <Typography
+                      sx={{
+                        fontSize: 12,
+                        color: "#777",
+                        mt: 0.5
+                      }}
+                    >
+                      Đã bán {Math.floor(Math.random() * 500)}
+                    </Typography>
+                  </Box>
+                </Card>
+              </Link>
+            );
+          })}
         </Box>
       </Box>
     </Box>

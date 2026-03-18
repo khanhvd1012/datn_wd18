@@ -32,10 +32,16 @@ const Contact = () => {
   const [open, setOpen] = useState(false);
 
   const [form, setForm] = useState({
+<<<<<<< HEAD
     username: "",
     email: "",
     phone: "",
     address: "",
+=======
+    name: "",
+    email: "",
+    phone: "",
+>>>>>>> eadc387cb669490d5a9694d97cda59cd5982f6fa
     message: ""
   });
 
@@ -51,7 +57,11 @@ const Contact = () => {
 
     try {
 
+<<<<<<< HEAD
       await axios.post("http://localhost:3000/api/contacts", form);
+=======
+      await axios.post("http://localhost:3000/contacts", form);
+>>>>>>> eadc387cb669490d5a9694d97cda59cd5982f6fa
 
       setOpen(true);
 
@@ -125,7 +135,11 @@ text:"support@shop.com"
 }
 ].map((item,index)=>(
 
+<<<<<<< HEAD
 <Grid item component="div" xs={12} md={4} key={index}>
+=======
+<Grid item xs={12} md={4} key={index}>
+>>>>>>> eadc387cb669490d5a9694d97cda59cd5982f6fa
 
 <Paper
 sx={{
@@ -181,8 +195,13 @@ Gửi tin nhắn
 
 <TextField
 label="Họ và tên"
+<<<<<<< HEAD
 name="username"
 value={form.username}
+=======
+name="name"
+value={form.name}
+>>>>>>> eadc387cb669490d5a9694d97cda59cd5982f6fa
 onChange={handleChange}
 fullWidth
 InputProps={{
@@ -225,6 +244,7 @@ startAdornment:(
 />
 
 <TextField
+<<<<<<< HEAD
 label="Địa chỉ"
 name="address"
 value={form.address}
@@ -240,6 +260,8 @@ startAdornment:(
 />
 
 <TextField
+=======
+>>>>>>> eadc387cb669490d5a9694d97cda59cd5982f6fa
 label="Nội dung"
 name="message"
 value={form.message}

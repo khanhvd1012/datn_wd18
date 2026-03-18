@@ -34,3 +34,19 @@ export const loginValidator = Joi.object({
         "any.required": "Mật khẩu là bắt buộc",
     }),
 });
+
+export const forgotPasswordValidator = Joi.object({
+    email: Joi.string().email().required().messages({
+        "string.empty": "Email không được để trống",
+        "string.email": "Email không hợp lệ",
+        "any.required": "Vui lòng nhập Email"
+    })
+});
+
+export const resetPasswordValidator = Joi.object({
+    password: Joi.string().min(6).required().messages({
+        "string.empty": "Mật khẩu mới không được để trống",
+        "string.min": "Mật khẩu mới phải có ít nhất 6 ký tự",
+        "any.required": "Vui lòng nhập Mật khẩu mới"
+    })
+});

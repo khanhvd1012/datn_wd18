@@ -1,5 +1,6 @@
 import { Box, Typography, Divider, Grid } from "@mui/material";
 
+<<<<<<< HEAD
 const iconStyle = {
   width: 28,
   height: 28,
@@ -35,12 +36,66 @@ const Footer = () => {
               <Typography fontWeight="bold" mb={1}>
                 TÌM CHÚNG TÔI TRÊN FACEBOOK
               </Typography>
+=======
+  const Footer = () => {
+    return (
+      <>
+        {/* ===== FOOTER TOP ===== */}
+        <Box
+          sx={{
+            backgroundColor: "#ffffff",
+            color: "#000000",
+            mt: 6 
+          }}
+        >
+          <Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 3, md: 4 }, py: 5 }}>
+            <Grid container justifyContent="space-between" spacing={3}>
+              {/* Cột 1 */}
+              <Grid item xs={12} md={3}>
+                <Typography color="#000000" fontWeight="bold" mb={1}>
+                  TÌM CHÚNG TÔI TRÊN FACEBOOK
+                </Typography>
+                <Divider sx={{ width: 40, height: 3, bgcolor: "#ff9800", mb: 2 }} />
+                <Typography fontSize={14}>Phukiendienthoai</Typography>
+              </Grid>
+
+              {/* Cột 2 */}
+              <Grid item xs={12} md={4}>
+                <Typography color="#000000" fontWeight="bold" mb={1}>
+                  CHÍNH SÁCH & QUY ĐỊNH
+                </Typography>
+                <Divider sx={{ width: 40, height: 3, bgcolor: "#ff9800", mb: 2 }} />
+>>>>>>> eadc387cb669490d5a9694d97cda59cd5982f6fa
 
               <Divider sx={{ width: 40, height: 3, bgcolor: "#ff9800", mb: 2 }} />
 
+<<<<<<< HEAD
               <Typography fontSize={14}>
                 Phukiendienthoai
               </Typography>
+=======
+              {/* Cột 3 */}
+              <Grid item xs={12} md={3}>
+                <Typography color="#000000" fontWeight="bold" mb={1}>
+                  LIÊN HỆ
+                </Typography>
+                <Divider sx={{ width: 40, height: 3, bgcolor: "#ff9800", mb: 2 }} />
+
+                <Typography fontSize={14} mb={1}>
+                  Cơ sở 1: Số 24 - Ngõ 70 Thái Hà - Đống Đa - Hà Nội
+                </Typography>
+                <Typography fontSize={14} mb={1}>
+                  Email: lienhe@phukiendienthoai.com
+                </Typography>
+
+                <Typography color="#fff" fontWeight="bold" mt={2} mb={1}>
+                  CÓ THẮC MẮC?
+                </Typography>
+
+                <Typography fontSize={14}>📞 0987 65 4321</Typography>
+                <Typography fontSize={14}>📞 0987 65 1234</Typography>
+              </Grid>
+>>>>>>> eadc387cb669490d5a9694d97cda59cd5982f6fa
             </Grid>
 
             {/* Cột 2 */}
@@ -113,6 +168,7 @@ const Footer = () => {
       >
         <Box
           sx={{
+<<<<<<< HEAD
             maxWidth: 1200,
             mx: "auto",
             px: { xs: 3, md: 4 },
@@ -122,6 +178,10 @@ const Footer = () => {
             alignItems: "flex-start",
             flexWrap: "wrap",
             gap: 2
+=======
+            backgroundColor: "#ffffff",
+            borderTop: "1px solid #333"
+>>>>>>> eadc387cb669490d5a9694d97cda59cd5982f6fa
           }}
         >
           {/* Left */}
@@ -145,10 +205,15 @@ const Footer = () => {
               25/04/2011
             </Typography>
 
+<<<<<<< HEAD
             <Typography fontSize={13}>
               Thiết kế web: Tuan Lak
             </Typography>
           </Box>
+=======
+              <Typography fontSize={13}>Thiết kế web: Mo</Typography>
+            </Box>
+>>>>>>> eadc387cb669490d5a9694d97cda59cd5982f6fa
 
           {/* Right */}
           <Box>

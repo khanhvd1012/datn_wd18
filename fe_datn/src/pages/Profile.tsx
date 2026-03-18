@@ -23,35 +23,23 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-
     const fetchUser = async () => {
-
       try {
-
         const data = await getMeAPI();
         setUser(data.user);
-
       } catch (err) {
-
         console.error("Lỗi lấy profile");
-
       } finally {
-
         setLoading(false);
-
       }
-
     };
 
     fetchUser();
-
   }, []);
 
   const handleLogout = () => {
-
     localStorage.removeItem("token");
     window.location.href = "/login";
-
   };
 
   if (loading)
@@ -72,52 +60,50 @@ export default function Profile() {
 
     <Box
       sx={{
-        minHeight: "80vh",
+        minHeight: "100vh",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        background: "#f5f5f5",
-        p: 3
+        background: "linear-gradient(135deg,#667eea,#764ba2)"
       }}
     >
 
       <Paper
-        elevation={5}
+        elevation={10}
         sx={{
           p: 5,
           width: 420,
-          borderRadius: 4,
-          textAlign: "center"
+          borderRadius: 5,
+          textAlign: "center",
+          backdropFilter: "blur(10px)",
+          background: "rgba(255,255,255,0.95)",
+          boxShadow: "0 20px 50px rgba(0,0,0,0.3)",
+          animation: "fadeUp 0.8s ease"
         }}
       >
 
         {/* Avatar */}
         <Avatar
           sx={{
-            width: 90,
-            height: 90,
+            width: 100,
+            height: 100,
             mx: "auto",
             mb: 2,
-            fontSize: 32,
-            background: "#ff5722"
+            fontSize: 36,
+            fontWeight: "bold",
+            background: "linear-gradient(45deg,#ff6a00,#ff3d00)",
+            boxShadow: "0 5px 15px rgba(0,0,0,0.3)"
           }}
         >
           {user.username[0].toUpperCase()}
         </Avatar>
 
         {/* Name */}
-        <Typography
-          variant="h5"
-          fontWeight="bold"
-          mb={1}
-        >
+        <Typography variant="h5" fontWeight="bold">
           {user.username}
         </Typography>
 
-        <Typography
-          color="text.secondary"
-          mb={3}
-        >
+        <Typography color="text.secondary" mb={3}>
           {user.email}
         </Typography>
 
@@ -148,9 +134,15 @@ export default function Profile() {
           fullWidth
           onClick={handleLogout}
           sx={{
-            background: "#ff5722",
+            background: "linear-gradient(45deg,#ff6a00,#ff3d00)",
             fontWeight: "bold",
-            "&:hover": { background: "#e64a19" }
+            py: 1.2,
+            borderRadius: 2,
+            transition: "0.3s",
+            "&:hover": {
+              transform: "translateY(-2px)",
+              boxShadow: "0 10px 20px rgba(0,0,0,0.3)"
+            }
           }}
         >
           Đăng xuất
@@ -158,8 +150,17 @@ export default function Profile() {
 
       </Paper>
 
+      {/* animation */}
+      <style>
+        {`
+          @keyframes fadeUp {
+            from {opacity:0; transform:translateY(40px)}
+            to {opacity:1; transform:translateY(0)}
+          }
+        `}
+      </style>
+
     </Box>
 
   );
-
 }

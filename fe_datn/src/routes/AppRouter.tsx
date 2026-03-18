@@ -22,6 +22,11 @@ import Profile from "../pages/Profile";
 import MyAccount from "../pages/account/MyAccount";
 
 /* NEW PAGES */
+<<<<<<< HEAD:fe_datn/src/routes/AppRouter.tsx
+=======
+import News from "../pages/news/News.tsx";
+import NewsDetail from "../pages/news/NewsDetail.tsx";
+>>>>>>> eadc387cb669490d5a9694d97cda59cd5982f6fa:fe_datn/src/routes/AppRouter.jsx
 import About from "../pages/about/About.tsx";
 import Contact from "../pages/contact/Contact.tsx";
 
@@ -65,6 +70,13 @@ const AppRouter = () => {
         {/* NEW PAGES */}
         <Route path="about" element={<About />} />
         <Route path="contact" element={<Contact />} />
+
+        {/* NEW PAGES */}
+        <Route path="news" element={<News />} />
+                <Route path="/news/:id" element={<NewsDetail />} />
+        <Route path="about" element={<About />} />
+        <Route path="contact" element={<Contact />} />
+        <Route path="/news/:id" element={<NewsDetail />} />
 
         {/* AUTH */}
         <Route path="login" element={<Login />} />
