@@ -9,7 +9,7 @@ import {
   Link,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { loginAPI } from "../../services/authService";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -19,9 +19,9 @@ const Login = () => {
     password: "",
   });
 
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({
       ...form,
       [e.target.name]: e.target.value,
@@ -29,7 +29,7 @@ const Login = () => {
   };
 
   const validate = () => {
-    const newErrors = {};
+    const newErrors: Record<string, string> = {};
 
     if (!form.email) {
       newErrors.email = "Email không được để trống";
@@ -53,19 +53,25 @@ const Login = () => {
     if (!validate()) return;
 
     try {
-      const res = await axios.get(
-        `http://localhost:3000/users?email=${form.email}&password=${form.password}`
-      );
+      const data = await loginAPI({
+        email: form.email,
+        password: form.password,
+      });
 
-      if (res.data.length > 0) {
-        localStorage.setItem("user", JSON.stringify(res.data[0]));
-        alert("Đăng nhập thành công!");
-        navigate("/");
-      } else {
-        alert("Sai email hoặc mật khẩu!");
+      if (data?.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+        window.dispatchEvent(new Event("userUpdated"));
       }
-    } catch (error) {
-      alert("Không kết nối được server!");
+
+      alert("Đăng nhập thành công!");
+      navigate("/");
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        (Array.isArray(error?.response?.data?.messages) ? error.response.data.messages[0] : undefined) ||
+        "Không kết nối được server!";
+
+      alert(message);
     }
   };
 

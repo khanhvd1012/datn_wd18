@@ -39,6 +39,7 @@ const ProductDetail = () => {
   const [img,setImg] = useState("");
   const [qty,setQty] = useState(1);
   const [tab,setTab] = useState(0);
+  const [images,setImages] = useState<string[]>([]);
 
   const [reviews,setReviews] = useState<any[]>([]);
   const [rating,setRating] = useState(5);
@@ -66,12 +67,20 @@ const ProductDetail = () => {
 
   useEffect(()=>{
 
+    if (!id) return;
+
     axios
       .get(`http://localhost:3000/products/${id}`)
       .then(res=>{
-        setProduct(res.data)
-        setImg(res.data.img)
+        setProduct(res.data);
+        setImg(res.data.img || "");
+        // Sử dụng mảng images từ API, nếu không có thì dùng img chính
+        setImages(res.data.images?.length ? res.data.images : [res.data.img]);
+        if (!res.data.images?.length) {
+          setImg(res.data.img);
+        }
       })
+      .catch(err => console.error("Load product error:", err));
 
   },[id])
 
@@ -79,12 +88,15 @@ const ProductDetail = () => {
 
   useEffect(()=>{
 
+    if (!id) return;
+
     axios
       .get(`http://localhost:3000/products?_limit=4`)
       .then(res=>{
-        const list=res.data.filter((p:any)=>p.id!==Number(id))
-        setRelated(list)
+        const list=res.data.filter((p:any)=>p.id!==Number(id));
+        setRelated(list);
       })
+      .catch(err => console.error("Load related error:", err));
 
   },[id])
 
@@ -103,6 +115,8 @@ const ProductDetail = () => {
   /* ADD TO CART */
 
   const addToCart = async () => {
+
+    if (!product) return;
 
     try {
 
@@ -224,7 +238,7 @@ const ProductDetail = () => {
 
   <Stack direction="row" spacing={1} mt={2}>
 
-  {[product.img,product.img,product.img].map((i,index)=>(
+  {images.map((i,index)=>(
 
   <Box
   key={index}
@@ -237,7 +251,8 @@ const ProductDetail = () => {
   border:"1px solid #ddd",
   borderRadius:2,
   cursor:"pointer",
-  p:1
+  p:1,
+  ...(img === i && { border: "2px solid #d70018" })
   }}
   />
 
