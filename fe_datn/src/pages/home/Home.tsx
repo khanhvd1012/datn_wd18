@@ -12,13 +12,13 @@ const Home = () => {
   return (
     <div style={{ background: "#faf8f8" }}>
       <Banner />
-      <FeatureBar/>
+      {/* <FeatureBar/> */}
       <FeaturedProducts />
       <Deal/>
       <ProductList/>
 
       <LatestNews />
-      <Footer />
+      {/* <Footer /> */}
 
 
       {/* Zalo Floating Button */}
