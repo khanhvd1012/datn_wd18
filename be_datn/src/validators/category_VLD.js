@@ -49,7 +49,7 @@ export const validateCategory = async (req, res, next) => {
                 : [req.body.brand];
         }
 
-        const { error } = categorySchema.validate(req.body, { abortEarly: false });
+        const { error } = categorySchema.validate(req.body, { abortEarly: false, allowUnknown: true });
 
         if (error) {
             if (req.file) deleteUploadedFile(req.file.filename);

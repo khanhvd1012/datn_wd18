@@ -1,21 +1,27 @@
 import Banner from '../../components/Banner'
 import FeaturedProducts from '../../components/FeaturedProducts'
 import Footer from '../../components/Footer'
-
-import { Box, Fab } from '@mui/material'
-import ChatIcon from '@mui/icons-material/Chat'
 import ProductList from '../product/ProductList'
 import FeatureBar from '../../components/FeatureBar'
 import Deal from '../../components/Deal'
+import LatestNews from '../../components/LatestNews'
+import { Box, Fab } from '@mui/material'
+import ChatIcon from '@mui/icons-material/Chat'
 
 const Home = () => {
   return (
-    <div style={{ background: "#2b2b2b" }}>
+    <div style={{ background: "#faf8f8" }}>
       <Banner />
-      <FeatureBar/>
+      {/* <FeatureBar/> */}
       <FeaturedProducts />
       <Deal/>
       <ProductList/>
+
+
+      <LatestNews />
+      {/* <Footer /> */}
+
+
 
       {/* Zalo Floating Button */}
       <Box

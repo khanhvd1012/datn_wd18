@@ -1218,6 +1218,22 @@
   ],
   "cart": [
     {
+<<<<<<< HEAD
+      "id": "23ce",
+      "productId": "2",
+      "name": "Ốp lưng iPhone Silicon",
+      "img": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9",
+      "price": 180000,
+      "quantity": 1
+    },
+    {
+      "id": "8c3a",
+      "productId": "1",
+      "name": "Kính cường lực iPhone 15",
+      "img": "https://images.unsplash.com/photo-1598327105666-5b89351aff97",
+      "price": 120000,
+      "quantity": 2
+=======
       "id": "89ca",
       "productId": "3",
       "name": "Cáp sạc Lightning iPhone",
@@ -1232,6 +1248,7 @@
       "img": "https://images.unsplash.com/photo-1592750475338-74b7b21085ab",
       "price": 200000,
       "quantity": 1
+>>>>>>> eadc387cb669490d5a9694d97cda59cd5982f6fa
     }
   ],
   "orders": [

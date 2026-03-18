@@ -19,6 +19,15 @@ export const deleteBannerApi = async (id: string) => {
   return res.data;
 };
 
+export const updateBannerApi = async (id: string, data: FormData) => {
+  const res = await api.put(`/banners/${id}`, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return res.data;
+};
+
 export const toggleBannerStatusApi = async (id: string) => {
   const res = await api.put(`/banners/${id}/toggle-status`);
   return res.data;

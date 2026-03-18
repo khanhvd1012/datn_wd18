@@ -72,7 +72,8 @@ export const createContact = async (req, res) => {
 
         const created = await contact_MD.create(contactData);
 
-        sendNewContactNotificationToAdmins(created);
+        // TODO: gửi thông báo cho admin nếu cần (function đã bị comment ở trên)
+        // sendNewContactNotificationToAdmins(created);
 
         res.status(201).json({ message: "Liên hệ đã được gửi!", data: created });
     } catch (error) {

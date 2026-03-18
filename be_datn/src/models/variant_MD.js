@@ -22,6 +22,22 @@ const variantSchema = new mongoose.Schema({
         default: {}
         // Ví dụ: { "color": "Đỏ", "storage": "128GB", "size": "M" }
     },
+    color: {
+        type: String,
+        default: ''
+    },
+    size: {
+        type: String,
+        default: ''
+    },
+    storage: {
+        type: String,
+        default: ''
+    },
+    material: {
+        type: String,
+        default: ''
+    },
     price: {
         type: Number,
         required: true,

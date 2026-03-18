@@ -7,8 +7,8 @@ const newsRouter = Router();
 
 newsRouter.get("/", getAllNews);
 newsRouter.get("/:id", getNewsById);
-newsRouter.post("/", upload.array("images", 5), validateNews,checkPermission, createNews);
-newsRouter.put("/:id", upload.array("images", 5), validateNews,checkPermission, updateNews);
+newsRouter.post("/", checkPermission, upload.array("images", 5), validateNews, createNews);
+newsRouter.put("/:id", checkPermission, upload.array("images", 5), validateNews, updateNews);
 newsRouter.delete("/:id", deleteNews);
 
 export default newsRouter;

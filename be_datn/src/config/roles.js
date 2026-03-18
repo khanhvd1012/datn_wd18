@@ -1,13 +1,15 @@
 export const ROLES = {
     ADMIN: 'admin',
     EMPLOYEE: 'employee',
-    USER: 'user'
+    USER: 'user',
+    CUSTOMER: 'customer'
 };
 
 export const ROLE_DESCRIPTIONS = {
     [ROLES.ADMIN]: 'Quản trị viên - Có toàn quyền trong hệ thống',
     [ROLES.EMPLOYEE]: 'Nhân viên - Có quyền quản lý sản phẩm, đơn hàng và khách hàng',
-    [ROLES.USER]: 'Người dùng - Có quyền mua hàng và quản lý tài khoản cá nhân'
+    [ROLES.USER]: 'Người dùng - Có quyền mua hàng và quản lý tài khoản cá nhân',
+    [ROLES.CUSTOMER]: 'Khách hàng - Có quyền mua hàng và xem trạng thái đơn'
 };
 
 export const ROLE_PERMISSIONS = {
