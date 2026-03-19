@@ -1,5 +1,4 @@
-import { useState } from "react";
-import axios from "axios";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -13,36 +12,22 @@ import PersonIcon from "@mui/icons-material/Person";
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
 import { useNavigate } from "react-router-dom";
-import { registerAPI } from "../../services/authService";
+import axios from "axios";
 import Footer from "../../components/Footer";
-
-interface RegisterForm {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
-
-interface RegisterErrors {
-  name?: string;
-  email?: string;
-  password?: string;
-  confirmPassword?: string;
-}
 
 const Register = () => {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState<RegisterForm>({
+  const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: ""
   });
 
-  const [errors, setErrors] = useState<RegisterErrors>({});
+  const [errors, setErrors] = useState({});
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e) => {
     setForm({
       ...form,
       [e.target.name]: e.target.value
@@ -50,7 +35,7 @@ const Register = () => {
   };
 
   const validate = () => {
-    const newErrors: RegisterErrors = {};
+    const newErrors = {};
 
     if (!form.name.trim()) {
       newErrors.name = "Họ và tên không được để trống";
@@ -78,24 +63,35 @@ const Register = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
     if (!validate()) return;
 
     try {
-      const res = await axios.post("http://localhost:3000/api/auth/register", {
-        username: form.name,
-        email: form.email,
-        password: form.password
-      });
+      const checkUser = await axios.get(
+        `http://localhost:3000/users?email=${form.email}`
+      );
 
-      if (res.status === 201) {
-        alert("Đăng ký thành công");
-        navigate("/login");
-      } else {
-        alert("Đăng ký thất bại. Vui lòng thử lại.");
+      if (checkUser.data.length > 0) {
+        alert("Email đã tồn tại");
+        return;
       }
+
+      const newUser = {
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        role: "user"
+      };
+
+      await axios.post("http://localhost:3000/users", newUser);
+
+      alert("Đăng ký thành công");
+      navigate("/login");
+
     } catch (error) {
-      alert(error.response?.data?.message || "Lỗi server");
+      alert("Lỗi server");
     }
   };
 

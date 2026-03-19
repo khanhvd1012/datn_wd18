@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -9,37 +9,26 @@ import {
   Link,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { loginAPI } from "../../services/authService";
-
-interface LoginForm {
-  email: string;
-  password: string;
-}
-
-interface LoginErrors {
-  email?: string;
-  password?: string;
-}
+import axios from "axios";
+import { useUser } from "../../context/UserContext"; // <-- import context
 
 const Login = () => {
   const navigate = useNavigate();
+  const { setUser } = useUser(); // <-- lấy setUser từ context
 
-  const [form, setForm] = useState<LoginForm>({
+  const [form, setForm] = useState({
     email: "",
     password: "",
   });
 
-  const [errors, setErrors] = useState<LoginErrors>({});
+  const [errors, setErrors] = useState({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const validate = () => {
-    const newErrors: LoginErrors = {};
+    const newErrors: any = {};
 
     if (!form.email) {
       newErrors.email = "Email không được để trống";
@@ -57,30 +46,27 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validate()) return;
 
     try {
-      const res = await loginAPI({
-        email: form.email,
-        password: form.password,
-      });
+      const res = await axios.get(
+        `http://localhost:3000/users?email=${form.email}&password=${form.password}`
+      );
 
-      const user = {
-        ...res.user,
-        token: res.accessToken,
-      };
-      localStorage.setItem("user", JSON.stringify(user));
-      alert("Đăng nhập thành công!");
-      if (user.role === "admin") {
-        navigate("/admin");
+      if (res.data.length > 0) {
+        const userData = res.data[0];
+        localStorage.setItem("user", JSON.stringify(userData));
+        setUser(userData); // <-- cập nhật context
+        alert("Đăng nhập thành công!");
+        navigate("/"); // chuyển trang mà không reload
       } else {
-        navigate("/");
+        alert("Sai email hoặc mật khẩu!");
       }
     } catch (error) {
-      alert(error.response?.data?.message || "Không kết nối được server!");
+      alert("Không kết nối được server!");
     }
   };
 
@@ -192,7 +178,11 @@ const Login = () => {
 
             <Typography variant="body2">
               Chưa có tài khoản?{" "}
-              <Link href="/register" underline="hover" sx={{ fontWeight: "bold" }}>
+              <Link
+                href="/register"
+                underline="hover"
+                sx={{ fontWeight: "bold" }}
+              >
                 Đăng ký ngay
               </Link>
             </Typography>

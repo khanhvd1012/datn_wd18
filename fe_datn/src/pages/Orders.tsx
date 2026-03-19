@@ -120,7 +120,7 @@ const Orders = () => {
 
                     <Chip
                       label={status.label}
-                      color={status.color as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
+                      color={status.color}
                       size="small"
                     />
 

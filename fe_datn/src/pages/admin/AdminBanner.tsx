@@ -15,30 +15,22 @@ import {
   DialogActions,
   TextField,
   IconButton,
-  CircularProgress,
-  Switch,
-  Snackbar,
-  Alert,
-  Tooltip
+  CircularProgress
 } from "@mui/material";
 
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
 
 import {
   getAllBannersApi,
   createBannerApi,
-  deleteBannerApi,
-  updateBannerApi,
-  toggleBannerStatusApi
+  deleteBannerApi
 } from "../../services/bannerService";
 
 interface Banner {
   _id: string;
   title: string;
   image: string;
-  status: any;
 }
 
 const AdminBanner: React.FC = () => {
@@ -50,15 +42,6 @@ const AdminBanner: React.FC = () => {
   const [image, setImage] = useState<File | null>(null);
 
   const [preview, setPreview] = useState("");
-
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [status, setStatus] = useState(true);
-
-  const [notification, setNotification] = useState({
-    open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error'
-  });
 
   const [loading, setLoading] = useState(false);
 
@@ -92,21 +75,13 @@ const AdminBanner: React.FC = () => {
 
   }, []);
 
-  /* ================= CREATE / UPDATE BANNER ================= */
+  /* ================= CREATE BANNER ================= */
 
-  const handleSave = async () => {
+  const handleCreate = async () => {
 
-    if (!title) {
+    if (!title || !image) {
 
-      alert("Vui lòng nhập tiêu đề");
-
-      return;
-
-    }
-
-    if (!editingId && !image) {
-
-      alert("Vui lòng chọn ảnh banner");
+      alert("Vui lòng nhập đầy đủ thông tin");
 
       return;
 
@@ -117,56 +92,24 @@ const AdminBanner: React.FC = () => {
       const formData = new FormData();
 
       formData.append("title", title);
-      formData.append("status", status ? "active" : "inactive");
-      if (image) {
-        formData.append("image", image);
-      }
+      formData.append("image", image);
 
-      if (editingId) {
-        await updateBannerApi(editingId, formData);
-        showNotification("Cập nhật banner thành công", "success");
-      } else {
-        await createBannerApi(formData);
-        showNotification("Thêm banner thành công", "success");
-      }
+      await createBannerApi(formData);
 
       setOpen(false);
 
       setTitle("");
       setImage(null);
       setPreview("");
-      setEditingId(null);
-      setStatus(true);
 
       fetchData();
 
-    } catch (error: any) {
+    } catch (error) {
 
-      if (error.response?.data?.message) {
-        showNotification(error.response.data.message, "error");
-      } else if (error.response?.data?.errors) {
-        showNotification(error.response.data.errors[0].message, "error");
-      } else {
-        console.log(error);
-        showNotification("Có lỗi xảy ra", "error");
-      }
+      console.log(error);
 
     }
 
-  };
-
-  const showNotification = (message: string, severity: 'success' | 'error') => {
-    setNotification({ open: true, message, severity });
-  };
-
-  /* ================= EDIT BANNER ================= */
-  const handleEditClick = (banner: any) => {
-    setEditingId(banner._id);
-    setTitle(banner.title);
-    setPreview(banner.image);
-    setStatus(banner.status === true || banner.status === 'active');
-    setImage(null);
-    setOpen(true);
   };
 
   /* ================= DELETE ================= */
@@ -180,33 +123,12 @@ const AdminBanner: React.FC = () => {
     try {
 
       await deleteBannerApi(id);
-      showNotification("Xoá banner thành công", "success");
+
       fetchData();
 
     } catch (error) {
 
       console.log(error);
-      showNotification("Lỗi khi xoá banner", "error");
-
-    }
-
-
-  };
-
-
-  /* ================= TOGGLE STATUS ================= */
-
-  const handleToggleStatus = async (id: string) => {
-
-    try {
-
-      await toggleBannerStatusApi(id);
-      fetchData();
-
-    } catch (error) {
-
-      console.log(error);
-      showNotification("Lỗi khi đổi trạng thái", "error");
 
     }
 
@@ -248,13 +170,7 @@ const AdminBanner: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => {
-            setEditingId(null);
-            setTitle("");
-            setPreview("");
-            setImage(null);
-            setOpen(true);
-          }}
+          onClick={() => setOpen(true)}
         >
           Add Banner
         </Button>
@@ -277,8 +193,7 @@ const AdminBanner: React.FC = () => {
 
               <TableCell>Image</TableCell>
               <TableCell>Title</TableCell>
-              <TableCell align="center">Status</TableCell>
-              <TableCell align="right" width={150}>Action</TableCell>
+              <TableCell width={120}>Action</TableCell>
 
             </TableRow>
 
@@ -307,28 +222,7 @@ const AdminBanner: React.FC = () => {
 
                 </TableCell>
 
-                <TableCell align="center">
-
-                  <Tooltip title={item.status ? "Đang hiển thị" : "Đang ẩn"}>
-                    <Switch
-                      checked={item.status}
-                      onChange={() => handleToggleStatus(item._id)}
-                      color="success"
-                    />
-                  </Tooltip>
-
-                </TableCell>
-
-                <TableCell align="right">
-
-                  <IconButton
-                    color="primary"
-                    onClick={() => handleEditClick(item)}
-                  >
-
-                    <EditIcon />
-
-                  </IconButton>
+                <TableCell>
 
                   <IconButton
                     color="error"
@@ -362,7 +256,7 @@ const AdminBanner: React.FC = () => {
 
         <DialogTitle>
 
-          {editingId ? "Edit Banner" : "Add Banner"}
+          Add Banner
 
         </DialogTitle>
 
@@ -376,26 +270,11 @@ const AdminBanner: React.FC = () => {
             onChange={(e) => setTitle(e.target.value)}
           />
 
-          <Box mt={3} display="flex" alignItems="center" gap={1}>
-            <Typography>Status:</Typography>
-            <Switch
-              checked={status}
-              onChange={(e) => setStatus(e.target.checked)}
-              color="success"
-            />
-            <Typography variant="body2" color="textSecondary">
-              {status ? "Hiển thị" : "Ẩn"}
-            </Typography>
-          </Box>
-
-          <Box mt={3}>
-            <Typography variant="body2" mb={1}>Banner Image:</Typography>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-            />
-          </Box>
+          <input
+            type="file"
+            style={{ marginTop: 20 }}
+            onChange={handleImageChange}
+          />
 
           {/* PREVIEW */}
 
@@ -426,7 +305,7 @@ const AdminBanner: React.FC = () => {
 
           <Button
             variant="contained"
-            onClick={handleSave}
+            onClick={handleCreate}
           >
 
             Save
@@ -436,21 +315,6 @@ const AdminBanner: React.FC = () => {
         </DialogActions>
 
       </Dialog>
-
-      <Snackbar
-        open={notification.open}
-        autoHideDuration={4000}
-        onClose={() => setNotification({ ...notification, open: false })}
-      >
-        <Alert
-          onClose={() => setNotification({ ...notification, open: false })}
-          severity={notification.severity}
-          variant="filled"
-          sx={{ width: '100%' }}
-        >
-          {notification.message}
-        </Alert>
-      </Snackbar>
 
     </Box>
 

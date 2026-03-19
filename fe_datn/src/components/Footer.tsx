@@ -21,8 +21,8 @@
         {/* ===== FOOTER TOP ===== */}
         <Box
           sx={{
-            backgroundColor: "#ffffff",
-            color: "#000000",
+            backgroundColor: "#1e1e1e",
+            color: "#ccc",
             mt: 6 
           }}
         >
@@ -30,7 +30,7 @@
             <Grid container justifyContent="space-between" spacing={3}>
               {/* Cột 1 */}
               <Grid item xs={12} md={3}>
-                <Typography color="#000000" fontWeight="bold" mb={1}>
+                <Typography color="#fff" fontWeight="bold" mb={1}>
                   TÌM CHÚNG TÔI TRÊN FACEBOOK
                 </Typography>
                 <Divider sx={{ width: 40, height: 3, bgcolor: "#ff9800", mb: 2 }} />
@@ -39,7 +39,7 @@
 
               {/* Cột 2 */}
               <Grid item xs={12} md={4}>
-                <Typography color="#000000" fontWeight="bold" mb={1}>
+                <Typography color="#fff" fontWeight="bold" mb={1}>
                   CHÍNH SÁCH & QUY ĐỊNH
                 </Typography>
                 <Divider sx={{ width: 40, height: 3, bgcolor: "#ff9800", mb: 2 }} />
@@ -66,7 +66,7 @@
 
               {/* Cột 3 */}
               <Grid item xs={12} md={3}>
-                <Typography color="#000000" fontWeight="bold" mb={1}>
+                <Typography color="#fff" fontWeight="bold" mb={1}>
                   LIÊN HỆ
                 </Typography>
                 <Divider sx={{ width: 40, height: 3, bgcolor: "#ff9800", mb: 2 }} />
@@ -92,7 +92,7 @@
         {/* ===== FOOTER BOTTOM ===== */}
         <Box
           sx={{
-            backgroundColor: "#ffffff",
+            backgroundColor: "#181818",
             borderTop: "1px solid #333"
           }}
         >
@@ -128,7 +128,7 @@
                 25/04/2011
               </Typography>
 
-              <Typography fontSize={13}>Thiết kế web: Mo</Typography>
+              <Typography fontSize={13}>Thiết kế web: Tuan Lak</Typography>
             </Box>
 
             {/* Right */}

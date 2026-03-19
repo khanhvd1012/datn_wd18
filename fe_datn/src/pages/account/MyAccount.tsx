@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Container,
+  Grid,
   Paper,
   Typography,
   Avatar,
@@ -17,25 +18,16 @@ import {
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  password?: string;
-  avatar?: string;
-}
-
 const MyAccount = () => {
 
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
-  const [user, setUser] = useState<User | null>(null);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [tab, setTab] = useState("profile");
+  const [user,setUser] = useState(null)
+  const [orders,setOrders] = useState([])
+  const [tab,setTab] = useState("profile")
 
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [name,setName] = useState("")
+  const [phone,setPhone] = useState("")
 
   const [oldPass,setOldPass] = useState("")
   const [newPass,setNewPass] = useState("")
@@ -45,17 +37,16 @@ const MyAccount = () => {
 
   useEffect(()=>{
 
-    const userRaw = localStorage.getItem("user");
-    const u = userRaw ? (JSON.parse(userRaw) as User) : null;
+    const u = JSON.parse(localStorage.getItem("user") || "null")
 
-    if (!u) {
-      navigate("/login");
-      return;
+    if(!u){
+      navigate("/login")
+      return
     }
 
-    setUser(u);
-    setName(u.name);
-    setPhone(u.phone || "");
+    setUser(u)
+    setName(u.name)
+    setPhone(u.phone || "")
 
     axios
       .get(`http://localhost:3000/orders?customerName=${u.name}`)
@@ -70,20 +61,16 @@ const MyAccount = () => {
 
   const updateProfile = async()=>{
 
-    if (!user) {
-      return;
-    }
-
     const updatedUser = {
       ...user,
       name,
-      phone,
-    };
+      phone
+    }
 
     await axios.patch(
       `http://localhost:3000/users/${user.id}`,
       updatedUser
-    );
+    )
 
     localStorage.setItem("user",JSON.stringify(updatedUser))
 
@@ -94,13 +81,9 @@ const MyAccount = () => {
 
   const changePassword = async()=>{
 
-    if (!user) {
-      return;
-    }
-
-    if (oldPass !== user.password) {
-      alert("Mật khẩu cũ không đúng");
-      return;
+    if(oldPass !== user.password){
+      alert("Mật khẩu cũ không đúng")
+      return
     }
 
     if(newPass !== confirmPass){
@@ -108,19 +91,15 @@ const MyAccount = () => {
       return
     }
 
-    if (!user) {
-      return;
-    }
-
     const updatedUser = {
       ...user,
-      password: newPass,
-    };
+      password:newPass
+    }
 
     await axios.patch(
       `http://localhost:3000/users/${user.id}`,
       updatedUser
-    );
+    )
 
     localStorage.setItem("user",JSON.stringify(updatedUser))
 
@@ -142,11 +121,11 @@ const MyAccount = () => {
 
   <Container maxWidth="lg">
 
-  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16, '@media (min-width: 900px)': { gridTemplateColumns: '1fr 2fr' } }}>
+  <Grid container spacing={4}>
 
   {/* SIDEBAR */}
 
-  <Box sx={{}}>
+  <Grid item xs={12} md={3}>
 
   <Paper elevation={3} sx={{p:3,borderRadius:3}}>
 
@@ -189,11 +168,11 @@ const MyAccount = () => {
 
   </Paper>
 
-  </Box>
+  </Grid>
 
   {/* CONTENT */}
 
-  <Box>
+  <Grid item xs={12} md={9}>
 
   <Paper elevation={3} sx={{p:4,borderRadius:3}}>
 
@@ -207,36 +186,36 @@ const MyAccount = () => {
   Thông tin cá nhân
   </Typography>
 
-  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16, '@media (min-width: 900px)': { gridTemplateColumns: '1fr 1fr' } }}>
+  <Grid container spacing={3}>
 
-  <Box>
+  <Grid item xs={12} md={6}>
   <TextField
   fullWidth
   label="Họ tên"
   value={name}
   onChange={(e)=>setName(e.target.value)}
   />
-  </Box>
+  </Grid>
 
-  <Box>
+  <Grid item xs={12} md={6}>
   <TextField
   fullWidth
   label="Email"
   value={user.email}
   disabled
   />
-  </Box>
+  </Grid>
 
-  <Box>
+  <Grid item xs={12} md={6}>
   <TextField
   fullWidth
   label="Số điện thoại"
   value={phone}
   onChange={(e)=>setPhone(e.target.value)}
   />
-  </Box>
+  </Grid>
 
-  </Box>
+  </Grid>
 
   <Button variant="contained" sx={{mt:3}} onClick={updateProfile}>
   Cập nhật
@@ -340,9 +319,9 @@ const MyAccount = () => {
 
   </Paper>
 
-  </Box>
+  </Grid>
 
-  </Box>
+  </Grid>
 
   </Container>
 

@@ -76,7 +76,7 @@ const FeatureBar = () => {
                 position: "relative",
 
                 background:
-                  "linear-gradient(135deg, #ffffff, #ffffff)",
+                  "linear-gradient(135deg, #ff6a00, #ee4d2d)",
                 padding: "2px",
 
                 transition: "0.4s",

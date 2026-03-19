@@ -2,17 +2,18 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 import {
-  Container,
-  Typography,
-  Box,
-  TextField,
-  Button,
-  Divider,
-  Card,
-  CardContent,
-  Avatar,
-  Paper,
-  RadioGroup,
+Container,
+Typography,
+Box,
+TextField,
+Button,
+Divider,
+Card,
+CardContent,
+Grid,
+Avatar,
+Paper,
+RadioGroup,
 FormControlLabel,
 Radio,
 CircularProgress,
@@ -242,11 +243,11 @@ Thanh toán đơn hàng
 ))}
 </Stepper>
 
-<Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16, '@media (min-width: 900px)': { gridTemplateColumns: '7fr 5fr' } }}>
+<Grid container spacing={4}>
 
 {/* CART */}
 
-<Box>
+<Grid item xs={12} md={7}>
 
 <Card sx={{borderRadius:4}}>
 
@@ -332,11 +333,11 @@ onClick={()=>removeItem(item.id)}
 
 </Card>
 
-</Box>
+</Grid>
 
 {/* CHECKOUT */}
 
-<Box>
+<Grid item xs={12} md={5}>
 
 <Paper sx={{p:4,borderRadius:4}}>
 
@@ -484,9 +485,9 @@ disabled={loading}
 
 </Paper>
 
-</Box>
+</Grid>
 
-</Box>
+</Grid>
 
 </Container>
 
