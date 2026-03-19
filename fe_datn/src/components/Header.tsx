@@ -33,11 +33,22 @@ const Header = () => {
   // ================= LOAD USER =================
   useEffect(() => {
 
-    const storedUser = localStorage.getItem("user");
+    const loadUser = () => {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      } else {
+        setUser(null);
+      }
+    };
 
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    loadUser();
+
+    window.addEventListener("userUpdated", loadUser);
+
+    return () => {
+      window.removeEventListener("userUpdated", loadUser);
+    };
 
   }, []);
 
