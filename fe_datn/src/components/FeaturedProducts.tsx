@@ -19,9 +19,22 @@ const FeaturedProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:3000/products")
+    fetch("http://localhost:3000/api/products")
       .then((res) => res.json())
-      .then((data) => setProducts(data))
+      .then((data) => {
+        // Handle array or paginated object
+        const list = Array.isArray(data) ? data : (data.docs || data.data || []);
+        
+        // Map data to match local interface if needed
+        const mappedList = list.map((item: any) => ({
+          id: item._id || item.id,
+          name: item.name,
+          img: item.img || (item.images && item.images[0]) || "https://via.placeholder.com/200",
+          price: item.price
+        }));
+        
+        setProducts(mappedList);
+      })
       .catch((err) => console.error("Lỗi load products:", err));
   }, []);
 
@@ -29,7 +42,7 @@ const FeaturedProducts = () => {
     price.toLocaleString("vi-VN") + " đ";
 
   return (
-    <Box sx={{ backgroundColor: "#111", py: 4 }}>
+    <Box sx={{ backgroundColor: "#ffffff", py: 4 }}>
       {/* Container */}
       <Box
         sx={{
@@ -77,7 +90,7 @@ const FeaturedProducts = () => {
             >
               <Card
                 sx={{
-                  backgroundColor: "#1a1a1a",
+                  backgroundColor: "#ffffff",
                   border: "1px solid #2a2a2a",
                   height: "100%",
                   transition: "0.3s",
@@ -85,7 +98,7 @@ const FeaturedProducts = () => {
                   "&:hover": {
                     borderColor: "#ff6a00",
                     transform: "translateY(-6px)",
-                    boxShadow: "0 8px 25px rgba(0,0,0,0.5)",
+                    boxShadow: "0 8px 25px rgba(198, 189, 189, 0.5)",
                   },
                 }}
               >

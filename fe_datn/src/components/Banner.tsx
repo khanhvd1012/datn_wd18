@@ -18,47 +18,58 @@ import mainBanner7 from "../img/5f096f672215ac4bf504.jpg";
 import mainBanner9 from "../img/bl2.jpg";
 import mainBanner10 from "../img/bl3.jpg";
 
-const categories = [
-  { name: "Phụ kiện Iphone", slug: "iphone" },
-  { name: "Phụ kiện Samsung", slug: "samsung" },
-  { name: "Phụ kiện Huawei", slug: "huawei" },
-  { name: "Phụ kiện Xiaomi", slug: "xiaomi" },
-  { name: "Phụ kiện Oppo", slug: "oppo" },
-  { name: "Tai nghe Bluetooth", slug: "tainghe" },
-  { name: "Đồng hồ thông minh", slug: "dongho" }
-];
-
-const banners = [mainBanner4, mainBanner10, mainBanner9];
+// Dữ liệu sẽ được fetch từ API
 
 const Banner = () => {
-
   const navigate = useNavigate();
-  const [index,setIndex] = useState(0);
-  const [hover,setHover] = useState(false);
+  const [index, setIndex] = useState(0);
+  const [hover, setHover] = useState(false);
+  const [apiCategories, setApiCategories] = useState<{ name: string; _id: string }[]>([]);
+  const [apiBanners, setApiBanners] = useState<{ image: string; title: string; _id: string }[]>([]);
 
-  useEffect(()=>{
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [catRes, banRes] = await Promise.all([
+          fetch("http://localhost:3000/api/categories"),
+          fetch("http://localhost:3000/api/banners")
+        ]);
+        const cats = await catRes.json();
+        const bans = await banRes.json();
+        
+        setApiCategories(Array.isArray(cats) ? cats : []);
+        // Lọc banner đang hoạt động
+        setApiBanners(Array.isArray(bans) ? bans.filter((b: any) => b.status !== false) : []);
+      } catch (err) {
+        console.error("Lỗi load banner/categories:", err);
+      }
+    };
+    fetchData();
+  }, []);
 
-    if(hover) return;
+  useEffect(() => {
+    if (hover || apiBanners.length === 0) return;
 
-    const timer = setInterval(()=>{
-      setIndex(prev => (prev + 1) % banners.length);
-    },4000);
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % apiBanners.length);
+    }, 4000);
 
-    return ()=>clearInterval(timer);
+    return () => clearInterval(timer);
+  }, [hover, apiBanners.length]);
 
-  },[hover]);
+  const next = () => {
+    if (apiBanners.length === 0) return;
+    setIndex((prev) => (prev + 1) % apiBanners.length);
+  };
 
-  const next = ()=>{
-    setIndex(prev => (prev + 1) % banners.length);
-  }
+  const prev = () => {
+    if (apiBanners.length === 0) return;
+    setIndex((prev) => (prev === 0 ? apiBanners.length - 1 : prev - 1));
+  };
 
-  const prev = ()=>{
-    setIndex(prev => prev === 0 ? banners.length - 1 : prev - 1);
-  }
-
-  const goCategory = (slug)=>{
-    navigate(`/products?category=${slug}`);
-  }
+  const goCategory = (id: string) => {
+    navigate(`/products?category=${id}`);
+  };
 
   return (
 
@@ -99,17 +110,17 @@ const Banner = () => {
 
           <List sx={{p:0}}>
 
-            {categories.map((item,i)=>(
+            {apiCategories.map((item, i) => (
               <ListItemButton
                 key={i}
-                onClick={()=>goCategory(item.slug)}
+                onClick={() => goCategory(item._id)}
                 sx={{
-                  borderBottom:"1px solid #f1f1f1",
-                  transition:"0.25s",
+                  borderBottom: "1px solid #f1f1f1",
+                  transition: "0.25s",
 
-                  "&:hover":{
-                    background:"#fff0f1",
-                    pl:3
+                  "&:hover": {
+                    background: "#fff0f1",
+                    pl: 3
                   }
                 }}
               >
@@ -117,8 +128,8 @@ const Banner = () => {
                 <ListItemText
                   primary={item.name}
                   primaryTypographyProps={{
-                    fontSize:14,
-                    fontWeight:500
+                    fontSize: 14,
+                    fontWeight: 500
                   }}
                 />
 
@@ -144,27 +155,39 @@ const Banner = () => {
           }}
         >
 
-          <Box
+            <Box
             sx={{
-              display:"flex",
-              width:`${banners.length*100}%`,
-              transform:`translateX(-${index*100}%)`,
-              transition:"0.6s"
+              display: "flex",
+              width: `${(apiBanners.length || 1) * 100}%`,
+              transform: `translateX(-${index * 100}%)`,
+              transition: "0.6s"
             }}
           >
 
-            {banners.map((img,i)=>(
+            {apiBanners.map((banner, i) => (
               <Box
                 key={i}
                 component="img"
-                src={img}
+                src={banner.image}
                 sx={{
-                  width:"100%",
-                  height:380,
-                  objectFit:"cover"
+                  width: "100%",
+                  height: 380,
+                  objectFit: "cover"
                 }}
               />
             ))}
+
+            {apiBanners.length === 0 && (
+               <Box
+               component="img"
+               src={mainBanner4}
+               sx={{
+                 width: "100%",
+                 height: 380,
+                 objectFit: "cover"
+               }}
+             />
+            )}
 
           </Box>
 
@@ -198,7 +221,7 @@ const Banner = () => {
 
         </Box>
 
-        {/* RIGHT ADS */}
+        {/* RIGHT ADS
 
         <Box
           sx={{
@@ -239,9 +262,9 @@ const Banner = () => {
                 transform:"scale(1.05)"
               }
             }}
-          />
+          /> */}
 
-        </Box>
+        {/* </Box> */}
 
       </Box>
 

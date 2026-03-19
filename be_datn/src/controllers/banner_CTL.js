@@ -1,10 +1,15 @@
 import banner_MD from "../models/banner_MD.js";
 import fs from "fs";
 import path from "path";
+import mongoose from "mongoose";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+function isValidObjectId(id) {
+  return mongoose.Types.ObjectId.isValid(id);
+}
 
 // Lấy tất cả banner có trạng thái hiển thị
 export const getAllBanners = async (req, res) => {
@@ -20,6 +25,9 @@ export const getAllBanners = async (req, res) => {
 // Lấy banner theo ID
 export const getBannerById = async (req, res) => {
   try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: "ID banner không hợp lệ" });
+    }
     const banner = await banner_MD.findById(req.params.id);
     if (!banner) return res.status(404).json({ message: "Không tìm thấy banner" });
 
@@ -34,11 +42,16 @@ export const getBannerById = async (req, res) => {
 export const createBanner = async (req, res) => {
   try {
     const { title } = req.body;
+    if (!title || !title.trim()) {
+      if (req.file) {
+        const filePath = path.join(__dirname, "../../public/uploads", req.file.filename);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      }
+      return res.status(400).json({ message: "Tiêu đề banner là bắt buộc" });
+    }
 
-    // Kiểm tra trùng tên
-    const exists = await banner_MD.findOne({ title });
+    const exists = await banner_MD.findOne({ title: title.trim() });
     if (exists) {
-      // Nếu có file upload thì xoá ngay để tránh rác
       if (req.file) {
         const filePath = path.join(__dirname, "../../public/uploads", req.file.filename);
         if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
@@ -50,7 +63,15 @@ export const createBanner = async (req, res) => {
       req.body.image = `http://localhost:3000/uploads/${req.file.filename}`;
     }
 
-    const created = await banner_MD.create(req.body);
+    if (req.body.status !== undefined) {
+      req.body.status = req.body.status === "active" || req.body.status === true || req.body.status === "true";
+    }
+
+    const created = await banner_MD.create({
+      title: title.trim(),
+      image: req.body.image || "",
+      status: req.body.status !== undefined ? req.body.status : true,
+    });
     res.status(201).json({ message: "Tạo banner thành công", data: created });
   } catch (error) {
     if (req.file) {
@@ -66,6 +87,14 @@ export const createBanner = async (req, res) => {
 // Cập nhật banner
 export const updateBanner = async (req, res) => {
   try {
+    if (!isValidObjectId(req.params.id)) {
+      if (req.file) {
+        const filePath = path.join(__dirname, "../../public/uploads", req.file.filename);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      }
+      return res.status(400).json({ message: "ID banner không hợp lệ" });
+    }
+
     const banner = await banner_MD.findById(req.params.id);
     if (!banner) {
       if (req.file) {
@@ -76,8 +105,8 @@ export const updateBanner = async (req, res) => {
     }
 
     const { title } = req.body;
-    if (title) {
-      const exists = await banner_MD.findOne({ title, _id: { $ne: req.params.id } });
+    if (title && title.trim()) {
+      const exists = await banner_MD.findOne({ title: title.trim(), _id: { $ne: req.params.id } });
       if (exists) {
         if (req.file) {
           const filePath = path.join(__dirname, "../../public/uploads", req.file.filename);
@@ -85,18 +114,32 @@ export const updateBanner = async (req, res) => {
         }
         return res.status(400).json({ message: "Tên banner đã tồn tại, vui lòng chọn tên khác" });
       }
+      req.body.title = title.trim();
     }
 
     if (req.file) {
-      if (banner.image) {
+      if (banner.image && banner.image.includes("/uploads/")) {
         const oldFilename = banner.image.split("/uploads/")[1];
-        const oldPath = path.join(__dirname, "../../public/uploads", oldFilename);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+        if (oldFilename) {
+          const oldPath = path.join(__dirname, "../../public/uploads", oldFilename);
+          if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+        }
       }
       req.body.image = `http://localhost:3000/uploads/${req.file.filename}`;
     }
 
-    const updated = await banner_MD.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (req.body.status !== undefined) {
+      req.body.status = req.body.status === "active" || req.body.status === true || req.body.status === "true";
+    }
+
+    const updated = await banner_MD.findByIdAndUpdate(
+      req.params.id,
+      {
+        ...req.body,
+      },
+      { new: true }
+    );
+
     res.status(200).json({ message: "Cập nhật banner thành công", data: updated });
   } catch (error) {
     console.error("Lỗi khi cập nhật banner:", error);
@@ -113,13 +156,19 @@ export const updateBanner = async (req, res) => {
 // Xoá banner
 export const deleteBanner = async (req, res) => {
   try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: "ID banner không hợp lệ" });
+    }
+
     const banner = await banner_MD.findById(req.params.id);
     if (!banner) return res.status(404).json({ message: "Banner không tồn tại" });
 
-    if (banner.image) {
+    if (banner.image && banner.image.includes("/uploads/")) {
       const filename = banner.image.split("/uploads/")[1];
-      const filePath = path.join(__dirname, "../../public/uploads", filename);
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      if (filename) {
+        const filePath = path.join(__dirname, "../../public/uploads", filename);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      }
     }
 
     await banner_MD.findByIdAndDelete(req.params.id);
@@ -133,6 +182,10 @@ export const deleteBanner = async (req, res) => {
 // Toggle trạng thái ẩn/hiện banner
 export const toggleBannerStatus = async (req, res) => {
   try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: "ID banner không hợp lệ" });
+    }
+
     const banner = await banner_MD.findById(req.params.id);
     if (!banner) return res.status(404).json({ message: "Banner không tồn tại" });
 

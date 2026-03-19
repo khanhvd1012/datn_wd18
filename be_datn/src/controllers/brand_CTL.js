@@ -16,9 +16,6 @@ export const getAllBrands = async (req, res) => {
         const brandsWithUpdatedCategories = await Promise.all(
             brands.map(async (brand) => {
 
-                // Cập nhật brand với danh sách  mới
-                await brand_MD.findByIdAndUpdate(brand._id);
-
                 // Trả về brand 
                 return {
                     ...brand.toObject()
@@ -29,7 +26,7 @@ export const getAllBrands = async (req, res) => {
         res.status(200).json(brandsWithUpdatedCategories);
     } catch (error) {
         console.error('Lỗi khi cập nhật danh sách trong brand:', error);
-        res.status(500).json({ message: 'Lỗi máy chủ nội bộ' });
+        res.status(500).json({ message: 'Lỗi máy chủ nội bộ', error: error.message });
     }
 };
 
@@ -121,10 +118,12 @@ export const updateBrand = async (req, res) => {
         }
 
         if (req.file) {
-            if (brand.logo_image) {
+            if (brand.logo_image && brand.logo_image.includes('/uploads/')) {
                 const oldFilename = brand.logo_image.split('/uploads/')[1];
-                const oldPath = path.join(__dirname, "../../public/uploads", oldFilename);
-                if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+                if (oldFilename) {
+                    const oldPath = path.join(__dirname, "../../public/uploads", oldFilename);
+                    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+                }
             }
             req.body.logo_image = `http://localhost:3000/uploads/${req.file.filename}`;
         }
@@ -142,7 +141,7 @@ export const updateBrand = async (req, res) => {
         }
 
         console.error('Lỗi khi cập nhật thương hiệu:', error);
-        res.status(500).json({ message: 'Lỗi máy chủ nội bộ' });
+        res.status(500).json({ message: 'Lỗi máy chủ nội bộ', error: error.message });
     }
 }
 
@@ -154,10 +153,12 @@ export const deleteBrand = async (req, res) => {
         }
 
         // Xoá ảnh logo nếu có
-        if (brand.logo_image) {
+        if (brand.logo_image && brand.logo_image.includes('/uploads/')) {
             const filename = brand.logo_image.split('/uploads/')[1];
-            const filePath = path.join(__dirname, "../../public/uploads", filename);
-            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+            if (filename) {
+                const filePath = path.join(__dirname, "../../public/uploads", filename);
+                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+            }
         }
 
         // Kiểm tra sản phẩm có đang dùng thương hiệu
@@ -172,7 +173,7 @@ export const deleteBrand = async (req, res) => {
         res.status(200).json({ message: 'Thương hiệu đã được xoá ' });
     } catch (error) {
         console.error('Lỗi khi xoá thương hiệu:', error);
-        res.status(500).json({ message: 'Lỗi máy chủ nội bộ' });
+        res.status(500).json({ message: 'Lỗi máy chủ nội bộ', error: error.message });
     }
 };
 

@@ -21,7 +21,7 @@ export const bannerSchema = Joi.object({
         }),
     image: Joi.string().optional(),
 
-    status: Joi.boolean().messages({
+    status: Joi.boolean().truthy('active').falsy('inactive').default(true).messages({
         "boolean.base": "Trạng thái phải là true hoặc false"
     }),
 });
@@ -50,10 +50,13 @@ export const validateBanner = async (req, res, next) => {
             return res.status(400).json({ errors });
         }
 
-        // Kiểm tra trùng title nếu tạo mới hoặc chỉnh sửa khác ID
-        const existingBanner = await banner_MD.findOne({
-            title: { $regex: new RegExp(`^${req.body.title}$`, "i") }
-        });
+        const title = req.body.title?.trim();
+        if (!title) {
+            return res.status(400).json({ errors: [{ field: "title", message: "Tiêu đề banner là bắt buộc" }] });
+        }
+
+        const escapedTitle = title.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+        const existingBanner = await banner_MD.findOne({ title: { $regex: new RegExp(`^${escapedTitle}$`, "i") } });
 
         if (!req.params.id && existingBanner) {
             if (req.file) {
@@ -66,15 +69,17 @@ export const validateBanner = async (req, res, next) => {
             });
         }
 
-        if (req.params.id && existingBanner && existingBanner._id.toString() !== req.params.id) {
-            if (req.file) {
-                const filePath = path.join(__dirname, "../../public/uploads", req.file.filename);
-                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        if (req.params.id) {
+            // Only treat as duplicate if there is another banner with same title
+            if (existingBanner && existingBanner._id.toString() !== req.params.id) {
+                if (req.file) {
+                    const filePath = path.join(__dirname, "../../public/uploads", req.file.filename);
+                    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+                }
+                return res.status(400).json({
+                    errors: [{ field: "title", message: "Tiêu đề banner đã tồn tại" }]
+                });
             }
-
-            return res.status(400).json({
-                errors: [{ field: "title", message: "Tiêu đề banner đã tồn tại" }]
-            });
         }
 
         next();
