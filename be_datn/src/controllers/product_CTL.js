@@ -215,10 +215,35 @@ const deleteImageFile = (imageUrl) => {
     }
 };
 
+// Chuẩn hóa dữ liệu từ form (multipart gửi toàn bộ là string)
+const normalizeProductBody = (body) => {
+    const data = { ...body };
+    // ObjectId: chuỗi rỗng hoặc không hợp lệ thì bỏ qua (giữ giá trị cũ khi update)
+    if (data.brand === '' || data.brand === undefined || !mongoose.Types.ObjectId.isValid(data.brand)) {
+        delete data.brand;
+    }
+    if (data.category === '' || data.category === undefined || !mongoose.Types.ObjectId.isValid(data.category)) {
+        delete data.category;
+    }
+    // Số
+    if (data.price !== undefined) {
+        const num = Number(data.price);
+        if (!Number.isNaN(num)) data.price = num;
+    }
+    if (data.original_price !== undefined) {
+        const num = Number(data.original_price);
+        if (!Number.isNaN(num)) data.original_price = num;
+    }
+    if (data.is_active !== undefined) {
+        data.is_active = data.is_active === 'true' || data.is_active === true;
+    }
+    return data;
+};
+
 // Tạo sản phẩm mới (Admin)
 export const createProduct = async (req, res) => {
     try {
-        let productData = { ...req.body };
+        let productData = normalizeProductBody(req.body);
 
         // Xử lý ảnh upload
         const uploadImages = buildImageUrls(req);
@@ -267,7 +292,7 @@ export const createProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        let updateData = { ...req.body };
+        let updateData = normalizeProductBody(req.body);
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: 'ID sản phẩm không hợp lệ' });

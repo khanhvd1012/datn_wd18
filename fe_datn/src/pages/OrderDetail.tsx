@@ -1,246 +1,352 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../services/api";
+
 import {
-  Container,
-  Typography,
-  Card,
-  CardContent,
   Box,
-  Avatar,
-  Divider,
-  Button,
+  Typography,
+  Paper,
   Stack,
+  Button,
+  Divider,
+  Container,
+  Breadcrumbs,
+  Link,
   Chip,
-  CircularProgress
+  Skeleton,
+  Stepper,
+  Step,
+  StepLabel,
 } from "@mui/material";
+
 import { useParams, useNavigate } from "react-router-dom";
+import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import PhoneIcon from "@mui/icons-material/Phone";
+import EmailIcon from "@mui/icons-material/Email";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 const OrderDetail = () => {
-
   const { id } = useParams();
   const navigate = useNavigate();
-
-  const [order, setOrder] = useState(null);
+  const [order, setOrder] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:3000/orders/${id}`)
-      .then(res => setOrder(res.data))
-      .catch(() => navigate("/404"));
-  }, [id, navigate]);
+    const fetchOrder = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get(`/orders/${id}`);
+        setOrder(res.data);
+      } catch (err) {
+        console.error("Lỗi load order:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (!order) {
-    return (
-      <Box textAlign="center" mt={10}>
-        <CircularProgress />
-        <Typography mt={2}>Đang tải đơn hàng...</Typography>
-      </Box>
-    );
-  }
+    if (id) {
+      fetchOrder();
+    }
+  }, [id]);
 
-  const getStatus = (status) => {
+  const formatPrice = (price: number) => {
+    return (price || 0).toLocaleString("vi-VN") + "₫";
+  };
+
+  const getStatus = (status: string) => {
     switch (status) {
       case "pending":
-        return { label: "Chờ xác nhận", color: "#ff9800" };
+        return { label: "Chờ xác nhận", color: "warning" as const, step: 0 };
+      case "confirmed":
+        return { label: "Đã xác nhận", color: "info" as const, step: 1 };
+      case "processing":
+        return { label: "Đang xử lý", color: "info" as const, step: 2 };
       case "shipping":
-        return { label: "Đang giao", color: "#2196f3" };
-      case "completed":
-        return { label: "Hoàn thành", color: "#4caf50" };
-      case "cancel":
-        return { label: "Đã hủy", color: "#f44336" };
+        return { label: "Đang giao hàng", color: "primary" as const, step: 3 };
+      case "delivered":
+        return { label: "Đã giao hàng", color: "success" as const, step: 4 };
+      case "cancelled":
+        return { label: "Đã hủy", color: "error" as const, step: -1 };
       default:
-        return { label: "Đã đặt hàng", color: "#ff5722" };
+        return { label: "Chờ xác nhận", color: "warning" as const, step: 0 };
     }
   };
 
-  const status = getStatus(order.status);
+  const getPaymentStatus = (status: string) => {
+    switch (status) {
+      case "pending":
+        return { label: "Chờ thanh toán", color: "warning" as const };
+      case "paid":
+        return { label: "Đã thanh toán", color: "success" as const };
+      case "failed":
+        return { label: "Thanh toán thất bại", color: "error" as const };
+      case "refunded":
+        return { label: "Đã hoàn tiền", color: "info" as const };
+      default:
+        return { label: "Chờ thanh toán", color: "warning" as const };
+    }
+  };
+
+  const getPaymentMethod = (method: string) => {
+    switch (method) {
+      case "cod":
+        return "Thanh toán khi nhận hàng (COD)";
+      case "bank":
+        return "Chuyển khoản ngân hàng";
+      case "momo":
+        return "Ví MoMo";
+      case "vnpay":
+        return "VNPay";
+      default:
+        return method;
+    }
+  };
+
+  const steps = ["Chờ xác nhận", "Đã xác nhận", "Đang xử lý", "Đang giao hàng", "Đã giao hàng"];
+
+  if (loading) {
+    return (
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2, mb: 3 }} />
+        <Skeleton variant="rectangular" height={300} sx={{ borderRadius: 2 }} />
+      </Container>
+    );
+  }
+
+  if (!order) {
+    return (
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Paper sx={{ p: 4, textAlign: "center" }}>
+          <Typography variant="h6" mb={2}>
+            Không tìm thấy đơn hàng
+          </Typography>
+          <Button variant="contained" onClick={() => navigate("/orders")}>
+            Quay lại danh sách đơn hàng
+          </Button>
+        </Paper>
+      </Container>
+    );
+  }
+
+  const status = getStatus(order.order_status || order.status);
+  const paymentStatus = getPaymentStatus(order.payment_status || order.paymentStatus);
 
   return (
-    <Container sx={{ py: 6, maxWidth: "950px" }}>
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      <Breadcrumbs sx={{ mb: 3 }}>
+        <Link
+          underline="hover"
+          sx={{ cursor: "pointer" }}
+          onClick={() => navigate("/")}
+        >
+          Trang chủ
+        </Link>
+        <Link
+          underline="hover"
+          sx={{ cursor: "pointer" }}
+          onClick={() => navigate("/orders")}
+        >
+          Đơn hàng
+        </Link>
+        <Typography>
+          #{order._id?.toString().slice(-6).toUpperCase() || order.id}
+        </Typography>
+      </Breadcrumbs>
 
-      {/* TITLE */}
-      <Typography variant="h4" fontWeight="bold" mb={4}>
-        Chi tiết đơn hàng #{order.id}
-      </Typography>
-
-      <Card
-        sx={{
-          borderRadius: 4,
-          boxShadow: 3,
-          border: "1px solid #eee"
-        }}
+      <Button
+        startIcon={<ArrowBackIcon />}
+        onClick={() => navigate("/orders")}
+        sx={{ mb: 3 }}
       >
+        Quay lại
+      </Button>
 
-        <CardContent>
+      {/* Order Header */}
+      <Paper sx={{ p: 4, mb: 3, borderRadius: 3 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+          <Box>
+            <Typography variant="h5" fontWeight="bold">
+              Đơn hàng #{order._id?.toString().slice(-6).toUpperCase() || order.id}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Ngày đặt: {new Date(order.createdAt).toLocaleDateString("vi-VN", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+              })}
+            </Typography>
+          </Box>
+          <Stack direction="row" spacing={1}>
+            <Chip
+              label={status.label}
+              color={status.color}
+              sx={{ fontWeight: "bold" }}
+            />
+            <Chip
+              label={paymentStatus.label}
+              color={paymentStatus.color}
+              variant="outlined"
+            />
+          </Stack>
+        </Box>
 
-          {/* ORDER INFO */}
-          <Box
-            sx={{
-              background: "#fafafa",
-              p: 3,
-              borderRadius: 3,
-              mb: 3
-            }}
-          >
+        {/* Order Progress */}
+        {status.step >= 0 && (
+          <Stepper activeStep={status.step} sx={{ mb: 3 }}>
+            {steps.map((label, index) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+        )}
+      </Paper>
 
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              flexWrap="wrap"
-              gap={2}
-            >
+      {/* Shipping Info */}
+      <Paper sx={{ p: 4, mb: 3, borderRadius: 3 }}>
+        <Typography variant="h6" fontWeight="bold" mb={2}>
+          Thông tin giao hàng
+        </Typography>
 
-              <Box>
-
-                <Typography fontWeight="bold">
-                  Người nhận: {order.customerName}
-                </Typography>
-
-                <Typography color="text.secondary">
-                  SĐT: {order.phone}
-                </Typography>
-
-                <Typography color="text.secondary">
-                  Địa chỉ: {order.address}
-                </Typography>
-
-                <Typography color="text.secondary">
-                  Ngày đặt: {new Date(order.createdAt).toLocaleString()}
-                </Typography>
-
-              </Box>
-
-              <Chip
-                label={status.label}
-                sx={{
-                  background: status.color,
-                  color: "#fff",
-                  fontWeight: "bold",
-                  height: 32
-                }}
-              />
-
-            </Stack>
-
+        <Stack spacing={2}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <LocationOnIcon color="action" />
+            <Box>
+              <Typography variant="body2" color="text.secondary">Địa chỉ giao hàng</Typography>
+              <Typography>{order.shipping_info?.address}</Typography>
+            </Box>
           </Box>
 
-          {/* PRODUCT LIST */}
-          <Typography variant="h6" fontWeight="bold" mb={2}>
-            Sản phẩm trong đơn
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <LocalShippingIcon color="action" />
+            <Box>
+              <Typography variant="body2" color="text.secondary">Người nhận</Typography>
+              <Typography>{order.shipping_info?.name}</Typography>
+            </Box>
+          </Box>
 
-          {order.items?.map(item => (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <PhoneIcon color="action" />
+            <Box>
+              <Typography variant="body2" color="text.secondary">Số điện thoại</Typography>
+              <Typography>{order.shipping_info?.phone}</Typography>
+            </Box>
+          </Box>
 
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <EmailIcon color="action" />
+            <Box>
+              <Typography variant="body2" color="text.secondary">Email</Typography>
+              <Typography>{order.shipping_info?.email}</Typography>
+            </Box>
+          </Box>
+        </Stack>
+      </Paper>
+
+      {/* Order Items */}
+      <Paper sx={{ p: 4, mb: 3, borderRadius: 3 }}>
+        <Typography variant="h6" fontWeight="bold" mb={2}>
+          Sản phẩm đã đặt
+        </Typography>
+
+        <Stack spacing={2}>
+          {(order.order_items || order.items || []).map((item: any, index: number) => (
             <Box
-              key={item.id}
+              key={index}
               sx={{
                 display: "flex",
-                justifyContent: "space-between",
                 alignItems: "center",
-                py: 2,
-                borderBottom: "1px solid #eee"
+                gap: 3,
+                p: 2,
+                border: "1px solid #eee",
+                borderRadius: 2,
               }}
             >
-
-              {/* LEFT */}
-              <Box display="flex" alignItems="center" gap={2}>
-
-                <Avatar
-                  src={item.img}
-                  variant="rounded"
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: 2
-                  }}
-                />
-
-                <Box>
-
-                  <Typography fontWeight="bold">
-                    {item.name}
-                  </Typography>
-
-                  <Typography color="text.secondary">
-                    Số lượng: {item.quantity}
-                  </Typography>
-
-                  <Typography color="text.secondary">
-                    Giá: {item.price.toLocaleString()}₫
-                  </Typography>
-
-                </Box>
-
-              </Box>
-
-              {/* PRICE */}
-              <Typography
-                fontWeight="bold"
-                fontSize={18}
-                color="#ff5722"
-              >
-                {(item.price * item.quantity).toLocaleString()}₫
-              </Typography>
-
-            </Box>
-
-          ))}
-
-          <Divider sx={{ my: 3 }} />
-
-          {/* TOTAL */}
-          <Box
-            sx={{
-              p: 3,
-              background: "#fff7f4",
-              borderRadius: 3,
-              textAlign: "right"
-            }}
-          >
-
-            <Typography fontSize={22} fontWeight="bold" color="#ff5722">
-              Tổng tiền: {order.total?.toLocaleString()}₫
-            </Typography>
-
-          </Box>
-
-          {/* BUTTON */}
-          <Box mt={4} textAlign="right">
-
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
-
-              <Button
-                variant="outlined"
-                onClick={() => navigate("/account")}
-              >
-                Tài khoản
-              </Button>
-
-              <Button
-                variant="contained"
-                onClick={() => navigate("/orders")}
-                sx={{
-                  background: "#ff5722",
-                  px: 4,
-                  py: 1,
-                  borderRadius: 2,
-                  fontWeight: "bold",
-                  "&:hover": {
-                    background: "#e64a19"
-                  }
+              <Box
+                component="img"
+                src={item.image || item.img}
+                onError={(e: any) => {
+                  e.target.src = "https://via.placeholder.com/80x80?text=No+Image";
                 }}
-              >
-                Quay lại đơn hàng
-              </Button>
+                sx={{
+                  width: 80,
+                  height: 80,
+                  objectFit: "contain",
+                  borderRadius: 1,
+                  bgcolor: "#f5f5f5",
+                }}
+              />
+              <Box sx={{ flex: 1 }}>
+                <Typography fontWeight="bold">{item.name}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {formatPrice(item.price)} x {item.quantity}
+                </Typography>
+              </Box>
+              <Typography fontWeight="bold" color="#d70018">
+                {formatPrice((item.price || 0) * (item.quantity || 0))}
+              </Typography>
+            </Box>
+          ))}
+        </Stack>
+      </Paper>
 
-            </Stack>
+      {/* Payment Info */}
+      <Paper sx={{ p: 4, mb: 3, borderRadius: 3 }}>
+        <Typography variant="h6" fontWeight="bold" mb={2}>
+          Thanh toán
+        </Typography>
 
+        <Stack spacing={2}>
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography color="text.secondary">Phương thức thanh toán</Typography>
+            <Typography>{getPaymentMethod(order.payment_method)}</Typography>
           </Box>
 
-        </CardContent>
+          <Divider />
 
-      </Card>
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography color="text.secondary">Tạm tính</Typography>
+            <Typography>{formatPrice(order.subtotal)}</Typography>
+          </Box>
 
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography color="text.secondary">Phí vận chuyển</Typography>
+            <Typography>
+              {order.shipping_fee === 0 ? "Miễn phí" : formatPrice(order.shipping_fee)}
+            </Typography>
+          </Box>
+
+          {(order.discount || order.coupon_discount) > 0 && (
+            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+              <Typography color="text.secondary">Giảm giá</Typography>
+              <Typography color="success.main">
+                -{formatPrice(order.discount || order.coupon_discount)}
+              </Typography>
+            </Box>
+          )}
+
+          <Divider />
+
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography variant="h6" fontWeight="bold">Tổng cộng</Typography>
+            <Typography variant="h6" fontWeight="bold" color="#d70018">
+              {formatPrice(order.total)}
+            </Typography>
+          </Box>
+        </Stack>
+      </Paper>
+
+      {/* Notes */}
+      {order.notes && (
+        <Paper sx={{ p: 4, borderRadius: 3 }}>
+          <Typography variant="h6" fontWeight="bold" mb={2}>
+            Ghi chú
+          </Typography>
+          <Typography>{order.notes}</Typography>
+        </Paper>
+      )}
     </Container>
   );
 };

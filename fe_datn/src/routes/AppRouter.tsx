@@ -12,7 +12,12 @@ import Orders from "../pages/Orders";
 import OrderDetail from "../pages/OrderDetail";
 import OrderSuccess from "../pages/OrderSuccess";
 
-
+/* PAYMENT */
+import PaymentSuccess from "../pages/PaymentSuccess";
+import PaymentFailed from "../pages/PaymentFailed";
+import PaymentProcess from "../pages/PaymentProcess";
+import PaymentBank from "../pages/PaymentBank";
+import PaymentMock from "../pages/PaymentMock";
 
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
@@ -21,12 +26,11 @@ import Profile from "../pages/Profile";
 import MyAccount from "../pages/account/MyAccount";
 
 /* NEW PAGES */
+import News from "../pages/news/News";
+import NewsDetail from "../pages/news/NewsDetail";
 
-import News from "../pages/news/News.tsx";
-import NewsDetail from "../pages/news/NewsDetail.tsx";
-
-import About from "../pages/about/About.tsx";
-import Contact from "../pages/contact/Contact.tsx";
+import About from "../pages/about/About";
+import Contact from "../pages/contact/Contact";
 
 /* ADMIN */
 import Users from "../pages/admin/Users";
@@ -64,24 +68,14 @@ const AppRouter = () => {
         <Route path="product/:id" element={<ProductDetail />} />
         <Route path="news" element={<News />} />
         <Route path="news/:id" element={<NewsDetail />} />
-
-        {/* NEW PAGES */}
         <Route path="about" element={<About />} />
         <Route path="contact" element={<Contact />} />
-
-        {/* NEW PAGES */}
-        <Route path="news" element={<News />} />
-                <Route path="/news/:id" element={<NewsDetail />} />
-        <Route path="about" element={<About />} />
-        <Route path="contact" element={<Contact />} />
-        <Route path="/news/:id" element={<NewsDetail />} />
 
         {/* AUTH */}
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
 
         {/* NEED LOGIN */}
-
         <Route
           path="cart"
           element={
@@ -127,7 +121,6 @@ const AppRouter = () => {
           }
         />
 
-        {/* MY ACCOUNT */}
         <Route
           path="my-account"
           element={
@@ -142,6 +135,52 @@ const AppRouter = () => {
           element={
             <PrivateRoute>
               <OrderSuccess />
+            </PrivateRoute>
+          }
+        />
+
+        {/* PAYMENT ROUTES */}
+        <Route
+          path="payment/success"
+          element={
+            <PrivateRoute>
+              <PaymentSuccess />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="payment/failed"
+          element={
+            <PrivateRoute>
+              <PaymentFailed />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="payment/process"
+          element={
+            <PrivateRoute>
+              <PaymentProcess />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="payment/bank"
+          element={
+            <PrivateRoute>
+              <PaymentBank />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="payment/mock"
+          element={
+            <PrivateRoute>
+              <PaymentMock />
             </PrivateRoute>
           }
         />

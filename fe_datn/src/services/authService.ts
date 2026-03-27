@@ -10,7 +10,15 @@ export const registerAPI = async (data: any) => {
 export const loginAPI = async (data: any) => {
   const res = await api.post("/auth/login", data);
 
-  localStorage.setItem("token", res.data.accessToken);
+  const userData = {
+    _id: res.data.user._id,
+    email: res.data.user.email,
+    username: res.data.user.username,
+    role: res.data.user.role,
+    avatar: res.data.user.avatar,
+    token: res.data.accessToken,
+  };
+  localStorage.setItem("user", JSON.stringify(userData));
 
   return res.data;
 };

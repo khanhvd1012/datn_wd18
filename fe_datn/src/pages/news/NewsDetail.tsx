@@ -1,84 +1,166 @@
-import React from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import api from "../../services/api";
+import { useParams, Link } from "react-router-dom";
 import {
-  Container,
+  Box,
   Typography,
-  Box
+  Breadcrumbs,
+  Link as MuiLink,
+  Divider,
+  CircularProgress,
+  Avatar,
+  Container,
+  Paper,
 } from "@mui/material";
 
-/* DATA */
+interface NewsItem {
+  _id: string;
+  title: string;
+  content: string;
+  images: string[];
+  author: string;
+  createdAt: string;
+  views?: number;
+}
 
-const news = [
-  {
-    id: 1,
-    title: "iPhone 16 sắp ra mắt",
-    img: "https://picsum.photos/900/500?1",
-    date: "12/03/2026",
-    desc: "Apple chuẩn bị ra mắt iPhone thế hệ mới với nhiều nâng cấp AI và camera.",
-    content:
-      "Apple được cho là sẽ ra mắt iPhone 16 với chip mới mạnh hơn, camera cải tiến và nhiều tính năng AI."
-  },
-  {
-    id: 2,
-    title: "Samsung Galaxy S mới",
-    img: "https://picsum.photos/900/500?2",
-    date: "10/03/2026",
-    desc: "Samsung giới thiệu dòng Galaxy mới.",
-    content:
-      "Samsung tiếp tục nâng cấp dòng Galaxy S với màn hình AMOLED và hiệu năng mạnh mẽ."
-  }
-];
-
-const NewsDetail: React.FC = () => {
-
+const NewsDetail = () => {
   const { id } = useParams();
+  const [news, setNews] = useState<NewsItem | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const article = news.find(
-    (item) => item.id === Number(id)
-  );
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const res = await api.get(`/news/${id}`);
+        setNews(res.data);
+      } catch (err) {
+        console.error("Error fetching news detail:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (!article) {
-    return <Typography>Không tìm thấy bài viết</Typography>;
+    fetchNews();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          minHeight: "60vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!news) {
+    return (
+      <Container maxWidth="md" sx={{ py: 8, textAlign: "center" }}>
+        <Typography variant="h5" mb={3}>
+          Bài viết không tồn tại
+        </Typography>
+        <MuiLink component={Link} to="/news" underline="hover">
+          Quay lại tin tức
+        </MuiLink>
+      </Container>
+    );
   }
 
   return (
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      <Breadcrumbs sx={{ mb: 4 }}>
+        <MuiLink
+          component={Link}
+          to="/"
+          underline="hover"
+          sx={{ color: "text.secondary" }}
+        >
+          Trang chủ
+        </MuiLink>
+        <MuiLink
+          component={Link}
+          to="/news"
+          underline="hover"
+          sx={{ color: "text.secondary" }}
+        >
+          Tin tức
+        </MuiLink>
+        <Typography color="text.primary">Chi tiết</Typography>
+      </Breadcrumbs>
 
-<Container sx={{ py:6 }}>
+      <Paper sx={{ p: { xs: 3, md: 5 }, borderRadius: 3 }}>
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: "bold",
+            mb: 3,
+            lineHeight: 1.3,
+          }}
+        >
+          {news.title}
+        </Typography>
 
-<Typography
-variant="h3"
-fontWeight="bold"
-mb={2}
->
-{article.title}
-</Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+          <Avatar sx={{ bgcolor: "primary.main" }}>
+            {news.author?.[0]?.toUpperCase() || "A"}
+          </Avatar>
+          <Box>
+            <Typography variant="subtitle2" fontWeight="bold">
+              {news.author}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {new Date(news.createdAt).toLocaleDateString("vi-VN", {
+                day: "2-digit",
+                month: "long",
+                year: "numeric",
+              })}{" "}
+              | {news.views || 0} lượt xem
+            </Typography>
+          </Box>
+        </Box>
 
-<Typography
-color="text.secondary"
-mb={3}
->
-{article.date}
-</Typography>
+        {news.images?.[0] && (
+          <Box
+            component="img"
+            src={news.images[0]}
+            onError={(e: any) => {
+              e.target.style.display = "none";
+            }}
+            sx={{
+              width: "100%",
+              height: "auto",
+              borderRadius: 2,
+              mb: 4,
+            }}
+          />
+        )}
 
-<Box
-component="img"
-src={article.img}
-width="100%"
-sx={{
-borderRadius:2,
-mb:3
-}}
-/>
+        <Divider sx={{ mb: 4 }} />
 
-<Typography
-variant="body1"
-lineHeight={1.7}
->
-{article.content}
-</Typography>
+        <Typography
+          sx={{
+            fontSize: "1.1rem",
+            lineHeight: 1.8,
+            "& p": { mb: 2 },
+            "& img": { maxWidth: "100%", height: "auto", borderRadius: 2, my: 2 },
+          }}
+          dangerouslySetInnerHTML={{ __html: news.content }}
+        />
 
-</Container>
+        <Divider sx={{ my: 4 }} />
 
+        <Box sx={{ display: "flex", justifyContent: "center" }}>
+          <MuiLink component={Link} to="/news" underline="hover">
+            ← Quay lại danh sách tin tức
+          </MuiLink>
+        </Box>
+      </Paper>
+    </Container>
   );
 };
 
