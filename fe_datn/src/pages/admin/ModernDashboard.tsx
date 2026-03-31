@@ -36,17 +36,40 @@ import {
   Category,
   BrandingWatermark,
 } from '@mui/icons-material';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as ChartTooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from 'recharts';
 import api from '../../services/api';
 
 interface DashboardStats {
   products: number;
-  stock: number;
+  stock: {
+    totalItems: number;
+    lowStock: number;
+    outOfStock: number;
+    stats: any[];
+  };
   vouchers: number;
   brands: number;
   categories: number;
   news: number;
   contacts: number;
-  orders: number;
+  orders: {
+    total: number;
+    pending: number;
+    revenue: number;
+    daily: any[];
+  };
 }
 
 interface NewsItem {
@@ -63,6 +86,10 @@ interface ContactItem {
   message: string;
   created_at: string;
 }
+
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+};
 
 const ModernDashboard: React.FC = () => {
   const theme = useTheme();
@@ -103,15 +130,25 @@ const ModernDashboard: React.FC = () => {
         const dashboardData = dashboardRes.data.data || dashboardRes.data;
         
         // Extract stats from nested structure or use defaults
-        const statsData = {
+        const statsData: DashboardStats = {
           products: dashboardData?.products?.total || 0,
-          stock: dashboardData?.stock?.totalItems || 0,
+          stock: {
+            totalItems: dashboardData?.stock?.totalItems || 0,
+            lowStock: dashboardData?.stock?.lowStock || 0,
+            outOfStock: dashboardData?.stock?.outOfStock || 0,
+            stats: dashboardData?.stock?.stats || [],
+          },
           vouchers: dashboardData?.vouchers?.total || 0,
           brands: dashboardData?.brands?.total || 0,
           categories: dashboardData?.categories?.total || 0,
           news: dashboardData?.news?.total || 0,
           contacts: dashboardData?.contacts?.total || 0,
-          orders: 0, // Not available in dashboard API yet
+          orders: {
+            total: dashboardData?.orders?.total || 0,
+            pending: dashboardData?.orders?.pending || 0,
+            revenue: dashboardData?.orders?.revenue || 0,
+            daily: dashboardData?.orders?.daily || [],
+          },
         };
         
         setStats(statsData);
@@ -119,13 +156,13 @@ const ModernDashboard: React.FC = () => {
         console.warn('Dashboard stats not available, using zeros');
         setStats({
           products: 0,
-          stock: 0,
+          stock: { totalItems: 0, lowStock: 0, outOfStock: 0, stats: [] },
           vouchers: 0,
           brands: 0,
           categories: 0,
           news: 0,
           contacts: 0,
-          orders: 0,
+          orders: { total: 0, pending: 0, revenue: 0, daily: [] },
         });
       }
 
@@ -197,19 +234,19 @@ const ModernDashboard: React.FC = () => {
     },
     {
       title: 'Tồn kho',
-      value: stats.stock.toLocaleString('vi-VN'),
+      value: stats.stock.totalItems.toLocaleString('vi-VN'),
       icon: <Inventory />,
       bgColor: alpha(theme.palette.success.main, 0.1),
-      trend: '+8%',
-      trendUp: true,
+      trend: stats.stock.lowStock + ' sắp hết',
+      trendUp: stats.stock.lowStock === 0,
     },
     {
       title: 'Đơn hàng',
-      value: stats.orders,
+      value: stats.orders.total,
       icon: <Receipt />,
       bgColor: alpha(theme.palette.warning.main, 0.1),
-      trend: '-3%',
-      trendUp: false,
+      trend: stats.orders.pending + ' chờ',
+      trendUp: stats.orders.pending === 0,
     },
     {
       title: 'Khuyến mãi',
@@ -302,30 +339,92 @@ const ModernDashboard: React.FC = () => {
 
       {/* Charts and Activities */}
       <Box sx={{ display: 'flex', gap: 3, mb: 3, flexWrap: 'wrap', width: '100%' }}>
-        {/* Line Chart Placeholder */}
+        {/* Line Chart: Weekly Trends */}
         <Box sx={{ flex: { xs: '1 1 100%', lg: '2 1 0' }, minWidth: 300 }}>
-          <Paper sx={{ p: 3, height: 400 }}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              Xu hướng tuần qua
+          <Paper sx={{ p: 3, height: 400, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: 'text.primary' }}>
+              Doanh thu & Đơn hàng tuần qua
             </Typography>
-            <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Typography color="text.secondary">
-                Biểu đồ xu hướng (Cần tích hợp thư viện chart)
-              </Typography>
+            <Box sx={{ height: 300 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={stats.orders.daily}>
+                  <defs>
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={theme.palette.primary.main} stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor={theme.palette.primary.main} stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <XAxis 
+                    dataKey="name" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 12, fill: '#666' }} 
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 12, fill: '#666' }}
+                    tickFormatter={(value) => `${value / 1000000}M`}
+                  />
+                  <ChartTooltip 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                    formatter={(value: any, name: string) => [
+                      name === 'revenue' ? formatPrice(value) : value, 
+                      name === 'revenue' ? 'Doanh thu' : 'Đơn hàng'
+                    ]}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="revenue" 
+                    stroke={theme.palette.primary.main} 
+                    fillOpacity={1} 
+                    fill="url(#colorRevenue)" 
+                    strokeWidth={3}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="orders" 
+                    stroke={theme.palette.secondary.main} 
+                    fill={alpha(theme.palette.secondary.main, 0.1)}
+                    strokeWidth={2}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </Box>
           </Paper>
         </Box>
 
-        {/* Pie Chart Placeholder */}
+        {/* Pie Chart: Stock Status */}
         <Box sx={{ flex: { xs: '1 1 100%', lg: '1 1 0' }, minWidth: 300 }}>
-          <Paper sx={{ p: 3, height: 400 }}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              Trạng thái kho hàng
+          <Paper sx={{ p: 3, height: 400, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: 'text.primary' }}>
+              Tình trạng kho hàng
             </Typography>
-            <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Typography color="text.secondary">
-                Biểu đồ kho hàng (Cần tích hợp thư viện chart)
-              </Typography>
+            <Box sx={{ height: 300 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: 'Sẵn có', value: stats.stock.totalItems - stats.stock.lowStock - stats.stock.outOfStock },
+                      { name: 'Sắp hết', value: stats.stock.lowStock },
+                      { name: 'Hết hàng', value: stats.stock.outOfStock },
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    <Cell fill={theme.palette.success.main} />
+                    <Cell fill={theme.palette.warning.main} />
+                    <Cell fill={theme.palette.error.main} />
+                  </Pie>
+                  <ChartTooltip />
+                  <Legend verticalAlign="bottom" height={36}/>
+                </PieChart>
+              </ResponsiveContainer>
             </Box>
           </Paper>
         </Box>

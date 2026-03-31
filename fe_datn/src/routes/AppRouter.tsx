@@ -10,7 +10,14 @@ import Checkout from "../pages/Checkout";
 
 import Orders from "../pages/Orders";
 import OrderDetail from "../pages/OrderDetail";
-import OrderSuccess from "../pages/OrderSuccess";
+import OrderSuccess from "../pages/OrderSuccessPage";
+
+import PaymentBank from "../pages/PaymentBank";
+import PaymentSuccess from "../pages/PaymentSuccess";
+import PaymentFailed from "../pages/PaymentFailed";
+import PaymentCallback from "../pages/PaymentCallback";
+import PaymentMock from "../pages/PaymentMock";
+import PaymentProcess from "../pages/PaymentProcess";
 
 
 
@@ -40,6 +47,7 @@ import NewsManagement from "../pages/admin/NewsManagement";
 import ModernDashboard from "../pages/admin/ModernDashboard";
 import AdminBanner from "../pages/admin/AdminBanner";
 import AdminFeedback from "../pages/admin/AdminFeedback";
+import AdminReviews from "../pages/admin/AdminReviews";
 import Category from "../pages/admin/Category";
 import Dashboard from "../pages/admin/Dashboard";
 
@@ -127,12 +135,12 @@ const AppRouter = () => {
           }
         />
 
-        {/* MY ACCOUNT */}
+        {/* MY ACCOUNT - Redirected to Profile */}
         <Route
           path="my-account"
           element={
             <PrivateRoute>
-              <MyAccount />
+              <Profile />
             </PrivateRoute>
           }
         />
@@ -142,6 +150,56 @@ const AppRouter = () => {
           element={
             <PrivateRoute>
               <OrderSuccess />
+            </PrivateRoute>
+          }
+        />
+
+        {/* PAYMENT FLOW */}
+        <Route
+          path="payment/bank"
+          element={
+            <PrivateRoute>
+              <PaymentBank />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="payment/success"
+          element={
+            <PrivateRoute>
+              <PaymentSuccess />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="payment/failed"
+          element={
+            <PrivateRoute>
+              <PaymentFailed />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="payment/callback"
+          element={
+            <PrivateRoute>
+              <PaymentCallback />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="payment/mock"
+          element={
+            <PrivateRoute>
+              <PaymentMock />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="payment/process"
+          element={
+            <PrivateRoute>
+              <PaymentProcess />
             </PrivateRoute>
           }
         />
@@ -168,7 +226,9 @@ const AppRouter = () => {
         <Route path="news" element={<NewsManagement />} />
         <Route path="banners" element={<AdminBanner />} />
         <Route path="contacts" element={<AdminFeedback />} />
+        <Route path="reviews" element={<AdminReviews />} />
         <Route path="users" element={<Users />} />
+        <Route path="profile" element={<Profile />} />
       </Route>
 
       {/* 404 */}

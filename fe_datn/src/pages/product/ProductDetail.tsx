@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-
 import {
   Box,
   Container,
@@ -12,537 +10,486 @@ import {
   Stack,
   IconButton,
   Rating,
-  TextField,
   Chip,
-  Divider,
-  Tabs,
-  Tab,
+  LinearProgress,
+  Snackbar,
   Paper,
-  LinearProgress
+  Divider,
+  Alert
 } from "@mui/material";
-
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
+import HistoryIcon from "@mui/icons-material/History";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { Breadcrumbs } from "@mui/material";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
+import { getProductDetailApi } from "../../services/productService";
+import { addToCartApi } from "../../services/cartService";
+import { getReviewsByProductApi } from "../../services/reviewService";
 
-import { useParams, useNavigate } from "react-router-dom";
+interface Variant {
+  _id: string;
+  name: string;
+  price: number;
+  stock: number;
+  color?: string;
+  size?: string;
+  storage?: string;
+  material?: string;
+  images?: string[];
+}
+
+interface Product {
+  id?: string;
+  _id?: string;
+  name: string;
+  description: string;
+  price: number;
+  rating?: number;
+  images?: string[];
+  img?: string;
+  countInStock?: number;
+  variants?: Variant[];
+  category?: string | { name: string };
+  brand?: string | { name: string };
+  original_price?: number;
+}
 
 const ProductDetail = () => {
-
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [product,setProduct] = useState<any>(null);
-  const [related,setRelated] = useState<any[]>([]);
-  const [img,setImg] = useState("");
-  const [qty,setQty] = useState(1);
-  const [tab,setTab] = useState(0);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+  const [quantity, setQuantity] = useState(1);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [notification, setNotification] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
-  const [reviews,setReviews] = useState<any[]>([]);
-  const [rating,setRating] = useState(5);
-  const [comment,setComment] = useState("");
-
-  const [time,setTime] = useState(3600);
-
-  /* FLASH SALE TIMER */
-
-  useEffect(()=>{
-
-    const timer=setInterval(()=>{
-      setTime(prev=>prev>0?prev-1:0)
-    },1000)
-
-    return()=>clearInterval(timer)
-
-  },[])
-
-  const formatPrice=(price:number)=>{
-    return price?.toLocaleString("vi-VN")+"₫"
-  }
-
-  /* LOAD PRODUCT */
-
-  useEffect(()=>{
-
-    axios
-      .get(`http://localhost:3000/products/${id}`)
-      .then(res=>{
-        setProduct(res.data)
-        setImg(res.data.img)
-      })
-
-  },[id])
-
-  /* RELATED PRODUCTS */
-
-  useEffect(()=>{
-
-    axios
-      .get(`http://localhost:3000/products?_limit=4`)
-      .then(res=>{
-        const list=res.data.filter((p:any)=>p.id!==Number(id))
-        setRelated(list)
-      })
-
-  },[id])
-
-  /* LOAD REVIEWS */
-
-  useEffect(()=>{
-
-    axios
-      .get(`http://localhost:3000/reviews?productId=${id}`)
-      .then(res=>{
-        setReviews(res.data)
-      })
-
-  },[id])
-
-  /* ADD TO CART */
-
-  const addToCart = async () => {
-
-    try {
-
-      const res = await axios.get(
-        `http://localhost:3000/cart?productId=${product.id}`
-      );
-
-      const data = res.data;
-
-      if (data.length > 0) {
-
-        const item = data[0];
-
-        await axios.patch(
-          `http://localhost:3000/cart/${item.id}`,
-          {
-            quantity: item.quantity + qty
+  useEffect(() => {
+    const fetchProductAndReviews = async () => {
+      if (!id) return;
+      try {
+        const productData = await getProductDetailApi(id);
+        setProduct(productData);
+        // Default select first variant if exists
+        if (productData.variants && productData.variants.length > 0) {
+          setSelectedVariant(productData.variants[0]);
+        }
+        
+        // Fetch reviews
+        try {
+          const reviewsRes = await getReviewsByProductApi(id);
+          if (reviewsRes && reviewsRes.data) {
+            setReviews(reviewsRes.data);
           }
-        );
+        } catch (reviewErr) {
+          console.error("Lỗi khi tải đánh giá:", reviewErr);
+        }
 
-      } else {
-
-        await axios.post(
-          "http://localhost:3000/cart",
-          {
-            productId: product.id,
-            name: product.name,
-            img: product.img,
-            price: product.price,
-            quantity: qty
-          }
-        );
-
+      } catch (error) {
+        setNotification({
+          open: true,
+          message: "Không thể tải thông tin sản phẩm",
+          severity: "error",
+        });
       }
+    };
+    fetchProductAndReviews();
+  }, [id]);
 
-      // cập nhật header
+  const handleAddToCart = async () => {
+    if (!product) return;
+    try {
+      await addToCartApi({ 
+        product_id: product._id || product.id || "", 
+        variant_id: selectedVariant?._id,
+        quantity 
+      });
       window.dispatchEvent(new Event("cartUpdated"));
-
-      alert("Đã thêm vào giỏ hàng");
-
+      setNotification({
+        open: true,
+        message: "Đã thêm vào giỏ hàng",
+        severity: "success",
+      });
     } catch (error) {
-
-      console.error("Add cart error:", error);
-
+      setNotification({
+        open: true,
+        message: "Lỗi khi thêm vào giỏ hàng",
+        severity: "error",
+      });
     }
+  };
 
-  }
-
-  /* SUBMIT REVIEW */
-
-  const submitReview=async()=>{
-
-    if(!comment) return
-
-    const newReview={
-      productId:Number(id),
-      user:"User Demo",
-      rating,
-      comment,
-      date:new Date().toLocaleDateString()
+  const handleBuyNow = async () => {
+    if (!product) return;
+    try {
+      await addToCartApi({ 
+        product_id: product._id || product.id || "", 
+        variant_id: selectedVariant?._id,
+        quantity 
+      });
+      window.dispatchEvent(new Event("cartUpdated"));
+      navigate("/checkout");
+    } catch (error) {
+      setNotification({
+        open: true,
+        message: "Lỗi khi thực hiện mua ngay",
+        severity: "error",
+      });
     }
-
-    const res=await axios.post(
-      "http://localhost:3000/reviews",
-      newReview
-    )
-
-    setReviews([...reviews,res.data])
-
-    setComment("")
-    setRating(5)
-
-  }
-
-  const total=reviews.length
-
-  const avg=total
-  ?reviews.reduce((a,b)=>a+b.rating,0)/total
-  :0
-
-  const countStar=(star:number)=>{
-    return reviews.filter(r=>r.rating===star).length
-  }
-
-  if(!product){
-
-    return(
-      <Typography textAlign="center" mt={10}>
-        Loading...
-      </Typography>
-    )
-
-  }
-
-  return(
-
-  <Box sx={{background:"#f5f5f5",py:6}}>
-
-  <Container maxWidth="lg">
-
-  <Card sx={{p:4,borderRadius:4}}>
-
-  <Grid container spacing={6}>
-
-  {/* IMAGE */}
-
-  <Grid item xs={12} md={5}>
-
-  <Box
-  component="img"
-  src={img}
-  sx={{
-  width:"100%",
-  height:420,
-  objectFit:"contain",
-  borderRadius:3
-  }}
-  />
-
-  <Stack direction="row" spacing={1} mt={2}>
-
-  {[product.img,product.img,product.img].map((i,index)=>(
-
-  <Box
-  key={index}
-  component="img"
-  src={i}
-  onClick={()=>setImg(i)}
-  sx={{
-  width:70,
-  height:70,
-  border:"1px solid #ddd",
-  borderRadius:2,
-  cursor:"pointer",
-  p:1
-  }}
-  />
-
-  ))}
-
-  </Stack>
-
-  </Grid>
-
-  {/* INFO */}
-
-  <Grid item xs={12} md={7}>
-
-  <Stack spacing={2}>
-
-  <Typography variant="h5" fontWeight="bold">
-  {product.name}
-  </Typography>
-
-  <Rating value={avg} precision={0.5} readOnly/>
-
-  <Typography variant="h4" fontWeight="bold" color="#d70018">
-  {formatPrice(product.price)}
-  </Typography>
-
-  <Chip
-  label={`Flash Sale ${Math.floor(time/60)}:${time%60}`}
-  color="error"
-  />
-
-  <Stack direction="row" spacing={1}>
-  <Chip label="Voucher 50K"/>
-  <Chip label="Freeship"/>
-  </Stack>
-
-  <Stack direction="row" spacing={1} alignItems="center">
-  <LocalShippingIcon/>
-  <Typography>
-  Giao hàng toàn quốc
-  </Typography>
-  </Stack>
-
-  <Divider/>
-
-  {/* QUANTITY */}
-
-  <Stack direction="row" spacing={1} alignItems="center">
-
-  <IconButton onClick={()=>setQty(qty>1?qty-1:1)}>
-  <RemoveIcon/>
-  </IconButton>
-
-  <TextField
-  size="small"
-  value={qty}
-  onChange={(e)=>setQty(Number(e.target.value))}
-  sx={{width:70}}
-  inputProps={{style:{textAlign:"center"}}}
-  />
-
-  <IconButton onClick={()=>setQty(qty+1)}>
-  <AddIcon/>
-  </IconButton>
-
-  </Stack>
-
-  {/* BUTTON */}
-
-  <Stack direction="row" spacing={2}>
-
-  <Button
-  variant="contained"
-  startIcon={<ShoppingCartIcon/>}
-  sx={{flex:1,background:"#ff6b35"}}
-  onClick={addToCart}
-  >
-  Thêm giỏ hàng
-  </Button>
-
-  <Button
-  variant="contained"
-  sx={{flex:1,background:"#d70018"}}
-  onClick={()=>{
-  addToCart()
-  navigate("/checkout")
-  }}
-  >
-  Mua ngay
-  </Button>
-
-  <IconButton>
-  <FavoriteBorderIcon/>
-  </IconButton>
-
-  </Stack>
-
-  </Stack>
-
-  </Grid>
-
-  </Grid>
-
-  </Card>
-
-  {/* TABS */}
-
-  <Box mt={5}>
-
-  <Tabs value={tab} onChange={(e,v)=>setTab(v)}>
-  <Tab label="Mô tả"/>
-  <Tab label="Đánh giá"/>
-  </Tabs>
-
-  <Paper sx={{p:3,mt:2}}>
-
-  {tab===0 && (
-  <Typography>
-  {product.description}
-  </Typography>
-  )}
-
-  {tab===1 && (
-
-  <Box>
-
-  <Grid container spacing={4} mb={4}>
-
-  <Grid item md={3}>
-
-  <Typography variant="h3" color="error">
-  {avg.toFixed(1)}
-  </Typography>
-
-  <Rating value={avg} precision={0.5} readOnly/>
-
-  <Typography>
-  {total} đánh giá
-  </Typography>
-
-  </Grid>
-
-  <Grid item md={9}>
-
-  {[5,4,3,2,1].map(star=>{
-
-  const percent=total
-  ?(countStar(star)/total)*100
-  :0
-
-  return(
-
-  <Stack key={star} direction="row" spacing={2} alignItems="center">
-
-  <Typography>{star}⭐</Typography>
-
-  <LinearProgress
-  variant="determinate"
-  value={percent}
-  sx={{flex:1,height:10,borderRadius:5}}
-  />
-
-  </Stack>
-
-  )
-
-  })}
-
-  </Grid>
-
-  </Grid>
-
-  {/* REVIEW FORM */}
-
-  <Paper sx={{p:3,mb:4}}>
-
-  <Typography variant="h6" mb={2}>
-  Viết đánh giá
-  </Typography>
-
-  <Stack spacing={2}>
-
-  <Rating
-  value={rating}
-  onChange={(e,v:any)=>setRating(v)}
-  />
-
-  <TextField
-  label="Bình luận"
-  multiline
-  rows={3}
-  value={comment}
-  onChange={(e)=>setComment(e.target.value)}
-  />
-
-  <Button variant="contained" onClick={submitReview}>
-  Gửi đánh giá
-  </Button>
-
-  </Stack>
-
-  </Paper>
-
-  {/* REVIEW LIST */}
-
-  <Stack spacing={2}>
-
-  {reviews.map(r=>(
-
-  <Paper key={r.id} sx={{p:2}}>
-
-  <Stack direction="row" justifyContent="space-between">
-
-  <Typography fontWeight="bold">
-  {r.user}
-  </Typography>
-
-  <Typography fontSize={13} color="text.secondary">
-  {r.date}
-  </Typography>
-
-  </Stack>
-
-  <Rating value={r.rating} readOnly size="small"/>
-
-  <Typography mt={1}>
-  {r.comment}
-  </Typography>
-
-  </Paper>
-
-  ))}
-
-  </Stack>
-
-  </Box>
-
-  )}
-
-  </Paper>
-
-  </Box>
-
-  {/* RELATED */}
-
-  <Box mt={6}>
-
-  <Typography variant="h5" fontWeight="bold" mb={3}>
-  Sản phẩm liên quan
-  </Typography>
-
-  <Grid container spacing={3}>
-
-  {related.map(item=>(
-
-  <Grid item xs={12} sm={6} md={3} key={item.id}>
-
-  <Card
-  sx={{
-  cursor:"pointer",
-  "&:hover":{
-  transform:"translateY(-6px)",
-  boxShadow:6
-  }
-  }}
-  onClick={()=>navigate(`/product/${item.id}`)}
-  >
-
-  <CardContent>
-
-  <Box
-  component="img"
-  src={item.img}
-  sx={{
-  width:"100%",
-  height:160,
-  objectFit:"contain"
-  }}
-  />
-
-  <Typography fontWeight="bold">
-  {item.name}
-  </Typography>
-
-  <Typography color="#d70018">
-  {formatPrice(item.price)}
-  </Typography>
-
-  </CardContent>
-
-  </Card>
-
-  </Grid>
-
-  ))}
-
-  </Grid>
-
-  </Box>
-
-  </Container>
-
-  </Box>
-
-  )
-
-}
+  };
+
+  return (
+    <Container maxWidth="lg" sx={{ py: 6 }}>
+      {!product ? (
+        <Box sx={{ width: "100%", py: 10 }}>
+          <LinearProgress />
+        </Box>
+      ) : (
+        <>
+          {/* Breadcrumbs */}
+          <Breadcrumbs 
+            separator={<NavigateNextIcon fontSize="small" />} 
+            aria-label="breadcrumb"
+            sx={{ mb: 4 }}
+          >
+            <Link to="/" style={{ textDecoration: 'none', color: '#1976d2' }}>
+              Trang chủ
+            </Link>
+            <Link to="/products" style={{ textDecoration: 'none', color: '#1976d2' }}>
+              Sản phẩm
+            </Link>
+            <Typography color="text.primary" fontWeight="medium">
+              {product.name}
+            </Typography>
+          </Breadcrumbs>
+
+          <Grid container spacing={8}>
+            {/* Left column: Images */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Stack spacing={2}>
+                <Paper 
+                  elevation={0} 
+                  sx={{ 
+                    borderRadius: 4, 
+                    overflow: "hidden", 
+                    border: "1px solid #f0f0f0",
+                    backgroundColor: "#fff",
+                    position: 'relative'
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={selectedVariant?.images?.[0] || product.images?.[0] || product.img}
+                    alt={product.name}
+                    sx={{ 
+                      width: "100%", 
+                      height: 500, 
+                      display: "block", 
+                      objectFit: "contain",
+                      transition: '0.3s'
+                    }}
+                  />
+                  {product.original_price && product.original_price > product.price && (
+                    <Chip 
+                      label={`-${Math.round((1 - product.price/product.original_price)*100)}%`}
+                      color="error"
+                      sx={{ position: 'absolute', top: 16, right: 16, fontWeight: 'bold' }}
+                    />
+                  )}
+                </Paper>
+
+                {/* Thumbnails (if available) */}
+                {(product.images && product.images.length > 1) && (
+                  <Stack direction="row" spacing={2} sx={{ overflowX: 'auto', pb: 1 }}>
+                    {product.images.map((img, index) => (
+                      <Box
+                        key={index}
+                        component="img"
+                        src={img}
+                        sx={{
+                          width: 80,
+                          height: 80,
+                          borderRadius: 2,
+                          border: "2px solid #eee",
+                          cursor: 'pointer',
+                          objectFit: 'cover',
+                          "&:hover": { borderColor: 'primary.main' }
+                        }}
+                      />
+                    ))}
+                  </Stack>
+                )}
+              </Stack>
+            </Grid>
+
+            {/* Right column: Info */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Stack spacing={3} sx={{ textAlign: 'left' }}>
+                <Box>
+                  <Typography variant="overline" color="primary" fontWeight="bold" letterSpacing={1}>
+                    {(typeof product.brand === 'object' ? product.brand.name : product.brand) || "CHÍNH HÃNG"}
+                  </Typography>
+                  <Typography variant="h4" fontWeight="700" sx={{ mt: 1, mb: 1.5, color: '#1a1a1a', lineHeight: 1.4 }}>
+                    {product.name}
+                  </Typography>
+                  <Stack direction="row" spacing={3} alignItems="center">
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Rating value={product.rating || 4.5} readOnly precision={0.5} size="small" />
+                      <Typography variant="body2" sx={{ ml: 1, fontWeight: 'bold' }}>{product.rating || 4.5}</Typography>
+                    </Box>
+                    <Divider orientation="vertical" flexItem />
+                    <Typography color="text.secondary" variant="body2">1.2k Đánh giá</Typography>
+                    <Divider orientation="vertical" flexItem />
+                    <Typography color="text.secondary" variant="body2">2.5k Đã bán</Typography>
+                  </Stack>
+                </Box>
+
+                <Box sx={{ p: 2.5, borderRadius: 2, backgroundColor: "#fafafa", border: '1px solid #f0f0f0' }}>
+                  <Stack direction="row" alignItems="center" spacing={2}>
+                    <Typography variant="h4" color="error" fontWeight="700">
+                      {(selectedVariant?.price || product.price)?.toLocaleString()}₫
+                    </Typography>
+                    {product.original_price && (
+                      <Typography variant="h6" color="text.secondary" sx={{ textDecoration: 'line-through' }}>
+                        {product.original_price?.toLocaleString()}₫
+                      </Typography>
+                    )}
+                  </Stack>
+                  <Typography variant="body2" color="success.main" sx={{ mt: 1, fontWeight: '500' }}>
+                    Tiết kiệm: {(product.original_price ? (product.original_price - product.price) : 0).toLocaleString()}₫
+                  </Typography>
+                </Box>
+
+                {product.variants && product.variants.length > 0 && (
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight="bold" mb={1.5} color="text.secondary" textTransform="uppercase">
+                      Lựa chọn phiên bản:
+                    </Typography>
+                  <Stack direction="row" spacing={1.5} flexWrap="wrap">
+                    {product.variants.map((v) => (
+                      <Button
+                        key={v._id}
+                        variant={selectedVariant?._id === v._id ? "contained" : "outlined"}
+                        onClick={() => setSelectedVariant(v)}
+                        sx={{
+                          borderRadius: 2,
+                          px: 3,
+                          py: 1,
+                          textTransform: 'none',
+                          fontWeight: 'bold',
+                          boxShadow: 'none',
+                          minWidth: 'fit-content',
+                          "&:hover": { boxShadow: 'none' }
+                        }}
+                      >
+                        {v.name}
+                      </Button>
+                    ))}
+                  </Stack>
+                  </Box>
+                )}
+
+                <Box>
+                  <Typography variant="subtitle2" fontWeight="bold" mb={1.5} color="text.secondary" textTransform="uppercase">
+                    Số lượng:
+                  </Typography>
+                  <Stack direction="row" spacing={3} alignItems="center">
+                    <Box 
+                      sx={{ 
+                        display: "flex", 
+                        alignItems: "center",
+                        backgroundColor: "#f5f5f5",
+                        borderRadius: 2,
+                        p: 0.5,
+                        width: 'fit-content'
+                      }}
+                    >
+                      <IconButton 
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))} 
+                        size="medium"
+                        sx={{ color: '#000' }}
+                      >
+                        <RemoveIcon />
+                      </IconButton>
+                      <Typography sx={{ px: 3, minWidth: 50, textAlign: "center", fontWeight: "bold", fontSize: 18 }}>
+                        {quantity}
+                      </Typography>
+                      <IconButton 
+                        onClick={() => setQuantity((q) => q + 1)} 
+                        size="medium"
+                        sx={{ color: '#000' }}
+                      >
+                        <AddIcon />
+                      </IconButton>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      {selectedVariant ? selectedVariant.stock : (product.countInStock || 0)} sản phẩm có sẵn
+                    </Typography>
+                  </Stack>
+                </Box>
+
+                <Stack direction="row" spacing={2} sx={{ pt: 2 }}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    size="large"
+                    onClick={handleAddToCart}
+                    startIcon={<ShoppingCartIcon />}
+                    sx={{ 
+                      py: 2, 
+                      borderRadius: 3, 
+                      borderWidth: 2, 
+                      fontWeight: 'bold',
+                      fontSize: 16,
+                      "&:hover": { borderWidth: 2 } 
+                    }}
+                  >
+                    Thêm vào giỏ
+                  </Button>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    size="large"
+                    onClick={handleBuyNow}
+                    sx={{
+                      py: 2,
+                      borderRadius: 3,
+                      fontSize: 16,
+                      fontWeight: 'bold',
+                      background: "linear-gradient(90deg,#ff512f,#dd2476)",
+                      boxShadow: "0 4px 15px rgba(221,36,118,0.3)",
+                      "&:hover": {
+                        background: "linear-gradient(90deg,#e94426,#c21d64)",
+                        boxShadow: "0 6px 20px rgba(221,36,118,0.4)",
+                      }
+                    }}
+                  >
+                    Mua ngay
+                  </Button>
+                </Stack>
+
+                {/* Trust Signals */}
+                <Box sx={{ mt: 2, pt: 3, borderTop: '1px solid #eee' }}>
+                  <Stack 
+                    direction={{ xs: "column", sm: "row" }} 
+                    spacing={3} 
+                    justifyContent="space-between"
+                  >
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <VerifiedUserIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                      <Typography fontSize={12} fontWeight="bold">CHÍNH HÃNG 100%</Typography>
+                    </Stack>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <LocalShippingIcon sx={{ color: '#2196f3', fontSize: 20 }} />
+                      <Typography fontSize={12} fontWeight="bold">MIỄN PHÍ VẬN CHUYỂN</Typography>
+                    </Stack>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <HistoryIcon sx={{ color: '#ff9800', fontSize: 20 }} />
+                      <Typography fontSize={12} fontWeight="bold">DỄ DÀNG ĐỔI TRẢ</Typography>
+                    </Stack>
+                  </Stack>
+                </Box>
+
+                <Box>
+                  <Typography variant="subtitle1" fontWeight="bold" mb={1}>
+                    Mô tả sản phẩm:
+                  </Typography>
+                  <Typography color="text.secondary" sx={{ whiteSpace: "pre-line", lineHeight: 1.8 }}>
+                    {product.description || "Thông tin sản phẩm đang được cập nhật..."}
+                  </Typography>
+                </Box>
+              </Stack>
+            </Grid>
+          </Grid>
+
+          {/* ĐÁNH GIÁ SẢN PHẨM */}
+          <Box sx={{ mt: 10 }}>
+            <Typography variant="h5" fontWeight="bold" mb={4}>
+              Đánh giá từ khách hàng ({reviews.length})
+            </Typography>
+
+            {reviews.length === 0 ? (
+              <Paper elevation={0} sx={{ p: 5, textAlign: 'center', bgcolor: '#fafafa', borderRadius: 4, border: '1px dashed #e0e0e0' }}>
+                <Typography color="text.secondary" variant="subtitle1">
+                  Chưa có đánh giá nào cho sản phẩm này. Hãy là người đầu tiên đánh giá!
+                </Typography>
+              </Paper>
+            ) : (
+              <Stack spacing={3}>
+                {reviews.map((review) => (
+                  <Paper key={review._id} elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid #f0f0f0' }}>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 3 }}>
+                      <Box sx={{ flexShrink: 0 }}>
+                        <Stack alignItems="center" spacing={1}>
+                          <Box
+                            component="img"
+                            src={review.user_id?.avatar || "https://ui-avatars.com/api/?name=" + (review.user_id?.username || 'User')}
+                            sx={{ width: 60, height: 60, borderRadius: '50%', objectFit: 'cover' }}
+                          />
+                          <Typography variant="subtitle2" fontWeight="bold">
+                            {review.user_id?.username || "Khách hàng"}
+                          </Typography>
+                        </Stack>
+                      </Box>
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Stack direction="row" alignItems="center" spacing={2} mb={1}>
+                          <Rating value={review.rating} readOnly size="small" />
+                          <Typography variant="caption" color="text.secondary">
+                            {new Date(review.createdAt).toLocaleDateString('vi-VN')}
+                          </Typography>
+                        </Stack>
+                        {review.product_variant_id && (
+                          <Typography variant="caption" sx={{ color: 'text.disabled', display: 'block', mb: 1 }}>
+                            Phân loại: {review.product_variant_id.name}
+                          </Typography>
+                        )}
+                        <Typography variant="body2" sx={{ lineHeight: 1.6, color: '#333' }}>
+                          {review.comment}
+                        </Typography>
+
+                        {/* Admin Reply */}
+                        {review.admin_reply && (
+                          <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f8ff', borderRadius: 2, borderLeft: '3px solid #1976d2' }}>
+                            <Typography variant="subtitle2" color="primary" fontWeight="bold" mb={0.5}>
+                              Phản hồi từ người bán:
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {review.admin_reply}
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    </Box>
+                  </Paper>
+                ))}
+              </Stack>
+            )}
+          </Box>
+        </>
+      )}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={3000}
+        onClose={() => setNotification({ ...notification, open: false })}
+      >
+        <Alert
+          onClose={() => setNotification({ ...notification, open: false })}
+          severity={notification.severity as any}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
+    </Container>
+  );
+};
 
 export default ProductDetail;

@@ -11,6 +11,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TableFooter,
   TablePagination,
   Button,
   IconButton,
@@ -40,6 +41,7 @@ import {
   alpha,
   Snackbar,
   Alert,
+  Divider,
 } from "@mui/material";
 import {
   Search,
@@ -65,6 +67,7 @@ import {
   Straighten,
   Close,
 } from "@mui/icons-material";
+import * as XLSX from "xlsx";
 import api from "../../services/api";
 
 interface Variant {
@@ -175,6 +178,7 @@ const ProductVariantManagement: React.FC = () => {
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
   const [openProductDialog, setOpenProductDialog] = useState(false);
   const [openVariantDialog, setOpenVariantDialog] = useState(false);
+  const [openBulkVariantDialog, setOpenBulkVariantDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [tabValue, setTabValue] = useState(0);
   const [expandedProduct, setExpandedProduct] = useState<string | false>(false);
@@ -223,6 +227,25 @@ const ProductVariantManagement: React.FC = () => {
 
   const [productImageFiles, setProductImageFiles] = useState<File[]>([]);
   const [variantImageFiles, setVariantImageFiles] = useState<File[]>([]);
+
+  const [bulkVariants, setBulkVariants] = useState<VariantFormData[]>([
+    {
+      name: "",
+      sku: "",
+      price: 0,
+      original_price: 0,
+      countInStock: 0,
+      color: "",
+      size: "",
+      storage: "",
+      material: "",
+      images: [],
+      is_active: true,
+      is_default: false,
+    },
+  ]);
+
+  const [excelFile, setExcelFile] = useState<File | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -391,7 +414,9 @@ const ProductVariantManagement: React.FC = () => {
         name: product.name,
         description: product.description,
         brand:
-          typeof product.brand === "string" ? product.brand : product.brand?.name || "",
+          typeof product.brand === "string"
+            ? product.brand
+            : product.brand?.name || "",
         category:
           typeof product.category === "string"
             ? product.category
@@ -470,24 +495,25 @@ const ProductVariantManagement: React.FC = () => {
     setOpenProductDialog(true);
   };
 
-  const handleCreateVariant = (product: Product) => {
+  const handleCreateBulkVariant = (product: Product) => {
     setSelectedProduct(product);
-    setVariantFormData({
-      name: "",
-      sku: "",
-      price: 0,
-      original_price: 0,
-      countInStock: 0,
-      color: "",
-      size: "",
-      storage: "",
-      material: "",
-      images: [],
-      is_active: true,
-    });
-    setVariantImageFiles([]);
-    setDialogMode("create");
-    setOpenVariantDialog(true);
+    setBulkVariants([
+      {
+        name: "",
+        sku: "",
+        price: 0,
+        original_price: 0,
+        countInStock: 0,
+        color: "",
+        size: "",
+        storage: "",
+        material: "",
+        images: [],
+        is_active: true,
+        is_default: false,
+      },
+    ]);
+    setOpenBulkVariantDialog(true);
   };
 
   const handleRemoveProductImage = (index: number) => {
@@ -497,11 +523,167 @@ const ProductVariantManagement: React.FC = () => {
     }));
   };
 
-  const handleRemoveVariantImage = (index: number) => {
-    setVariantFormData((prev) => ({
+  const handleBulkVariantChange = (
+    index: number,
+    field: keyof VariantFormData,
+    value: any,
+  ) => {
+    setBulkVariants((prev) =>
+      prev.map((v, i) => (i === index ? { ...v, [field]: value } : v)),
+    );
+  };
+
+  const addBulkVariantRow = () => {
+    setBulkVariants((prev) => [
       ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }));
+      {
+        name: "",
+        sku: "",
+        price: 0,
+        original_price: 0,
+        countInStock: 0,
+        color: "",
+        size: "",
+        storage: "",
+        material: "",
+        images: [],
+        is_active: true,
+        is_default: false,
+      },
+    ]);
+  };
+
+  const removeBulkVariantRow = (index: number) => {
+    setBulkVariants((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleExcelUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setExcelFile(file);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        // Skip header row and map data
+        const variants: VariantFormData[] = jsonData
+          .slice(1)
+          .map((row: any) => ({
+            name: row[0] || "",
+            sku: row[1] || "",
+            price: Number(row[2]) || 0,
+            original_price: Number(row[3]) || 0,
+            countInStock: Number(row[4]) || 0,
+            color: row[5] || "",
+            size: row[6] || "",
+            storage: row[7] || "",
+            material: row[8] || "",
+            images: [],
+            is_active: true,
+            is_default: false,
+          }));
+
+        setBulkVariants(variants);
+        showNotification("Excel file uploaded successfully!", "success");
+      } catch (error) {
+        console.error("Error parsing Excel file:", error);
+        showNotification(
+          "Error parsing Excel file. Please check the format.",
+          "error",
+        );
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const downloadExcelTemplate = () => {
+    // Create sample data for the template
+    const templateData = [
+      [
+        "Tên biến thể",
+        "SKU",
+        "Giá",
+        "Giá gốc",
+        "Số lượng tồn kho",
+        "Màu sắc",
+        "Kích thước",
+        "Bộ nhớ",
+        "Chất liệu",
+      ],
+      [
+        "iPhone 15 Pro 128GB",
+        "IP15P128",
+        25000000,
+        28000000,
+        10,
+        "Titan Tự Nhiên",
+        "",
+        "128GB",
+        "Titan",
+      ],
+      [
+        "iPhone 15 Pro 256GB",
+        "IP15P256",
+        29000000,
+        32000000,
+        5,
+        "Titan Tự Nhiên",
+        "",
+        "256GB",
+        "Titan",
+      ],
+      [
+        "iPhone 15 Pro 512GB",
+        "IP15P512",
+        35000000,
+        38000000,
+        3,
+        "Titan Tự Nhiên",
+        "",
+        "512GB",
+        "Titan",
+      ],
+      [
+        "iPhone 15 Pro 1TB",
+        "IP15P1TB",
+        42000000,
+        45000000,
+        2,
+        "Titan Tự Nhiên",
+        "",
+        "1TB",
+        "Titan",
+      ],
+    ];
+
+    // Create workbook and worksheet
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.aoa_to_sheet(templateData);
+
+    // Set column widths
+    worksheet["!cols"] = [
+      { wch: 20 }, // Tên biến thể
+      { wch: 15 }, // SKU
+      { wch: 12 }, // Giá
+      { wch: 12 }, // Giá gốc
+      { wch: 18 }, // Số lượng tồn kho
+      { wch: 15 }, // Màu sắc
+      { wch: 12 }, // Kích thước
+      { wch: 12 }, // Bộ nhớ
+      { wch: 12 }, // Chất liệu
+    ];
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Mẫu biến thể");
+
+    // Download the file
+    XLSX.writeFile(workbook, "mau_bien_the.xlsx");
+    showNotification("Đã tải xuống mẫu Excel!", "success");
   };
 
   const handleRemoveNewProductImage = (index: number) => {
@@ -564,7 +746,7 @@ const ProductVariantManagement: React.FC = () => {
       console.log("📤 Sending data to API:", dataToSend);
 
       const formData = new FormData();
-      
+
       // Append text fields
       formData.append("name", dataToSend.name);
       formData.append("description", dataToSend.description);
@@ -573,9 +755,12 @@ const ProductVariantManagement: React.FC = () => {
       formData.append("price", String(dataToSend.price));
       formData.append("slug", dataToSend.slug);
       formData.append("is_active", String(dataToSend.is_active));
-      
+
       // Append current existing image URLs so backend can keep or delete
-      formData.append("existingImages", JSON.stringify(productFormData.images || []));
+      formData.append(
+        "existingImages",
+        JSON.stringify(productFormData.images || []),
+      );
       // Append new file uploads
       productImageFiles.forEach((file) => formData.append("images", file));
 
@@ -600,7 +785,9 @@ const ProductVariantManagement: React.FC = () => {
         setProductFormData((prev) => ({
           ...prev,
           ...returnedProduct,
-          images: Array.isArray(returnedProduct.images) ? returnedProduct.images : [],
+          images: Array.isArray(returnedProduct.images)
+            ? returnedProduct.images
+            : [],
         }));
       }
       setOpenProductDialog(false);
@@ -662,14 +849,14 @@ const ProductVariantManagement: React.FC = () => {
           formData.append(key, String(value));
         }
       });
-      
+
       // Append existing images as JSON string (single field, not multiple)
       if (Array.isArray(payload.images) && payload.images.length > 0) {
         formData.append("existingImages", JSON.stringify(payload.images));
       } else {
         formData.append("existingImages", JSON.stringify([]));
       }
-      
+
       // Append new file uploads
       variantImageFiles.forEach((file) => formData.append("images", file));
 
@@ -682,13 +869,9 @@ const ProductVariantManagement: React.FC = () => {
         console.log("✅ Create response:", response.data);
         showNotification("Tạo biến thể thành công", "success");
       } else if (dialogMode === "edit" && selectedVariant) {
-        response = await api.put(
-          `/variants/${selectedVariant._id}`,
-          formData,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-          },
-        );
+        response = await api.put(`/variants/${selectedVariant._id}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
         console.log("✅ Update response:", response.data);
         showNotification("Cập nhật biến thể thành công", "success");
       } else {
@@ -701,6 +884,76 @@ const ProductVariantManagement: React.FC = () => {
       setOpenVariantDialog(false);
     } catch (error: any) {
       console.error("Error saving variant:", error);
+      const message = error.response?.data?.message || "Không thể lưu biến thể";
+      showNotification(message, "error");
+    }
+  };
+
+  const handleSaveBulkVariants = async () => {
+    if (!selectedProduct) return;
+
+    try {
+      const validVariants = bulkVariants.filter(
+        (v) => v.name.trim() && v.sku.trim(),
+      );
+
+      if (validVariants.length === 0) {
+        showNotification(
+          "Vui lòng nhập ít nhất một biến thể hợp lệ",
+          "warning",
+        );
+        return;
+      }
+
+      for (const variant of validVariants) {
+        const payload = {
+          product: selectedProduct._id,
+          name: variant.name,
+          sku: variant.sku,
+          price: variant.price,
+          original_price: variant.original_price,
+          stock: variant.countInStock,
+          color: variant.color,
+          size: variant.size,
+          storage: variant.storage,
+          material: variant.material,
+          attributes: {
+            color: variant.color,
+            size: variant.size,
+            storage: variant.storage,
+            material: variant.material,
+          },
+          images: variant.images,
+          is_active: variant.is_active,
+          is_default: variant.is_default,
+        };
+
+        const formData = new FormData();
+        Object.entries(payload).forEach(([key, value]) => {
+          if (value === undefined || value === null) return;
+          if (key === "images") return;
+          if (typeof value === "object") {
+            formData.append(key, JSON.stringify(value));
+          } else {
+            formData.append(key, String(value));
+          }
+        });
+
+        formData.append("existingImages", JSON.stringify([]));
+
+        await api.post("/variants", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+
+      showNotification(
+        `Đã thêm ${validVariants.length} biến thể thành công`,
+        "success",
+      );
+      setOpenBulkVariantDialog(false);
+      fetchProducts();
+    } catch (error: any) {
+      console.error("Error saving bulk variants:", error);
       const message = error.response?.data?.message || "Không thể lưu biến thể";
       showNotification(message, "error");
     }
@@ -791,10 +1044,13 @@ const ProductVariantManagement: React.FC = () => {
         ? product.brand
         : product.brand?._id || product.brand?.id || "";
     const productBrandName =
-      typeof product.brand === "string" ? product.brand : product.brand?.name || "";
+      typeof product.brand === "string"
+        ? product.brand
+        : product.brand?.name || "";
 
     const selectedCategoryName =
-      categories.find((c) => c._id === categoryFilter)?.name?.toLowerCase() || "";
+      categories.find((c) => c._id === categoryFilter)?.name?.toLowerCase() ||
+      "";
     const selectedBrandName =
       brands.find((b) => b._id === brandFilter)?.name?.toLowerCase() || "";
 
@@ -802,13 +1058,15 @@ const ProductVariantManagement: React.FC = () => {
       !categoryFilter ||
       productCategoryId === categoryFilter ||
       productCategoryName.toLowerCase() === categoryFilter.toLowerCase() ||
-      (selectedCategoryName && productCategoryName.toLowerCase() === selectedCategoryName);
+      (selectedCategoryName &&
+        productCategoryName.toLowerCase() === selectedCategoryName);
 
     const matchesBrand =
       !brandFilter ||
       productBrandId === brandFilter ||
       productBrandName.toLowerCase() === brandFilter.toLowerCase() ||
-      (selectedBrandName && productBrandName.toLowerCase() === selectedBrandName);
+      (selectedBrandName &&
+        productBrandName.toLowerCase() === selectedBrandName);
 
     const productIsActive =
       product.is_active === true ||
@@ -1170,6 +1428,15 @@ const ProductVariantManagement: React.FC = () => {
                             >
                               Thêm biến thể
                             </Button>
+                            <Button
+                              variant="contained"
+                              size="small"
+                              startIcon={<AddCircle />}
+                              onClick={() => handleCreateBulkVariant(product)}
+                              color="secondary"
+                            >
+                              Thêm nhanh nhiều biến thể
+                            </Button>
                           </Box>
                           <Table size="small">
                             <TableHead>
@@ -1307,20 +1574,24 @@ const ProductVariantManagement: React.FC = () => {
                 </React.Fragment>
               ))}
             </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TablePagination
+                  rowsPerPageOptions={[5, 10, 25]}
+                  count={filteredProducts.length}
+                  rowsPerPage={rowsPerPage}
+                  page={page}
+                  onPageChange={handleChangePage}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                  labelRowsPerPage="Số dòng mỗi trang:"
+                  labelDisplayedRows={({ from, to, count }) =>
+                    `${from}-${to} của ${count}`
+                  }
+                />
+              </TableRow>
+            </TableFooter>
           </Table>
         </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          count={filteredProducts.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="Số dòng mỗi trang:"
-          labelDisplayedRows={({ from, to, count }) =>
-            `${from}-${to} của ${count}`
-          }
-        />
       </Paper>
 
       {/* Product Action Menu */}
@@ -1493,45 +1764,101 @@ const ProductVariantManagement: React.FC = () => {
 
             <Box>
               <Typography variant="subtitle2" gutterBottom>
-                Hình ảnh sản phẩm
+                Album hình ảnh sản phẩm
+              </Typography>
+              <TextField
+                fullWidth
+                size="small"
+                label="Thêm URL ảnh (cách nhau bằng dấu phẩy)"
+                placeholder="https://example.com/img1.jpg, https://example.com/img2.jpg"
+                sx={{ mb: 2 }}
+                value={productFormData.images.join(", ")}
+                onChange={(e) => {
+                  const urls = e.target.value.split(",").map(s => s.trim()).filter(s => s !== "");
+                  setProductFormData({ ...productFormData, images: urls });
+                }}
+              />
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                Hoặc tải lên từ máy tính:
               </Typography>
               <input
                 accept="image/*"
-                style={{ display: 'none' }}
+                style={{ display: "none" }}
                 id="product-image-upload"
                 multiple
                 type="file"
                 onChange={(e) => {
                   if (e.target.files) {
-                    setProductImageFiles((prev) => [...prev, ...Array.from(e.target.files)]);
+                    setProductImageFiles((prev) => [
+                      ...prev,
+                      ...Array.from(e.target.files),
+                    ]);
                   }
                 }}
               />
               <label htmlFor="product-image-upload">
-                <Button variant="outlined" component="span" startIcon={<Image />}>
+                <Button
+                  variant="outlined"
+                  component="span"
+                  startIcon={<Image />}
+                >
                   Chọn ảnh
                 </Button>
               </label>
-              <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+              <Box sx={{ display: "flex", gap: 1, mt: 1, flexWrap: "wrap" }}>
                 {(productFormData.images || []).map((img, index) => (
-                  <Box key={`old-product-img-${index}`} sx={{ position: 'relative' }}>
-                    <img src={img} alt="" width={80} height={80} style={{ objectFit: 'cover', borderRadius: 4 }} />
+                  <Box
+                    key={`old-product-img-${index}`}
+                    sx={{ position: "relative" }}
+                  >
+                    <img
+                      src={img}
+                      alt=""
+                      width={80}
+                      height={80}
+                      style={{ objectFit: "cover", borderRadius: 4 }}
+                    />
                     <IconButton
                       size="small"
                       onClick={() => handleRemoveProductImage(index)}
-                      sx={{ position: 'absolute', top: 0, right: 0, bgcolor: 'rgba(0,0,0,0.6)', color: '#fff', p: '2px', '&:hover': { bgcolor: 'rgba(0,0,0,0.8)' } }}
+                      sx={{
+                        position: "absolute",
+                        top: 0,
+                        right: 0,
+                        bgcolor: "rgba(0,0,0,0.6)",
+                        color: "#fff",
+                        p: "2px",
+                        "&:hover": { bgcolor: "rgba(0,0,0,0.8)" },
+                      }}
                     >
                       <Close fontSize="small" />
                     </IconButton>
                   </Box>
                 ))}
                 {productImageFiles.map((file, index) => (
-                  <Box key={`new-product-img-${index}`} sx={{ position: 'relative' }}>
-                    <img src={URL.createObjectURL(file)} alt="" width={80} height={80} style={{ objectFit: 'cover', borderRadius: 4 }} />
+                  <Box
+                    key={`new-product-img-${index}`}
+                    sx={{ position: "relative" }}
+                  >
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt=""
+                      width={80}
+                      height={80}
+                      style={{ objectFit: "cover", borderRadius: 4 }}
+                    />
                     <IconButton
                       size="small"
                       onClick={() => handleRemoveNewProductImage(index)}
-                      sx={{ position: 'absolute', top: 0, right: 0, bgcolor: 'rgba(0,0,0,0.6)', color: '#fff', p: '2px', '&:hover': { bgcolor: 'rgba(0,0,0,0.8)' } }}
+                      sx={{
+                        position: "absolute",
+                        top: 0,
+                        right: 0,
+                        bgcolor: "rgba(0,0,0,0.6)",
+                        color: "#fff",
+                        p: "2px",
+                        "&:hover": { bgcolor: "rgba(0,0,0,0.8)" },
+                      }}
                     >
                       <Close fontSize="small" />
                     </IconButton>
@@ -1680,45 +2007,101 @@ const ProductVariantManagement: React.FC = () => {
             </Box>
             <Box>
               <Typography variant="subtitle2" gutterBottom>
-                Hình ảnh biến thể
+                Album hình ảnh biến thể
+              </Typography>
+              <TextField
+                fullWidth
+                size="small"
+                label="Thêm URL ảnh (cách nhau bằng dấu phẩy)"
+                placeholder="https://example.com/img1.jpg, https://example.com/img2.jpg"
+                sx={{ mb: 2 }}
+                value={variantFormData.images.join(", ")}
+                onChange={(e) => {
+                  const urls = e.target.value.split(",").map(s => s.trim()).filter(s => s !== "");
+                  setVariantFormData({ ...variantFormData, images: urls });
+                }}
+              />
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                Hoặc tải lên từ máy tính:
               </Typography>
               <input
                 accept="image/*"
-                style={{ display: 'none' }}
+                style={{ display: "none" }}
                 id="variant-image-upload"
                 multiple
                 type="file"
                 onChange={(e) => {
                   if (e.target.files) {
-                    setVariantImageFiles((prev) => [...prev, ...Array.from(e.target.files)]);
+                    setVariantImageFiles((prev) => [
+                      ...prev,
+                      ...Array.from(e.target.files),
+                    ]);
                   }
                 }}
               />
               <label htmlFor="variant-image-upload">
-                <Button variant="outlined" component="span" startIcon={<Image />}>
+                <Button
+                  variant="outlined"
+                  component="span"
+                  startIcon={<Image />}
+                >
                   Chọn ảnh
                 </Button>
               </label>
-              <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+              <Box sx={{ display: "flex", gap: 1, mt: 1, flexWrap: "wrap" }}>
                 {(variantFormData.images || []).map((img, index) => (
-                  <Box key={`old-variant-img-${index}`} sx={{ position: 'relative' }}>
-                    <img src={img} alt="" width={80} height={80} style={{ objectFit: 'cover', borderRadius: 4 }} />
+                  <Box
+                    key={`old-variant-img-${index}`}
+                    sx={{ position: "relative" }}
+                  >
+                    <img
+                      src={img}
+                      alt=""
+                      width={80}
+                      height={80}
+                      style={{ objectFit: "cover", borderRadius: 4 }}
+                    />
                     <IconButton
                       size="small"
                       onClick={() => handleRemoveVariantImage(index)}
-                      sx={{ position: 'absolute', top: 0, right: 0, bgcolor: 'rgba(0,0,0,0.6)', color: '#fff', p: '2px', '&:hover': { bgcolor: 'rgba(0,0,0,0.8)' } }}
+                      sx={{
+                        position: "absolute",
+                        top: 0,
+                        right: 0,
+                        bgcolor: "rgba(0,0,0,0.6)",
+                        color: "#fff",
+                        p: "2px",
+                        "&:hover": { bgcolor: "rgba(0,0,0,0.8)" },
+                      }}
                     >
                       <Close fontSize="small" />
                     </IconButton>
                   </Box>
                 ))}
                 {variantImageFiles.map((file, index) => (
-                  <Box key={`new-variant-img-${index}`} sx={{ position: 'relative' }}>
-                    <img src={URL.createObjectURL(file)} alt="" width={80} height={80} style={{ objectFit: 'cover', borderRadius: 4 }} />
+                  <Box
+                    key={`new-variant-img-${index}`}
+                    sx={{ position: "relative" }}
+                  >
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt=""
+                      width={80}
+                      height={80}
+                      style={{ objectFit: "cover", borderRadius: 4 }}
+                    />
                     <IconButton
                       size="small"
                       onClick={() => handleRemoveNewVariantImage(index)}
-                      sx={{ position: 'absolute', top: 0, right: 0, bgcolor: 'rgba(0,0,0,0.6)', color: '#fff', p: '2px', '&:hover': { bgcolor: 'rgba(0,0,0,0.8)' } }}
+                      sx={{
+                        position: "absolute",
+                        top: 0,
+                        right: 0,
+                        bgcolor: "rgba(0,0,0,0.6)",
+                        color: "#fff",
+                        p: "2px",
+                        "&:hover": { bgcolor: "rgba(0,0,0,0.8)" },
+                      }}
                     >
                       <Close fontSize="small" />
                     </IconButton>
@@ -1746,6 +2129,231 @@ const ProductVariantManagement: React.FC = () => {
           <Button onClick={() => setOpenVariantDialog(false)}>Hủy</Button>
           <Button variant="contained" onClick={handleSaveVariant}>
             {dialogMode === "create" ? "Thêm" : "Lưu"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Bulk Variant Dialog */}
+      <Dialog
+        open={openBulkVariantDialog}
+        onClose={() => setOpenBulkVariantDialog(false)}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle>Thêm nhanh nhiều biến thể</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2, mb: 3, maxHeight: "70vh", overflow: "auto" }}>
+            <Typography variant="h6" gutterBottom>
+              Tải lên file Excel
+            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+              <Button
+                variant="outlined"
+                component="label"
+                startIcon={<AttachMoney />}
+              >
+                Chọn file Excel
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  hidden
+                  id="excel-file-input"
+                  onChange={handleExcelUpload}
+                />
+              </Button>
+              <Button
+                variant="text"
+                onClick={downloadExcelTemplate}
+                startIcon={<Image />}
+              >
+                Tải mẫu Excel
+              </Button>
+              <Button
+                variant="text"
+                onClick={() => {
+                  setBulkVariants([
+                    {
+                      name: "",
+                      sku: "",
+                      price: 0,
+                      original_price: 0,
+                      countInStock: 0,
+                      color: "",
+                      size: "",
+                      storage: "",
+                      material: "",
+                      images: [],
+                      is_active: true,
+                      is_default: false,
+                    },
+                  ]);
+                  setExcelFile(null);
+                  // Reset file input
+                  const fileInput = document.getElementById(
+                    "excel-file-input",
+                  ) as HTMLInputElement;
+                  if (fileInput) fileInput.value = "";
+                }}
+                color="error"
+              >
+                Xóa dữ liệu
+              </Button>
+              {excelFile && (
+                <Typography variant="body2" color="text.secondary">
+                  Đã chọn: {excelFile.name}
+                </Typography>
+              )}
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              File Excel phải có các cột: Tên biến thể, SKU, Giá, Giá gốc, Tồn
+              kho, Màu, Kích thước, Dung lượng, Chất liệu
+            </Typography>
+            <Divider sx={{ mb: 3 }} />
+            <Typography variant="h6" gutterBottom>
+              Xem trước dữ liệu ({bulkVariants.length} biến thể)
+            </Typography>
+            {bulkVariants.map((variant, index) => (
+              <Box
+                key={index}
+                sx={{
+                  mb: 3,
+                  p: 2,
+                  border: "1px solid #e0e0e0",
+                  borderRadius: 1,
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 2,
+                  }}
+                >
+                  <Typography variant="h6">Biến thể {index + 1}</Typography>
+                  {bulkVariants.length > 1 && (
+                    <IconButton
+                      onClick={() => removeBulkVariantRow(index)}
+                      color="error"
+                    >
+                      <RemoveCircle />
+                    </IconButton>
+                  )}
+                </Box>
+                <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                  <TextField
+                    label="Tên biến thể"
+                    value={variant.name}
+                    onChange={(e) =>
+                      handleBulkVariantChange(index, "name", e.target.value)
+                    }
+                    size="small"
+                    sx={{ minWidth: 200 }}
+                  />
+                  <TextField
+                    label="SKU"
+                    value={variant.sku}
+                    onChange={(e) =>
+                      handleBulkVariantChange(index, "sku", e.target.value)
+                    }
+                    size="small"
+                    sx={{ minWidth: 150 }}
+                  />
+                  <TextField
+                    label="Giá"
+                    type="number"
+                    value={variant.price}
+                    onChange={(e) =>
+                      handleBulkVariantChange(
+                        index,
+                        "price",
+                        Number(e.target.value),
+                      )
+                    }
+                    size="small"
+                    sx={{ minWidth: 120 }}
+                  />
+                  <TextField
+                    label="Giá gốc"
+                    type="number"
+                    value={variant.original_price}
+                    onChange={(e) =>
+                      handleBulkVariantChange(
+                        index,
+                        "original_price",
+                        Number(e.target.value),
+                      )
+                    }
+                    size="small"
+                    sx={{ minWidth: 120 }}
+                  />
+                  <TextField
+                    label="Tồn kho"
+                    type="number"
+                    value={variant.countInStock}
+                    onChange={(e) =>
+                      handleBulkVariantChange(
+                        index,
+                        "countInStock",
+                        Number(e.target.value),
+                      )
+                    }
+                    size="small"
+                    sx={{ minWidth: 100 }}
+                  />
+                  <TextField
+                    label="Màu"
+                    value={variant.color}
+                    onChange={(e) =>
+                      handleBulkVariantChange(index, "color", e.target.value)
+                    }
+                    size="small"
+                    sx={{ minWidth: 100 }}
+                  />
+                  <TextField
+                    label="Kích thước"
+                    value={variant.size}
+                    onChange={(e) =>
+                      handleBulkVariantChange(index, "size", e.target.value)
+                    }
+                    size="small"
+                    sx={{ minWidth: 100 }}
+                  />
+                  <TextField
+                    label="Dung lượng"
+                    value={variant.storage}
+                    onChange={(e) =>
+                      handleBulkVariantChange(index, "storage", e.target.value)
+                    }
+                    size="small"
+                    sx={{ minWidth: 100 }}
+                  />
+                  <TextField
+                    label="Chất liệu"
+                    value={variant.material}
+                    onChange={(e) =>
+                      handleBulkVariantChange(index, "material", e.target.value)
+                    }
+                    size="small"
+                    sx={{ minWidth: 100 }}
+                  />
+                </Box>
+              </Box>
+            ))}
+            <Button
+              variant="outlined"
+              startIcon={<AddCircle />}
+              onClick={addBulkVariantRow}
+              sx={{ mt: 2 }}
+            >
+              Thêm biến thể mới
+            </Button>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenBulkVariantDialog(false)}>Hủy</Button>
+          <Button onClick={handleSaveBulkVariants} variant="contained">
+            Lưu tất cả
           </Button>
         </DialogActions>
       </Dialog>

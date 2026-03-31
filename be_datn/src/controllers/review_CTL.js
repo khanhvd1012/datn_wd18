@@ -1,6 +1,25 @@
 import Review from "../models/review_MD.js";
 import { createReviewValidator, replyReviewValidator } from "../validators/review_VLD.js";
 
+// Lấy tất cả đánh giá (Admin)
+export const getAllReviews = async (req, res) => {
+    try {
+        const reviews = await Review.find()
+            .populate("user_id", "username fullName email avatar")
+            .populate("product_id", "name images")
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            message: "Lấy tất cả đánh giá thành công",
+            data: reviews,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: "Lỗi server: " + error.message,
+        });
+    }
+};
+
 // Lấy toàn bộ đánh giá của một sản phẩm
 export const getReviewsByProduct = async (req, res) => {
     try {
@@ -30,16 +49,24 @@ export const createReview = async (req, res) => {
             return res.status(400).json({ message: errors });
         }
 
-        const { user_id, order_item, images, product_id, product_variant_id, rating, comment } = req.body;
+        // Lấy user_id từ token (req.user._id)
+        const user_id = req.user?._id || req.body.user_id;
 
-        // Lưu ý: Cần thêm logic kiểm tra xem user_id đã mua product_id chưa (thường xử lý ở đây hoặc middleware)
+        // Hỗ trợ cả camelCase (frontend) và snake_case
+        const product_id = req.body.product_id || req.body.productId;
+        const order_item = req.body.order_item || req.body.orderId || null;
+        const { images, product_variant_id, rating, comment } = req.body;
+
+        if (!product_id) {
+            return res.status(400).json({ message: 'Thiếu thông tin sản phẩm' });
+        }
 
         const newReview = await Review.create({
             user_id,
             order_item,
-            images,
+            images: images || [],
             product_id,
-            product_variant_id,
+            product_variant_id: product_variant_id || null,
             rating,
             comment,
         });
@@ -65,7 +92,8 @@ export const replyReview = async (req, res) => {
         }
 
         const { reviewId } = req.params;
-        const { admin_reply } = req.body;
+        // Hỗ trợ cả 'reply' (frontend) và 'admin_reply' (legacy)
+        const admin_reply = req.body.admin_reply || req.body.reply;
 
         const updatedReview = await Review.findByIdAndUpdate(
             reviewId,
