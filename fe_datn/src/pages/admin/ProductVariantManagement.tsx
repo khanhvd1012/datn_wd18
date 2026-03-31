@@ -176,6 +176,7 @@ const ProductVariantManagement: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+  const [productForVariantCreate, setProductForVariantCreate] = useState<Product | null>(null);
   const [openProductDialog, setOpenProductDialog] = useState(false);
   const [openVariantDialog, setOpenVariantDialog] = useState(false);
   const [openBulkVariantDialog, setOpenBulkVariantDialog] = useState(false);
@@ -493,6 +494,30 @@ const ProductVariantManagement: React.FC = () => {
     setProductImageFiles([]);
     setDialogMode("create");
     setOpenProductDialog(true);
+  };
+
+  const handleCreateVariant = (product: Product) => {
+    console.log("🔨 handleCreateVariant called with product:", product);
+    setSelectedProduct(product);
+    setProductForVariantCreate(product);
+    setSelectedVariant(null);
+    setVariantFormData({
+      name: "",
+      sku: "",
+      price: 0,
+      original_price: 0,
+      countInStock: 0,
+      color: "",
+      size: "",
+      storage: "",
+      material: "",
+      images: [],
+      is_active: true,
+      is_default: false,
+    });
+    setVariantImageFiles([]);
+    setDialogMode("create");
+    setOpenVariantDialog(true);
   };
 
   const handleCreateBulkVariant = (product: Product) => {
@@ -861,13 +886,19 @@ const ProductVariantManagement: React.FC = () => {
       variantImageFiles.forEach((file) => formData.append("images", file));
 
       let response;
-      if (dialogMode === "create" && selectedProduct) {
-        formData.append("product", selectedProduct._id);
+      console.log("🔍 Saving variant - dialogMode:", dialogMode, "selectedProduct:", selectedProduct, "productForVariantCreate:", productForVariantCreate);
+      
+      // Use productForVariantCreate if available (for create mode), otherwise fall back to selectedProduct
+      const productToUse = dialogMode === "create" ? (productForVariantCreate || selectedProduct) : selectedProduct;
+      
+      if (dialogMode === "create" && productToUse) {
+        formData.append("product", productToUse._id);
         response = await api.post("/variants", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         console.log("✅ Create response:", response.data);
         showNotification("Tạo biến thể thành công", "success");
+        setProductForVariantCreate(null); // Clear after successful create
       } else if (dialogMode === "edit" && selectedVariant) {
         response = await api.put(`/variants/${selectedVariant._id}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
@@ -875,6 +906,7 @@ const ProductVariantManagement: React.FC = () => {
         console.log("✅ Update response:", response.data);
         showNotification("Cập nhật biến thể thành công", "success");
       } else {
+        console.error("❌ Lỗi: dialogMode=", dialogMode, "productToUse=", productToUse, "selectedVariant=", selectedVariant);
         showNotification("Chưa chọn sản phẩm hoặc biến thể", "error");
         return;
       }

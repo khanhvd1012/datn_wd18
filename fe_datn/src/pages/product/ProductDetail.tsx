@@ -129,21 +129,26 @@ const ProductDetail = () => {
 
   const handleBuyNow = async () => {
     if (!product) return;
-    try {
-      await addToCartApi({ 
-        product_id: product._id || product.id || "", 
-        variant_id: selectedVariant?._id,
-        quantity 
-      });
-      window.dispatchEvent(new Event("cartUpdated"));
-      navigate("/checkout");
-    } catch (error) {
-      setNotification({
-        open: true,
-        message: "Lỗi khi thực hiện mua ngay",
-        severity: "error",
-      });
-    }
+    
+    const buyNowItem = {
+      _id: "buynow-" + (product._id || product.id || Date.now()),
+      product: {
+        _id: product._id || product.id || "",
+        name: product.name,
+        images: selectedVariant?.images || product.images || [product.img],
+        price: selectedVariant?.price || product.price,
+      },
+      variant: selectedVariant ? {
+        _id: selectedVariant._id,
+        name: selectedVariant.name,
+        images: selectedVariant.images,
+        price: selectedVariant.price,
+      } : undefined,
+      quantity: quantity,
+      totalPrice: (selectedVariant?.price || product.price) * quantity,
+    };
+    
+    navigate("/checkout", { state: { buyNowItem } });
   };
 
   return (

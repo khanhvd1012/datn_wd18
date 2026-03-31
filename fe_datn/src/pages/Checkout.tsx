@@ -24,7 +24,7 @@ import {
   Badge,
   IconButton,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { getCartApi, clearCartApi } from "../services/cartService";
 import { createOrderApi } from "../services/orderService";
 import { createVNPayPaymentApi } from "../services/paymentService";
@@ -40,6 +40,7 @@ import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 const Checkout: React.FC = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isBuyNowMode, setIsBuyNowMode] = useState(false);
   const [notif, setNotif] = useState<{
     open: boolean;
     message: string;
@@ -61,6 +62,7 @@ const Checkout: React.FC = () => {
   });
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   const formatPrice = (price: number) => {
     return price.toLocaleString("vi-VN") + "₫";
@@ -69,7 +71,14 @@ const Checkout: React.FC = () => {
   const premiumFont = { fontFamily: "'Inter', system-ui, sans-serif" };
 
   useEffect(() => {
-    fetchCart();
+    const state = location.state as { buyNowItem?: CartItem } | null;
+    if (state?.buyNowItem) {
+      setCart([state.buyNowItem]);
+      setIsBuyNowMode(true);
+    } else {
+      fetchCart();
+      setIsBuyNowMode(false);
+    }
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     if (user) {
       setFormData(prev => ({
@@ -161,10 +170,10 @@ const Checkout: React.FC = () => {
       };
 
       const order = await createOrderApi(orderData);
-      await clearCartApi();
-      
-      // Dispatch event to update Header badge
-      window.dispatchEvent(new Event("cartUpdated"));
+      if (!isBuyNowMode) {
+        await clearCartApi();
+        window.dispatchEvent(new Event("cartUpdated"));
+      }
       
       setNotif({
         open: true,
