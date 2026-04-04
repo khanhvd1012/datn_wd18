@@ -1,5 +1,5 @@
-
 import { useEffect, useState } from "react";
+import api from "../../services/api";
 import {
   Box,
   Typography,
@@ -28,9 +28,8 @@ const NewsPage = () => {
   const itemsPerPage = 6;
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/news")
-      .then((res) => res.json())
-      .then((data) => setNews(data))
+    api.get("/news")
+      .then((res) => setNews(res.data.data || res.data))
       .catch((err) => console.error("Error fetching news:", err));
   }, []);
 

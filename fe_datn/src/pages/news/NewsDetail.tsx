@@ -1,5 +1,5 @@
-
 import { useEffect, useState } from "react";
+import api from "../../services/api";
 import { useParams, Link } from "react-router-dom";
 import {
   Box,
@@ -27,10 +27,9 @@ const NewsDetail = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/news/${id}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setNews(data);
+    api.get(`/news/${id}`)
+      .then((res) => {
+        setNews(res.data.data || res.data);
         setLoading(false);
       })
       .catch((err) => {

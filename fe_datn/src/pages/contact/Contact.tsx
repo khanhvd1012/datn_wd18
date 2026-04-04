@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import { createContactApi } from "../../services/contactService";
 
 import {
   Container,
@@ -43,7 +43,7 @@ const Contact = () => {
     e.preventDefault();
 
     try {
-      await axios.post("http://localhost:3000/api/contacts", form);
+      await createContactApi(form);
 
       setOpen(true);
 
