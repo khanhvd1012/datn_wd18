@@ -84,6 +84,10 @@ export const getNewsById = async (req, res) => {
     if (!news)
       return res.status(404).json({ message: "Không tìm thấy tin tức" });
 
+    // Tăng lượt xem lên 1
+    await news_MD.findByIdAndUpdate(id, { $inc: { views: 1 } });
+    news.views += 1;
+
     res.status(200).json(news);
   } catch (error) {
     console.error("Lỗi khi lấy tin tức:", error);
