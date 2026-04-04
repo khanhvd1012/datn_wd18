@@ -34,6 +34,9 @@ import NewsDetail from "../pages/news/NewsDetail.tsx";
 
 import About from "../pages/about/About.tsx";
 import Contact from "../pages/contact/Contact.tsx";
+import PrivacyPolicy from "../pages/policies/PrivacyPolicy";
+import ReturnPolicy from "../pages/policies/ReturnPolicy";
+import ShippingPolicy from "../pages/policies/ShippingPolicy";
 
 /* ADMIN */
 import Users from "../pages/admin/Users";
@@ -76,13 +79,9 @@ const AppRouter = () => {
         {/* NEW PAGES */}
         <Route path="about" element={<About />} />
         <Route path="contact" element={<Contact />} />
-
-        {/* NEW PAGES */}
-        <Route path="news" element={<News />} />
-                <Route path="/news/:id" element={<NewsDetail />} />
-        <Route path="about" element={<About />} />
-        <Route path="contact" element={<Contact />} />
-        <Route path="/news/:id" element={<NewsDetail />} />
+        <Route path="privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="return-policy" element={<ReturnPolicy />} />
+        <Route path="shipping-policy" element={<ShippingPolicy />} />
 
         {/* AUTH */}
         <Route path="login" element={<Login />} />

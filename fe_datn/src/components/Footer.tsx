@@ -1,4 +1,5 @@
 import { Box, Grid, Typography, Divider } from "@mui/material";
+import { Link } from "react-router-dom";
 const iconStyle = {
   width: 28,
   height: 28,
@@ -49,21 +50,23 @@ const Footer = () => {
               />
 
               {[
-                "Hướng dẫn mua online",
-                "Cam kết bán hàng",
-                "Bảo hành, đổi trả",
-                "Chính sách bảo mật",
-                "Chính sách với người tiêu dùng",
-                "Chính sách giao hàng",
-                "Kênh thông tin RSS",
+                { label: "Bảo hành, đổi trả", path: "/return-policy" },
+                { label: "Chính sách bảo mật", path: "/privacy-policy" },
+                { label: "Chính sách giao hàng", path: "/shipping-policy" },
+                { label: "Hướng dẫn mua online", path: "#" },
+                { label: "Điều khoản dịch vụ", path: "#" },
               ].map((item, i) => (
                 <Typography
                   key={i}
+                  component={Link}
+                  to={item.path}
                   fontSize={14}
                   mb={0.8}
+                  display="block"
+                  style={{ textDecoration: 'none', color: 'inherit' }}
                   sx={{ "&:hover": { color: "#ff9800", cursor: "pointer" } }}
                 >
-                  {item}
+                  {item.label}
                 </Typography>
               ))}
             </Grid>
