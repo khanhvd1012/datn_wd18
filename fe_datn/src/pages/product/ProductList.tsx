@@ -246,7 +246,7 @@ const ProductList = () => {
 
       // Add to cart
       await addToCartApi({
-        productId: product._id,
+        product_id: product._id,
         quantity: 1,
       });
 
