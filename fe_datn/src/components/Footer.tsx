@@ -53,8 +53,8 @@ const Footer = () => {
                 { label: "Bảo hành, đổi trả", path: "/return-policy" },
                 { label: "Chính sách bảo mật", path: "/privacy-policy" },
                 { label: "Chính sách giao hàng", path: "/shipping-policy" },
-                { label: "Hướng dẫn mua online", path: "#" },
-                { label: "Điều khoản dịch vụ", path: "#" },
+                { label: "Hướng dẫn mua online", path: "/purchase-guide" },
+                { label: "Điều khoản dịch vụ", path: "/terms-of-service" },
               ].map((item, i) => (
                 <Typography
                   key={i}

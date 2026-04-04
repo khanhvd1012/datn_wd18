@@ -37,6 +37,8 @@ import Contact from "../pages/contact/Contact.tsx";
 import PrivacyPolicy from "../pages/policies/PrivacyPolicy";
 import ReturnPolicy from "../pages/policies/ReturnPolicy";
 import ShippingPolicy from "../pages/policies/ShippingPolicy";
+import PurchaseGuide from "../pages/policies/PurchaseGuide";
+import TermsOfService from "../pages/policies/TermsOfService";
 
 /* ADMIN */
 import Users from "../pages/admin/Users";
@@ -82,6 +84,8 @@ const AppRouter = () => {
         <Route path="privacy-policy" element={<PrivacyPolicy />} />
         <Route path="return-policy" element={<ReturnPolicy />} />
         <Route path="shipping-policy" element={<ShippingPolicy />} />
+        <Route path="purchase-guide" element={<PurchaseGuide />} />
+        <Route path="terms-of-service" element={<TermsOfService />} />
 
         {/* AUTH */}
         <Route path="login" element={<Login />} />
