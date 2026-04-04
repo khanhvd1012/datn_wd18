@@ -43,6 +43,12 @@ const userSchema = new mongoose.Schema(
       default:
         "https://res.cloudinary.com/davdn1j86/image/upload/v1732163937/datn/653308_p0u3co.png",
     },
+    favorites: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+      },
+    ],
     resetPasswordToken: String,
     resetPasswordExpires: Date,
   },

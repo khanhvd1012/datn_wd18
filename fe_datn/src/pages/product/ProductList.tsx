@@ -25,6 +25,8 @@ import {
 
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import { getFavoritesApi, toggleFavoriteApi } from "../../services/userService";
 import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
 import SearchIcon from "@mui/icons-material/Search";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -64,6 +66,7 @@ const ProductList = () => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("");
   const [open, setOpen] = useState(false);
+  const [favorites, setFavorites] = useState<string[]>([]);
   const [notification, setNotification] = useState({
     open: false,
     message: "",
@@ -110,7 +113,36 @@ const ProductList = () => {
       }
     };
     fetchData();
+
+    if (localStorage.getItem("token")) {
+      getFavoritesApi()
+        .then(data => {
+          if (Array.isArray(data)) {
+            setFavorites(data.map((fav: any) => typeof fav === 'string' ? fav : fav._id));
+          }
+        })
+        .catch(err => console.error(err));
+    }
   }, []);
+
+  const handleToggleFavorite = async (e: any, productId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      if (!localStorage.getItem("token")) {
+        setNotification({ open: true, message: "Vui lòng đăng nhập để yêu thích", severity: "warning" });
+        return;
+      }
+      await toggleFavoriteApi(productId);
+      if (favorites.includes(productId)) {
+        setFavorites(favorites.filter(id => id !== productId));
+      } else {
+        setFavorites([...favorites, productId]);
+      }
+    } catch (err: any) {
+      setNotification({ open: true, message: err.response?.data?.message || "Lỗi khi xử lý", severity: "error" });
+    }
+  };
 
   const formatPrice = (price: number) => price.toLocaleString("vi-VN") + " đ";
 
@@ -417,6 +449,7 @@ const ProductList = () => {
                   >
                     <Box sx={{ position: "relative", height: 200, display: "flex", alignItems: "center", justifyContent: "center", overflow: 'hidden', p: 2 }}>
                       <IconButton
+                        onClick={(e) => handleToggleFavorite(e, product._id)}
                         sx={{
                           position: "absolute",
                           top: 8,
@@ -425,7 +458,11 @@ const ProductList = () => {
                           zIndex: 1,
                         }}
                       >
-                        <FavoriteBorderIcon />
+                        {favorites.includes(product._id) ? (
+                          <FavoriteIcon color="error" />
+                        ) : (
+                          <FavoriteBorderIcon />
+                        )}
                       </IconButton>
 
                       <Link to={`/product/${product._id}`} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

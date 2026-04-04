@@ -17,6 +17,8 @@ import {
   Divider,
   Alert
 } from "@mui/material";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
@@ -29,6 +31,7 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { getProductDetailApi } from "../../services/productService";
 import { addToCartApi } from "../../services/cartService";
 import { getReviewsByProductApi } from "../../services/reviewService";
+import { getFavoritesApi, toggleFavoriteApi } from "../../services/userService";
 
 interface Variant {
   _id: string;
@@ -66,6 +69,7 @@ const ProductDetail = () => {
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
   const [notification, setNotification] = useState({
     open: false,
     message: "",
@@ -91,6 +95,16 @@ const ProductDetail = () => {
           }
         } catch (reviewErr) {
           console.error("Lỗi khi tải đánh giá:", reviewErr);
+        }
+
+        if (localStorage.getItem("token")) {
+          getFavoritesApi()
+            .then(data => {
+              if (Array.isArray(data)) {
+                setFavorites(data.map((fav: any) => typeof fav === 'string' ? fav : fav._id));
+              }
+            })
+            .catch(err => console.error(err));
         }
 
       } catch (error) {
@@ -124,6 +138,26 @@ const ProductDetail = () => {
         message: "Lỗi khi thêm vào giỏ hàng",
         severity: "error",
       });
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!product || (!product._id && !product.id)) return;
+    const productId = (product._id || product.id) as string;
+    
+    try {
+      if (!localStorage.getItem("token")) {
+        setNotification({ open: true, message: "Vui lòng đăng nhập để lưu sản phẩm yêu thích", severity: "warning" });
+        return;
+      }
+      await toggleFavoriteApi(productId);
+      if (favorites.includes(productId)) {
+        setFavorites(favorites.filter(id => id !== productId));
+      } else {
+        setFavorites([...favorites, productId]);
+      }
+    } catch (err: any) {
+      setNotification({ open: true, message: err.response?.data?.message || "Lỗi khi xử lý", severity: "error" });
     }
   };
 
@@ -209,6 +243,23 @@ const ProductDetail = () => {
                       sx={{ position: 'absolute', top: 16, right: 16, fontWeight: 'bold' }}
                     />
                   )}
+                  <IconButton
+                    onClick={handleToggleFavorite}
+                    sx={{
+                      position: 'absolute',
+                      top: 16,
+                      right: product.original_price && product.original_price > product.price ? 80 : 16,
+                      bgcolor: "rgba(255,255,255,0.8)",
+                      zIndex: 1,
+                      "&:hover": { bgcolor: "rgba(255,255,255,1)" }
+                    }}
+                  >
+                    {favorites.includes((product._id || product.id) as string) ? (
+                      <FavoriteIcon color="error" />
+                    ) : (
+                      <FavoriteBorderIcon />
+                    )}
+                  </IconButton>
                 </Paper>
 
                 {/* Thumbnails (if available) */}

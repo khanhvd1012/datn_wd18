@@ -92,3 +92,57 @@ export const deleteUser = async (req, res) => {
       .json({ message: "Lỗi server", error: error.message });
   }
 };
+
+export const getFavorites = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate("favorites");
+    if (!user) {
+      return res.status(404).json({ message: "Người dùng không tồn tại" });
+    }
+    return res.status(200).json({
+      message: "Lấy danh sách yêu thích thành công",
+      data: user.favorites,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const toggleFavorite = async (req, res) => {
+  try {
+    const { productId } = req.body;
+    const userId = req.user._id;
+
+    if (!productId) {
+      return res.status(400).json({ message: "Thiếu productId" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({ message: "ID sản phẩm không hợp lệ" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "Người dùng không tồn tại" });
+    }
+
+    const index = user.favorites.indexOf(productId);
+    let message = "";
+    if (index === -1) {
+      user.favorites.push(productId);
+      message = "Đã thêm vào danh sách yêu thích";
+    } else {
+      user.favorites.splice(index, 1);
+      message = "Đã bỏ yêu thích";
+    }
+
+    await user.save();
+
+    return res.status(200).json({
+      message,
+      data: user.favorites,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};

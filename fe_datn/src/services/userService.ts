@@ -1,16 +1,13 @@
-import api from './api';
+import api from "./api";
 
-export const getAllUsersApi = async () => {
-  const res = await api.get('/users');
-  return res.data.data || [];
+// Lấy danh sách ID sản phẩm yêu thích (Trả về cả object tuỳ BE nhưng ta cần ID)
+export const getFavoritesApi = async () => {
+  const response = await api.get("/users/favorites");
+  return response.data.data; // trả về mảng các object hoặc ID
 };
 
-export const updateUserRoleApi = async (userId: string, role: string) => {
-  const res = await api.patch(`/users/${userId}/role`, { role });
-  return res.data.user;
-};
-
-export const deleteUserApi = async (userId: string) => {
-  const res = await api.delete(`/users/${userId}`);
-  return res.data;
+// Toggle (Thêm hoặc Bỏ yêu thích) một sản phẩm
+export const toggleFavoriteApi = async (productId: string) => {
+  const response = await api.post("/users/favorites", { productId });
+  return response.data;
 };
