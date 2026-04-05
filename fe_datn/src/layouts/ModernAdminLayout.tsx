@@ -41,6 +41,7 @@ import {
   TrendingUp,
   TrendingDown,
   AttachMoney,
+  Star as StarIcon,
 } from '@mui/icons-material';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
@@ -93,6 +94,12 @@ const menuItems = [
     title: 'Phản hồi',
     path: '/admin/contacts',
     icon: <Message />,
+    badge: 0,
+  },
+  {
+    title: 'Đánh giá',
+    path: '/admin/reviews',
+    icon: <StarIcon />,
     badge: 0,
   },
   {

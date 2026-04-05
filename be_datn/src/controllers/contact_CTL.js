@@ -1,42 +1,42 @@
 import contact_MD from "../models/contact_MD.js";
 
-// import Notification from "../models/notification_MD.js";
-// import User from "../models/auth_MD.js";
+import Notification from "../models/notification_MD.js";
+import User from "../models/user_MD.js";
 
-// export const sendNewContactNotificationToAdmins = async (contact) => {
-//     try {
-//         // Lấy danh sách tất cả admin & employee
-//         const admins = await User.find({ role: { $in: ["admin", "employee"] } });
+export const sendNewContactNotificationToAdmins = async (contact) => {
+    try {
+        // Lấy danh sách tất cả admin & employee
+        const admins = await User.find({ role: { $in: ["admin", "employee"] } });
 
-//         if (admins.length === 0) {
-//             console.log("Không tìm thấy admin hoặc nhân viên để gửi thông báo");
-//             return;
-//         }
+        if (admins.length === 0) {
+            console.log("Không tìm thấy admin hoặc nhân viên để gửi thông báo");
+            return;
+        }
 
-//         const notifications = admins.map((admin) => ({
-//             user_id: admin._id.toString(),
-//             title: "Liên hệ mới từ khách hàng 📩",
-//             message: `Người dùng "${contact.username}" đã gửi liên hệ mới.`,
-//             type: "contact_new_admin",
-//             data: {
-//                 contact_id: contact._id,
-//                 username: contact.username,
-//                 email: contact.email,
-//                 phone: contact.phone,
-//                 address: contact.address,
-//                 created_at: contact.createdAt || new Date(),
-//             },
-//             is_read: false,
-//             created_at: new Date(),
-//         }));
+        const notifications = admins.map((admin) => ({
+            user_id: admin._id.toString(),
+            title: "Liên hệ mới từ khách hàng 📩",
+            message: `Người dùng "${contact.username}" đã gửi liên hệ mới.`,
+            type: "contact_new_admin",
+            data: {
+                contact_id: contact._id,
+                username: contact.username,
+                email: contact.email,
+                phone: contact.phone,
+                address: contact.address,
+                created_at: contact.createdAt || new Date(),
+            },
+            is_read: false,
+            created_at: new Date(),
+        }));
 
-//         // Bulk insert tối ưu
-//         await Notification.insertMany(notifications);
+        // Bulk insert tối ưu
+        await Notification.insertMany(notifications);
 
-//     } catch (error) {
-//         console.error("Lỗi khi gửi thông báo liên hệ mới:", error);
-//     }
-// };
+    } catch (error) {
+        console.error("Lỗi khi gửi thông báo liên hệ mới:", error);
+    }
+};
 
 export const createContact = async (req, res) => {
     try {
@@ -72,8 +72,8 @@ export const createContact = async (req, res) => {
 
         const created = await contact_MD.create(contactData);
 
-        // TODO: gửi thông báo cho admin nếu cần (function đã bị comment ở trên)
-        // sendNewContactNotificationToAdmins(created);
+        // Gửi thông báo cho admin nếu cần
+        sendNewContactNotificationToAdmins(created);
 
         res.status(201).json({ message: "Liên hệ đã được gửi!", data: created });
     } catch (error) {

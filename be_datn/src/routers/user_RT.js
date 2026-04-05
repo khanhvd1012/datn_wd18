@@ -1,10 +1,15 @@
 import { Router } from "express";
-import { getAllUsers, updateUserRole, deleteUser } from "../controllers/user_CTL.js";
+import { getAllUsers, updateUserRole, deleteUser, getFavorites, toggleFavorite } from "../controllers/user_CTL.js";
 import { checkPermission, checkRole } from "../middleware/checkPermission.js";
 import { ROLES } from "../config/roles.js";
 
 const router = Router();
 
+// Yêu thích sản phẩm
+router.get("/favorites", checkPermission, getFavorites);
+router.post("/favorites", checkPermission, toggleFavorite);
+
+// Quản trị người dùng
 router.get("/", checkPermission, checkRole([ROLES.ADMIN]), getAllUsers);
 router.patch("/:id/role", checkPermission, checkRole([ROLES.ADMIN]), updateUserRole);
 router.delete("/:id", checkPermission, checkRole([ROLES.ADMIN]), deleteUser);

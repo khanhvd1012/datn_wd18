@@ -6,6 +6,7 @@ import stock_MD from '../models/stock_MD.js';
 import voucher_MD from '../models/voucher_MD.js';
 import news_MD from '../models/news_MD.js';
 import contact_MD from '../models/contact_MD.js';
+import order_MD from '../models/order_MD.js';
 
 // Lấy thống kê tổng quan
 export const getDashboardStats = async (req, res) => {
@@ -72,9 +73,19 @@ export const getDashboardStats = async (req, res) => {
             .limit(5)
             .select('username email createdAt');
 
+        // Thống kê đơn hàng và doanh thu
+        const totalOrders = await order_MD.countDocuments();
+        const pendingOrders = await order_MD.countDocuments({ order_status: 'pending' });
+        const revenueData = await order_MD.aggregate([
+            { $match: { payment_status: 'paid' } },
+            { $group: { _id: null, total: { $sum: '$total' } } }
+        ]);
+        const totalRevenue = revenueData[0]?.total || 0;
+
         // Thống kê theo thời gian (7 ngày gần nhất)
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        sevenDaysAgo.setHours(0, 0, 0, 0);
 
         const productsCreatedLast7Days = await product_MD.countDocuments({
             createdAt: { $gte: sevenDaysAgo }
@@ -83,6 +94,41 @@ export const getDashboardStats = async (req, res) => {
         const vouchersCreatedLast7Days = await voucher_MD.countDocuments({
             createdAt: { $gte: sevenDaysAgo }
         });
+
+        // 7 ngày gần nhất để vẽ biểu đồ
+        const dailyStats = [];
+        for (let i = 6; i >= 0; i--) {
+            const start = new Date();
+            start.setDate(start.getDate() - i);
+            start.setHours(0, 0, 0, 0);
+            
+            const end = new Date();
+            end.setDate(end.getDate() - i);
+            end.setHours(23, 59, 59, 999);
+
+            const dayOrders = await order_MD.countDocuments({
+                createdAt: { $gte: start, $lte: end }
+            });
+
+            const dayRevenue = await order_MD.aggregate([
+                { $match: { createdAt: { $gte: start, $lte: end }, payment_status: 'paid' } },
+                { $group: { _id: null, total: { $sum: '$total' } } }
+            ]);
+
+            const dayProducts = await product_MD.countDocuments({
+                createdAt: { $gte: start, $lte: end }
+            });
+
+            const dayName = start.toLocaleDateString('vi-VN', { weekday: 'short' });
+            
+            dailyStats.push({
+                name: dayName,
+                orders: dayOrders,
+                revenue: dayRevenue[0]?.total || 0,
+                products: dayProducts,
+                date: start.toISOString().split('T')[0]
+            });
+        }
 
         res.status(200).json({
             success: true,
@@ -110,6 +156,12 @@ export const getDashboardStats = async (req, res) => {
                 },
                 categories: {
                     total: totalCategories
+                },
+                orders: {
+                    total: totalOrders,
+                    pending: pendingOrders,
+                    revenue: totalRevenue,
+                    daily: dailyStats
                 },
                 news: {
                     total: totalNews,

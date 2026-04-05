@@ -10,22 +10,22 @@ const __dirname = path.dirname(__filename);
 
 // Hàm xoá file upload
 const deleteImages = (files = []) => {
-  files.forEach(item => {
-    let filename = '';
+  files.forEach((item) => {
+    let filename = "";
     if (!item) return;
-    if (typeof item === 'string') {
-      filename = item.split('/uploads/')[1];
+    if (typeof item === "string") {
+      filename = item.split("/uploads/")[1];
     } else if (item.filename) {
       filename = item.filename;
     }
     if (!filename) return;
-    const filePath = path.join(__dirname, '../../public/uploads', filename);
+    const filePath = path.join(__dirname, "../../public/uploads", filename);
     try {
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
     } catch (err) {
-      console.error('Error deleting file:', filePath, err);
+      console.error("Error deleting file:", filePath, err);
     }
   });
 };
@@ -38,8 +38,8 @@ export const getAllNews = async (req, res) => {
 
     if (search) {
       filter.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { content: { $regex: search, $options: 'i' } }
+        { title: { $regex: search, $options: "i" } },
+        { content: { $regex: search, $options: "i" } },
       ];
     }
 
@@ -60,7 +60,7 @@ export const getAllNews = async (req, res) => {
     const formatted = newsList.map((news) => ({
       ...news.toObject(),
       author: news.author?.username || "Admin",
-      excerpt: truncate(news.content, 150, { ellipsis: "..." })
+      excerpt: truncate(news.content, 150, { ellipsis: "..." }),
     }));
 
     res.status(200).json({ data: formatted, total });
@@ -78,8 +78,15 @@ export const getNewsById = async (req, res) => {
       return res.status(400).json({ message: "ID không hợp lệ" });
     }
 
-    const news = await news_MD.findById(id).populate({ path: "author", select: "username" });
-    if (!news) return res.status(404).json({ message: "Không tìm thấy tin tức" });
+    const news = await news_MD
+      .findById(id)
+      .populate({ path: "author", select: "username" });
+    if (!news)
+      return res.status(404).json({ message: "Không tìm thấy tin tức" });
+
+    // Tăng lượt xem lên 1
+    await news_MD.findByIdAndUpdate(id, { $inc: { views: 1 } });
+    news.views += 1;
 
     res.status(200).json(news);
   } catch (error) {
@@ -91,18 +98,24 @@ export const getNewsById = async (req, res) => {
 // Tạo tin tức
 export const createNews = async (req, res) => {
   try {
-
     const { title } = req.body;
 
     const exists = await news_MD.findOne({ title });
     if (exists) {
       if (req.files) {
-        deleteImages(req.files.map(f => `http://localhost:3000/uploads/${f.filename}`));
+        deleteImages(
+          req.files.map((f) => `http://localhost:3000/uploads/${f.filename}`),
+        );
       }
-      return res.status(400).json({ message: "Tiêu đề đã tồn tại, vui lòng chọn tên khác" });
+      return res
+        .status(400)
+        .json({ message: "Tiêu đề đã tồn tại, vui lòng chọn tên khác" });
     }
 
-    const images = req.files?.map((file) => `http://localhost:3000/uploads/${file.filename}`) || [];
+    const images =
+      req.files?.map(
+        (file) => `http://localhost:3000/uploads/${file.filename}`,
+      ) || [];
 
     const MAX_IMAGES = 5;
 
@@ -123,12 +136,15 @@ export const createNews = async (req, res) => {
     const created = await news_MD.create({
       ...req.body,
       images,
-      author: req.user._id
+      author: req.user._id,
     });
 
     res.status(201).json({ message: "Tạo tin tức thành công", data: created });
   } catch (error) {
-    if (req.files) deleteImages(req.files.map((f) => `http://localhost:3000/uploads/${f.filename}`));
+    if (req.files)
+      deleteImages(
+        req.files.map((f) => `http://localhost:3000/uploads/${f.filename}`),
+      );
 
     console.error("Lỗi khi tạo tin tức:", error);
     res.status(500).json({ message: "Lỗi máy chủ nội bộ" });
@@ -142,13 +158,19 @@ export const updateNews = async (req, res) => {
     const { title } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      if (req.files) deleteImages(req.files.map(f => `http://localhost:3000/uploads/${f.filename}`));
+      if (req.files)
+        deleteImages(
+          req.files.map((f) => `http://localhost:3000/uploads/${f.filename}`),
+        );
       return res.status(400).json({ message: "ID không hợp lệ" });
     }
 
     const news = await news_MD.findById(id);
     if (!news) {
-      if (req.files) deleteImages(req.files.map(f => `http://localhost:3000/uploads/${f.filename}`));
+      if (req.files)
+        deleteImages(
+          req.files.map((f) => `http://localhost:3000/uploads/${f.filename}`),
+        );
       return res.status(404).json({ message: "Tin tức không tồn tại" });
     }
 
@@ -156,9 +178,13 @@ export const updateNews = async (req, res) => {
       const exists = await news_MD.findOne({ title, _id: { $ne: id } });
       if (exists) {
         if (req.files) {
-          deleteImages(req.files.map(f => `http://localhost:3000/uploads/${f.filename}`));
+          deleteImages(
+            req.files.map((f) => `http://localhost:3000/uploads/${f.filename}`),
+          );
         }
-        return res.status(400).json({ message: "Tiêu đề đã tồn tại, vui lòng chọn tên khác" });
+        return res
+          .status(400)
+          .json({ message: "Tiêu đề đã tồn tại, vui lòng chọn tên khác" });
       }
     }
 
@@ -174,7 +200,7 @@ export const updateNews = async (req, res) => {
 
       // Xoá ảnh không còn giữ lại
       const removedImages = (news.images || []).filter(
-        oldUrl => !imageUrls.includes(oldUrl)
+        (oldUrl) => !imageUrls.includes(oldUrl),
       );
       if (removedImages.length > 0) {
         deleteImages(removedImages);
@@ -183,7 +209,9 @@ export const updateNews = async (req, res) => {
 
     // Nếu có ảnh mới, thêm vào
     if (req.files && req.files.length > 0) {
-      const newImages = req.files.map(file => `http://localhost:3000/uploads/${file.filename}`);
+      const newImages = req.files.map(
+        (file) => `http://localhost:3000/uploads/${file.filename}`,
+      );
       imageUrls = [...imageUrls, ...newImages];
     }
 
@@ -193,7 +221,9 @@ export const updateNews = async (req, res) => {
     if (imageUrls.length > MAX_IMAGES) {
       // Xóa ảnh mới vừa upload
       if (req.files && req.files.length > 0) {
-        const newImages = req.files.map(f => `http://localhost:3000/uploads/${f.filename}`);
+        const newImages = req.files.map(
+          (f) => `http://localhost:3000/uploads/${f.filename}`,
+        );
         deleteImages(newImages);
       }
       return res.status(400).json({ message: `Tối đa ${MAX_IMAGES} ảnh` });
@@ -205,7 +235,7 @@ export const updateNews = async (req, res) => {
     const updated = await news_MD.findByIdAndUpdate(
       id,
       { ...req.body, images: imageUrls },
-      { new: true }
+      { new: true },
     );
 
     return res.status(200).json({
@@ -215,7 +245,9 @@ export const updateNews = async (req, res) => {
   } catch (error) {
     // Nếu có upload ảnh mới mà bị lỗi thì xoá đi để tránh rác
     if (req.files) {
-      deleteImages(req.files.map(f => `http://localhost:3000/uploads/${f.filename}`));
+      deleteImages(
+        req.files.map((f) => `http://localhost:3000/uploads/${f.filename}`),
+      );
     }
 
     console.error("Lỗi khi cập nhật tin tức:", error);
@@ -232,7 +264,8 @@ export const deleteNews = async (req, res) => {
     }
 
     const news = await news_MD.findById(id);
-    if (!news) return res.status(404).json({ message: "Tin tức không tồn tại" });
+    if (!news)
+      return res.status(404).json({ message: "Tin tức không tồn tại" });
 
     if (news.images && news.images.length > 0) deleteImages(news.images);
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { getOrderByIdApi } from "../services/orderService";
+import { processMockPaymentApi } from "../services/paymentService";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Container,
@@ -40,18 +41,9 @@ const PaymentMock = () => {
       }
 
       try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(
-          `http://localhost:3000/api/orders/${orderId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
-
-        if (response.data && response.data.order) {
-          setOrder(response.data.order);
+        const orderData = await getOrderByIdApi(orderId);
+        if (orderData) {
+          setOrder(orderData);
         }
       } catch (error) {
         console.error("Error fetching order:", error);
@@ -74,17 +66,9 @@ const PaymentMock = () => {
       setTimeout(async () => {
         try {
           // Simulate successful payment
-          const paymentResponse = await axios.post(
-            "http://localhost:3000/api/payment/mock/process",
-            { orderId },
-            {
-              headers: {
-                Authorization: `Bearer ${token}`
-              }
-            }
-          );
+          const paymentResponse = await processMockPaymentApi({ orderId });
 
-          if (paymentResponse.data) {
+          if (paymentResponse) {
             setPaymentResult("success");
             setTimeout(() => {
               navigate("/payment/success", { state: { orderId } });

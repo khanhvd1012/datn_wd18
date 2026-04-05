@@ -1,21 +1,15 @@
 import Joi from "joi";
 
 export const createReviewValidator = Joi.object({
-    user_id: Joi.string().required().messages({
-        "string.empty": "Mã người dùng không được để trống",
-        "any.required": "Trường user_id là bắt buộc"
-    }),
-    order_item: Joi.string().required().messages({
-        "string.empty": "Mã sản phẩm trong đơn hàng không được để trống",
-        "any.required": "Trường order_item là bắt buộc"
-    }),
-    images: Joi.array().items(Joi.string().uri()).optional().messages({
-        "string.uri": "Link hình ảnh không hợp lệ",
-    }),
-    product_id: Joi.string().required().messages({
-        "string.empty": "Mã sản phẩm không được để trống",
-        "any.required": "Trường product_id là bắt buộc"
-    }),
+    // user_id sẽ được lấy từ token (req.user._id), không cần frontend gửi
+    user_id: Joi.string().optional(),
+    // order_item / orderId không bắt buộc
+    order_item: Joi.string().optional().allow(null, ''),
+    orderId: Joi.string().optional().allow(null, ''),
+    images: Joi.array().items(Joi.string()).optional(),
+    // Hỗ trợ cả product_id (snake_case) lẫn productId (camelCase)
+    product_id: Joi.string().optional(),
+    productId: Joi.string().optional(),
     product_variant_id: Joi.string().optional(),
     rating: Joi.number().min(1).max(5).required().messages({
         "number.base": "Đánh giá sao phải là một số",
@@ -30,8 +24,9 @@ export const createReviewValidator = Joi.object({
 });
 
 export const replyReviewValidator = Joi.object({
-    admin_reply: Joi.string().required().messages({
-        "string.empty": "Nội dung phản hồi không được để trống",
-        "any.required": "Trường admin_reply là bắt buộc"
-    })
+    // Hỗ trợ cả 'admin_reply' lẫn 'reply'
+    admin_reply: Joi.string().optional(),
+    reply: Joi.string().optional()
+}).or('admin_reply', 'reply').messages({
+    'object.missing': 'Vui lòng nhập nội dung phản hồi'
 });

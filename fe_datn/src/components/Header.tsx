@@ -11,71 +11,123 @@ import {
   Menu,
   MenuItem
 } from "@mui/material";
+
 import SearchIcon from "@mui/icons-material/Search";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import PhoneIcon from "@mui/icons-material/Phone";
 
 import { Link, useNavigate } from "react-router-dom";
-import { MouseEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { getCartApi } from "../services/cartService";
+
 import logo3 from "../img/logo3.png";
 
-import { useUser } from "../context/UserContext";
+const Header = () => {
 
-interface CartItem {
-  quantity: number;
-}
-
-const Header: React.FC = () => {
-  const { user, setUser } = useUser(); // lấy user từ Context
-  const [cartCount, setCartCount] = useState<number>(0);
-  const [search, setSearch] = useState<string>("");
+  const [user, setUser] = useState<any>(null);
+  const [cartCount, setCartCount] = useState(0);
+  const [search, setSearch] = useState("");
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const navigate = useNavigate();
 
-  // Load cart count
+  // ================= LOAD USER =================
+  useEffect(() => {
+
+    const storedUser = localStorage.getItem("user");
+
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+
+  }, []);
+
+  // ================= LOAD CART =================
   const loadCartCount = async () => {
     try {
-      const res = await fetch("http://localhost:3000/cart");
-      const data: CartItem[] = await res.json();
-      setCartCount(data.reduce((s, i) => s + i.quantity, 0));
-    } catch (err) {
-      console.log("Error loading cart", err);
+      const data = await getCartApi();
+      const total = data.reduce(
+        (sum: number, item: any) => sum + item.quantity,
+        0
+      );
+      setCartCount(total);
+    } catch (error) {
+      console.error("Load cart error:", error);
+      setCartCount(0);
     }
   };
 
   useEffect(() => {
-    loadCartCount();
-  }, []);
+    if (user) {
+      loadCartCount();
+    } else {
+      setCartCount(0);
+    }
 
-  // Logout
+    const handleCartUpdate = () => {
+      loadCartCount();
+    };
+
+    window.addEventListener("cartUpdated", handleCartUpdate);
+    window.addEventListener("storage", loadCartCount);
+
+    return () => {
+      window.removeEventListener("cartUpdated", handleCartUpdate);
+      window.removeEventListener("storage", loadCartCount);
+    };
+  }, [user]);
+
+  // ================= LOGOUT =================
   const handleLogout = () => {
+
     localStorage.removeItem("user");
-    setUser(null); // cập nhật Context
+    setUser(null);
+
     navigate("/");
+
   };
 
+  // ================= SEARCH =================
   const handleSearch = () => {
+
     if (!search.trim()) return;
+
     navigate(`/products?search=${search}`);
+
   };
 
-  const openMenu = (e: MouseEvent<HTMLElement>) => setAnchorEl(e.currentTarget);
-  const closeMenu = () => setAnchorEl(null);
+  const openMenu = (e: any) => {
+    setAnchorEl(e.currentTarget);
+  };
+
+  const closeMenu = () => {
+    setAnchorEl(null);
+  };
 
   return (
-    <AppBar
-      position="sticky"
-      sx={{
-        background: "linear-gradient(to right, #ffffff, #fafafa)",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.05)"
-      }}
-    >
-      {/* TOP BAR */}
-      <Toolbar sx={{ justifyContent: "space-between", py: 1.2 }}>
+
+    <AppBar position="static" sx={{ backgroundColor: "#ffffff" }}>
+
+      {/* TOP HEADER */}
+      <Toolbar sx={{ justifyContent: "space-between" }}>
+
         {/* LOGO */}
-        <Box component={Link} to="/" sx={{ display: "flex" }}>
-          <img src={logo3} alt="logo" style={{ height: 50 }} />
+        <Box
+          component={Link}
+          to="/"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            textDecoration: "none"
+          }}
+        >
+
+          <img
+            src={logo3}
+            alt="Logo"
+            style={{ height: 48 }}
+          />
+
         </Box>
 
         {/* SEARCH */}
@@ -83,36 +135,30 @@ const Header: React.FC = () => {
           sx={{
             display: "flex",
             alignItems: "center",
-            backgroundColor: "#f1f3f4",
-            borderRadius: "30px",
+            backgroundColor: "#fff",
+            borderRadius: 3,
             px: 3,
             width: 600,
-            mx: 4,
-            transition: "0.3s",
-            border: "1px solid transparent",
-            "&:hover": { backgroundColor: "#eaeaea" },
-            "&:focus-within": { border: "1px solid #ff9800", boxShadow: "0 0 0 2px rgba(255,152,0,0.2)" }
+            mx: 4
           }}
         >
+
           <InputBase
-            placeholder="🔍 Tìm sản phẩm bạn muốn..."
+            placeholder="Nhập tên sản phẩm cần tìm?"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            sx={{ flex: 1, fontSize: 14 }}
+            sx={{ flex: 1,border: "1px solid #ccc", borderRadius: 3, px: 2, py: 0.5 }}
           />
-          <IconButton onClick={handleSearch}><SearchIcon /></IconButton>
+
+          <IconButton onClick={handleSearch}>
+            <SearchIcon />
+          </IconButton>
+
         </Box>
 
-        {/* RIGHT ACTIONS */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 3,
-            minWidth: 250, // giữ khoảng trống đủ
-            justifyContent: "flex-end" // luôn nằm bên phải
-          }}
-        >
+        {/* RIGHT */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+
           {/* PHONE */}
           <Box
             component="a"
@@ -120,97 +166,160 @@ const Header: React.FC = () => {
             sx={{
               display: "flex",
               alignItems: "center",
-              gap: 1,
+              gap: 0.5,
               textDecoration: "none",
-              color: "#333",
-              transition: "0.3s",
-              "&:hover": { color: "#ff9800" }
+              color: "#000000"
             }}
           >
-            <PhoneIcon />
-            <Typography fontSize={14}>0987.65.4321</Typography>
+
+            <PhoneIcon sx={{ color: "#ff9800" }} />
+
+            <Typography fontSize={14}>
+              0987.65.4321
+            </Typography>
+
           </Box>
 
           {/* ACCOUNT */}
           {user ? (
+
             <>
+
               <IconButton onClick={openMenu}>
+
                 <Avatar
                   src={user.avatar || "https://i.pravatar.cc/150"}
-                  sx={{ border: "2px solid #ff9800" }}
                 />
+
               </IconButton>
 
-              <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={closeMenu}>
-                <MenuItem onClick={() => { navigate("/my-account"); closeMenu(); }}>👤 Tài khoản</MenuItem>
-                <MenuItem onClick={() => { navigate("/orders"); closeMenu(); }}>📦 Đơn hàng</MenuItem>
-                <MenuItem onClick={handleLogout}>🚪 Đăng xuất</MenuItem>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={closeMenu}
+              >
+
+                <MenuItem
+                  onClick={() => {
+                    navigate("/my-account");
+                    closeMenu();
+                  }}
+                >
+                  Tài khoản
+                </MenuItem>
+
+                <MenuItem
+                  onClick={() => {
+                    navigate("/orders");
+                    closeMenu();
+                  }}
+                >
+                  Đơn hàng
+                </MenuItem>
+
+                <MenuItem onClick={handleLogout}>
+                  Đăng xuất
+                </MenuItem>
+
               </Menu>
+
             </>
+
           ) : (
+
             <Button
               component={Link}
               to="/login"
-              variant="contained"
+              variant="outlined"
               sx={{
-                backgroundColor: "#ff9800",
-                borderRadius: "20px",
-                textTransform: "none",
-                "&:hover": { backgroundColor: "#e68900" }
+                color: "#170000",
+                borderColor: "#f19916"
               }}
             >
               Đăng nhập
             </Button>
+
           )}
 
           {/* CART */}
-          <IconButton component={Link} to="/cart" sx={{ color: "#333", "&:hover": { color: "#ff9800" } }}>
-            <Badge badgeContent={cartCount} color="error">
+          <IconButton
+            component={Link}
+            to="/cart"
+            sx={{ color: "#f45454" }}
+          >
+
+            <Badge
+              badgeContent={cartCount}
+              color="error"
+            >
+
               <ShoppingCartIcon />
+
             </Badge>
+
           </IconButton>
+
         </Box>
+
       </Toolbar>
 
-      {/* MAIN MENU */}
-      <Box sx={{ display: "flex", justifyContent: "center", gap: 6, py: 1.5, borderTop: "1px solid #eee" }}>
-        {[
-          { label: "Trang chủ", path: "/" },
-          { label: "Sản phẩm", path: "/products" },
-          { label: "Tin tức", path: "/news" },
-          { label: "Giới thiệu", path: "/about" },
-          { label: "Liên hệ", path: "/contact" }
-        ].map(item => (
-          <Button
-            key={item.path}
-            component={Link}
-            to={item.path}
-            sx={{
-              color: "#333",
-              fontWeight: 500,
-              position: "relative",
-              "&:hover": { color: "#ff9800" },
-              "&::after": {
-                content: '""',
-                position: "absolute",
-                width: "0%",
-                height: "3px",
-                bottom: -2,
-                left: "50%",
-                transform: "translateX(-50%)",
-                backgroundColor: "#ff9800",
-                borderRadius: 2,
-                transition: "0.3s"
-              },
-              "&:hover::after": { width: "80%" }
-            }}
-          >
-            {item.label}
-          </Button>
-        ))}
-      </Box>
+      {/* MENU NAVIGATION */}
+      {/* <Box
+        sx={{
+          background: "#111",
+          display: "flex",
+          justifyContent: "center",
+          gap: 5,
+          py: 1
+        }}
+      >
+
+        <Button
+          component={Link}
+          to="/"
+          sx={{ color: "#fff" }}
+        >
+          Trang chủ
+        </Button>
+
+        <Button
+          component={Link}
+          to="/products"
+          sx={{ color: "#fff" }}
+        >
+          Sản phẩm
+        </Button>
+
+        <Button
+          component={Link}
+          to="/news"
+          sx={{ color: "#fff" }}
+        >
+          Tin tức
+        </Button>
+
+        <Button
+          component={Link}
+          to="/about"
+          sx={{ color: "#fff" }}
+        >
+          Giới thiệu
+        </Button>
+
+        <Button
+          component={Link}
+          to="/contact"
+          sx={{ color: "#fff" }}
+        >
+          Liên hệ
+        </Button>
+
+      </Box> */}
+
     </AppBar>
+
   );
+
 };
 
 export default Header;
