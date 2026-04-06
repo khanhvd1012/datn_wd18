@@ -185,7 +185,7 @@ const ProductList = () => {
     if (search) {
       filtered = filtered.filter(
         (product) =>
-          product.name.toLowerCase().includes(search.toLowerCase()) ||
+          product.name?.toLowerCase().includes(search.toLowerCase()) ||
           product.description?.toLowerCase().includes(search.toLowerCase()),
       );
     }
@@ -270,6 +270,7 @@ const ProductList = () => {
 
   const handleSearch = (value: string) => {
     setSearch(value);
+    setPage(1);
     const params = new URLSearchParams(searchParams);
     if (value) {
       params.set("search", value);
@@ -281,6 +282,7 @@ const ProductList = () => {
 
   const handleCategoryChange = (categoryId: string) => {
     setSelectedCategory(categoryId);
+    setPage(1);
     const params = new URLSearchParams(searchParams);
     if (categoryId) {
       params.set("category", categoryId);
@@ -370,7 +372,10 @@ const ProductList = () => {
           <Select
             value={selectedBrand}
             label="Thương hiệu"
-            onChange={(e) => setSelectedBrand(e.target.value)}
+            onChange={(e) => {
+              setSelectedBrand(e.target.value);
+              setPage(1);
+            }}
           >
             <MenuItem value="">Tất cả thương hiệu</MenuItem>
             {brands.map((brand) => (
@@ -393,7 +398,10 @@ const ProductList = () => {
           <Select
             value={sortType}
             label="Sắp xếp"
-            onChange={(e) => setSortType(e.target.value)}
+            onChange={(e) => {
+              setSortType(e.target.value);
+              setPage(1);
+            }}
           >
             <MenuItem value="default">Mặc định</MenuItem>
             <MenuItem value="priceAsc">Giá tăng dần</MenuItem>
