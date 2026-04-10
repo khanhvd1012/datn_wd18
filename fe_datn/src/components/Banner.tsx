@@ -146,7 +146,7 @@ const Banner = () => {
           onMouseLeave={() => setHover(false)}
           sx={{
             flex: 1,
-            height: 380,
+            height:455,
             borderRadius: 3,
             overflow: "hidden",
             position: "relative",
@@ -168,7 +168,7 @@ const Banner = () => {
                 src={banner.image}
                 sx={{
                   width: "100%",
-                  height: 380,
+                  height: "100%",
                   objectFit: "cover",
                 }}
               />
