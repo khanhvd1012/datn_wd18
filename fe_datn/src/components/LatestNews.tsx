@@ -6,9 +6,11 @@ import {
   CardMedia,
   CardContent,
   Grid,
-  Button
+  Button,
+  Chip,
 } from "@mui/material";
 import { Link } from "react-router-dom";
+import api from "../services/api";
 
 interface NewsItem {
   _id: string;
@@ -23,13 +25,18 @@ const LatestNews = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/news")
-      .then((res) => res.json())
-      .then((data) => {
-        const list = Array.isArray(data) ? data : (data.docs || data.data || []);
+    const fetchLatestNews = async () => {
+      try {
+        const res = await api.get("/news", {
+          params: { status: "published", limit: 3 },
+        });
+        const list = Array.isArray(res.data?.data) ? res.data.data : [];
         setNews(list.slice(0, 3));
-      })
-      .catch((err) => console.error("Error fetching news:", err));
+      } catch (err) {
+        console.error("Error fetching news:", err);
+      }
+    };
+    fetchLatestNews();
   }, []);
 
   if (news.length === 0) return null;
@@ -37,13 +44,13 @@ const LatestNews = () => {
   return (
     <Box sx={{ maxWidth: 1300, mx: "auto", px: 2, py: 6 }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
-        <Typography variant="h5" sx={{ fontWeight: "bold", color: "#fff" }}>
+        <Typography variant="h5" sx={{ fontWeight: "bold", color: "#0f172a" }}>
           TIN TỨC MỚI NHẤT
         </Typography>
         <Button 
           component={Link} 
           to="/news" 
-          sx={{ color: "#ff6a00" }}
+          sx={{ color: "#1d4ed8", fontWeight: 700 }}
         >
           Xem tất cả
         </Button>
@@ -55,26 +62,31 @@ const LatestNews = () => {
             <Card
               sx={{
                 height: "100%",
-                backgroundColor: "#1a1a1a",
-                border: "1px solid #333",
+                backgroundColor: "#fff",
+                border: "1px solid #e8edf5",
+                borderRadius: 3,
                 transition: "0.3s",
                 "&:hover": {
                   transform: "translateY(-5px)",
-                  borderColor: "#ff6a00",
+                  boxShadow: "0 12px 25px rgba(15,23,42,0.08)",
                 },
               }}
             >
               <CardMedia
                 component="img"
-                height="200"
+                height="350"
                 image={item.images[0] || "https://via.placeholder.com/400x200"}
                 alt={item.title}
+                sx={{
+                  objectFit: "cover",
+                  objectPosition: "center 35%",
+                }}
               />
               <CardContent>
                 <Typography
                   variant="subtitle1"
                   sx={{
-                    color: "#fff",
+                    color: "#0f172a",
                     fontWeight: "bold",
                     mb: 1,
                     display: "-webkit-box",
@@ -89,7 +101,7 @@ const LatestNews = () => {
                 <Typography
                   variant="body2"
                   sx={{
-                    color: "#aaa",
+                    color: "#64748b",
                     mb: 2,
                     display: "-webkit-box",
                     WebkitLineClamp: 3,
@@ -101,14 +113,15 @@ const LatestNews = () => {
                   {item.excerpt}
                 </Typography>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <Typography variant="caption" sx={{ color: "#666" }}>
+                  <Typography variant="caption" sx={{ color: "#64748b" }}>
                     {new Date(item.createdAt).toLocaleDateString("vi-VN")}
                   </Typography>
+                  <Chip label="Tin mới" size="small" sx={{ bgcolor: "#e8f0ff", color: "#1d4ed8" }} />
                   <Button 
                     size="small" 
                     component={Link} 
                     to={`/news/${item._id}`}
-                    sx={{ color: "#ff6a00" }}
+                    sx={{ color: "#1d4ed8", fontWeight: 700 }}
                   >
                     Đọc tiếp
                   </Button>

@@ -70,13 +70,27 @@ export const getOrderByIdApi = async (orderId: string): Promise<Order> => {
 
 export const updateOrderStatusApi = async (
   orderId: string,
-  status: string,
+  orderStatus: string,
+  paymentStatus?: string,
 ): Promise<Order> => {
-  const response = await api.patch(`/orders/${orderId}/status`, { status });
+  const response = await api.put(`/orders/${orderId}`, {
+    order_status: orderStatus,
+    ...(paymentStatus ? { payment_status: paymentStatus } : {}),
+  });
+  return response.data.order;
+};
+
+export const getAdminOrdersApi = async (params?: {
+  search?: string;
+  status?: string;
+  page?: number;
+  limit?: number;
+}) => {
+  const response = await api.get("/orders/admin/all", { params });
   return response.data;
 };
 
-export const cancelOrderApi = async (orderId: string): Promise<Order> => {
-  const response = await api.patch(`/orders/${orderId}/cancel`);
+export const deleteOrderApi = async (orderId: string) => {
+  const response = await api.delete(`/orders/${orderId}`);
   return response.data;
 };

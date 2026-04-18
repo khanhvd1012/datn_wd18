@@ -30,6 +30,16 @@ const Banner = () => {
   const [apiBanners, setApiBanners] = useState<
     { image: string; title: string; _id: string }[]
   >([]);
+  const fallbackBanners = [mainBanner4, mainBanner6, mainBanner7, mainBanner9, mainBanner10].map(
+    (image, idx) => ({
+      image,
+      title: `Fallback banner ${idx + 1}`,
+      _id: `fallback-${idx + 1}`,
+    }),
+  );
+  const displayBanners = apiBanners.length > 0 ? apiBanners : fallbackBanners;
+  const isBannerActive = (status: unknown) =>
+    status === true || status === "active" || status === "true" || status === 1;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,7 +55,7 @@ const Banner = () => {
         // Lọc banner đang hoạt động
         setApiBanners(
           Array.isArray(bans)
-            ? bans.filter((b: any) => b.status !== false)
+            ? bans.filter((b: any) => isBannerActive(b?.status))
             : [],
         );
       } catch (err) {
@@ -56,23 +66,31 @@ const Banner = () => {
   }, []);
 
   useEffect(() => {
-    if (hover || apiBanners.length === 0) return;
+    if (hover || displayBanners.length <= 1) return;
 
     const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % apiBanners.length);
-    }, 4000);
+      setIndex((prev) => (prev + 1) % displayBanners.length);
+    }, 2000);
 
     return () => clearInterval(timer);
-  }, [hover, apiBanners.length]);
+  }, [hover, displayBanners.length]);
+
+  useEffect(() => {
+    if (index >= displayBanners.length) {
+      setIndex(0);
+    }
+  }, [index, displayBanners.length]);
 
   const next = () => {
-    if (apiBanners.length === 0) return;
-    setIndex((prev) => (prev + 1) % apiBanners.length);
+    if (displayBanners.length === 0) return;
+    setIndex((prev) => (prev + 1) % displayBanners.length);
   };
 
   const prev = () => {
-    if (apiBanners.length === 0) return;
-    setIndex((prev) => (prev === 0 ? apiBanners.length - 1 : prev - 1));
+    if (displayBanners.length === 0) return;
+    setIndex((prev) =>
+      prev === 0 ? displayBanners.length - 1 : prev - 1,
+    );
   };
 
   const goCategory = (id: string) => {
@@ -156,35 +174,24 @@ const Banner = () => {
           <Box
             sx={{
               display: "flex",
-              width: `${(apiBanners.length || 1) * 100}%`,
+              width: "100%",
               transform: `translateX(-${index * 100}%)`,
               transition: "0.6s",
             }}
           >
-            {apiBanners.map((banner, i) => (
+            {displayBanners.map((banner, i) => (
               <Box
-                key={i}
+                key={banner._id || i}
                 component="img"
                 src={banner.image}
+                alt={banner.title}
                 sx={{
-                  width: "100%",
+                  minWidth: "100%",
                   height: 380,
                   objectFit: "cover",
                 }}
               />
             ))}
-
-            {apiBanners.length === 0 && (
-              <Box
-                component="img"
-                src={mainBanner4}
-                sx={{
-                  width: "100%",
-                  height: 380,
-                  objectFit: "cover",
-                }}
-              />
-            )}
           </Box>
 
           <IconButton

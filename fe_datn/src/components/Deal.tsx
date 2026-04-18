@@ -1,10 +1,8 @@
 
 import React, { useEffect, useState } from "react";
-import { Box, Typography, IconButton } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import DealMallBanner from "./DealMallBanner";
 
 
 const Deal = () => {
@@ -17,9 +15,6 @@ const Deal = () => {
   const [banners, setBanners] = useState<
     { _id: string; image: string; status?: boolean }[]
   >([]);
-
-  const [index, setIndex] = useState(0);
-  const [hover, setHover] = useState(false);
 
   // 👉 FETCH GIỐNG BANNER
   useEffect(() => {
@@ -44,34 +39,6 @@ const Deal = () => {
 
     fetchData();
   }, []);
-
-  // 👉 AUTO SLIDER
-  useEffect(() => {
-    if (hover || banners.length === 0) return;
-
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % banners.length);
-    }, 3000);
-
-    return () => clearInterval(timer);
-  }, [hover, banners]);
-
-  // 👉 FIX index khi data đổi
-  useEffect(() => {
-    if (index >= banners.length) setIndex(0);
-  }, [banners]);
-
-  const next = () => {
-    if (banners.length === 0) return;
-    setIndex((prev) => (prev + 1) % banners.length);
-  };
-
-  const prev = () => {
-    if (banners.length === 0) return;
-    setIndex((prev) =>
-      prev === 0 ? banners.length - 1 : prev - 1
-    );
-  };
 
   const goCategory = (id: string) => {
     navigate(`/products?category=${id}`);
@@ -128,48 +95,7 @@ const Deal = () => {
           }}
         >
           {/* 🔥 LEFT BANNER SLIDER */}
-          <Box
-            onMouseEnter={() => setHover(true)}
-            onMouseLeave={() => setHover(false)}
-            sx={{
-              width: "100%",
-              height: "100%",
-              overflow: "hidden",
-              borderRadius: 2,
-              position: "relative",
-              background: "#000",
-            }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                width: `${(banners.length || 1) * 100}%`,
-                transform: `translateX(-${index * 100}%)`,
-                transition: "0.5s",
-              }}
-            >
-              {banners.length > 0 ? (
-                banners.map((item) => (
-                  <Box
-                    key={item._id}
-                    component="img"
-                    src={item.image}
-                    sx={{
-                      width: "100%",
-                      height: 300,
-                      objectFit: "cover",
-                    }}
-                  />
-                ))
-              ) : (
-                <Box
-                  component="img"
-                  src="https://via.placeholder.com/400"
-                  sx={{ width: "100%", height: 300 }}
-                />
-              )}
-            </Box>
-          </Box>
+          <DealMallBanner banners={banners} />
           {/* CATEGORY GRID */}
           <Box
             sx={{

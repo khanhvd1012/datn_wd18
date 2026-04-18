@@ -8,13 +8,18 @@ import {
   Link as MuiLink,
   Divider,
   CircularProgress,
-  Avatar
+  Avatar,
+  Chip,
 } from "@mui/material";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import api from "../../services/api";
 
 interface NewsItem {
   _id: string;
   title: string;
   content: string;
+  excerpt?: string;
   images: string[];
   author: string;
   createdAt: string;
@@ -27,16 +32,24 @@ const NewsDetail = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/news/${id}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setNews(data);
-        setLoading(false);
-      })
-      .catch((err) => {
+    const fetchNewsDetail = async () => {
+      try {
+        const res = await api.get(`/news/${id}`);
+        const data = res.data;
+        setNews({
+          ...data,
+          author:
+            typeof data.author === "string"
+              ? data.author
+              : data.author?.username || "Admin",
+        });
+      } catch (err) {
         console.error("Error fetching news detail:", err);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+    fetchNewsDetail();
   }, [id]);
 
   if (loading) {
@@ -56,79 +69,91 @@ const NewsDetail = () => {
   }
 
   return (
-    <Box sx={{ background: "#111", minHeight: "100vh", pb: 10 }}>
-      {/* Feature Image Header */}
-      {news.images[0] && (
-        <Box 
-          sx={{ 
-            width: "100%", 
-            height: "40vh", 
+    <Box sx={{ background: "#f6f8fc", minHeight: "100vh", pb: 10 }}>
+      {news.images?.[0] && (
+        <Box
+          sx={{
+            width: "100%",
+            height: { xs: 220, md: 360 },
             backgroundImage: `url(${news.images[0]})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
-            position: "relative",
-            "&::after": {
-              content: '""',
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-              backgroundColor: "rgba(0,0,0,0.5)"
-            }
           }}
         />
       )}
 
-      <Box sx={{ maxWidth: 900, mx: "auto", px: 2, mt: news.images[0] ? -10 : 4, position: "relative", zIndex: 2 }}>
-        <Card sx={{ backgroundColor: "#1a1a1a", border: "1px solid #333", borderRadius: 4, overflow: "hidden" }}>
+      <Box sx={{ maxWidth: 980, mx: "auto", px: 2, mt: news.images?.[0] ? -6 : 4, position: "relative" }}>
+        <Box
+          sx={{
+            backgroundColor: "#fff",
+            border: "1px solid #e8edf5",
+            borderRadius: 4,
+            overflow: "hidden",
+            boxShadow: "0 15px 40px rgba(2, 6, 23, 0.08)",
+          }}
+        >
           <Box sx={{ p: { xs: 3, md: 6 } }}>
-            <Breadcrumbs sx={{ color: "#aaa", mb: 3 }}>
-              <MuiLink component={Link} to="/" sx={{ color: "#aaa", textDecoration: "none" }}>
+            <Breadcrumbs sx={{ color: "#64748b", mb: 3 }}>
+              <MuiLink component={Link} to="/" sx={{ color: "#64748b", textDecoration: "none" }}>
                 Trang chủ
               </MuiLink>
-              <MuiLink component={Link} to="/news" sx={{ color: "#aaa", textDecoration: "none" }}>
+              <MuiLink component={Link} to="/news" sx={{ color: "#64748b", textDecoration: "none" }}>
                 Tin tức
               </MuiLink>
-              <Typography color="#ff6a00" sx={{ display: { xs: "none", sm: "block" } }}>Chi tiết</Typography>
+              <Typography color="#1d4ed8" sx={{ display: { xs: "none", sm: "block" } }}>Chi tiết</Typography>
             </Breadcrumbs>
 
-            <Typography variant="h3" sx={{ color: "#fff", fontWeight: "bold", mb: 4, lineHeight: 1.2, fontSize: { xs: "2rem", md: "3rem" } }}>
+            <Chip label="Tin tức" sx={{ mb: 2, bgcolor: "#e8f0ff", color: "#1d4ed8", fontWeight: 700 }} />
+            <Typography
+              variant="h3"
+              sx={{
+                color: "#0f172a",
+                fontWeight: 800,
+                mb: 2,
+                lineHeight: 1.2,
+                fontSize: { xs: "1.8rem", md: "2.5rem" },
+              }}
+            >
               {news.title}
             </Typography>
 
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 4 }}>
-              <Avatar sx={{ bgcolor: "#ff6a00" }}>{news.author[0].toUpperCase()}</Avatar>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 4, flexWrap: "wrap" }}>
+              <Avatar sx={{ bgcolor: "#1d4ed8" }}>{news.author?.[0]?.toUpperCase() || "A"}</Avatar>
               <Box>
-                <Typography variant="subtitle2" sx={{ color: "#fff" }}>{news.author}</Typography>
-                <Typography variant="caption" sx={{ color: "#aaa" }}>
-                  Ngày đăng: {new Date(news.createdAt).toLocaleDateString("vi-VN")} | {news.views || 0} lượt xem
-                </Typography>
+                <Typography variant="subtitle2" sx={{ color: "#0f172a", fontWeight: 700 }}>{news.author}</Typography>
+                <Box sx={{ display: "flex", gap: 2, color: "#64748b", mt: 0.5 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    <AccessTimeIcon fontSize="small" />
+                    <Typography variant="caption">
+                      {new Date(news.createdAt).toLocaleDateString("vi-VN")}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    <PersonOutlineIcon fontSize="small" />
+                    <Typography variant="caption">{news.views || 0} lượt xem</Typography>
+                  </Box>
+                </Box>
               </Box>
             </Box>
 
-            <Divider sx={{ borderColor: "#333", mb: 4 }} />
+            <Divider sx={{ borderColor: "#e8edf5", mb: 4 }} />
 
-            <Typography 
-              sx={{ 
-                color: "#eee", 
-                fontSize: "1.1rem", 
+            <Typography
+              sx={{
+                color: "#1f2937",
+                fontSize: "1.05rem",
                 lineHeight: 1.8,
                 "& p": { mb: 2 },
-                "& img": { maxWidth: "100%", height: "auto", borderRadius: 2, my: 2 }
+                "& h1, & h2, & h3": { color: "#0f172a", mt: 2, mb: 1.5 },
+                "& img": { maxWidth: "100%", height: "auto", borderRadius: 2, my: 2 },
               }}
               dangerouslySetInnerHTML={{ __html: news.content }}
             />
           </Box>
-        </Card>
+        </Box>
       </Box>
     </Box>
   );
 };
-
-// Simple Card container for the content
-const Card = ({ children, sx }: any) => (
-    <Box sx={{ ...sx }}>{children}</Box>
-);
 
 export default NewsDetail;
