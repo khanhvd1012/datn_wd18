@@ -583,6 +583,16 @@ const ProductManagement: React.FC = () => {
                 onChange={(e) => setFormData({ ...formData, countInStock: Number(e.target.value) })}
               />
             </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Album hình ảnh (Danh sách URL, cách nhau bằng dấu phẩy)"
+                placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
+                value={formData.images.join(', ')}
+                onChange={(e) => setFormData({ ...formData, images: e.target.value.split(',').map(img => img.trim()).filter(img => img !== '') })}
+                helperText="Nhập các đường dẫn ảnh sản phẩm, mỗi ảnh cách nhau bằng dấu phẩy"
+              />
+            </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>

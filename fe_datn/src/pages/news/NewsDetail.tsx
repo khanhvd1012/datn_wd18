@@ -8,9 +8,7 @@ import {
   Link as MuiLink,
   Divider,
   CircularProgress,
-  Avatar,
-  Container,
-  Paper,
+  Avatar
 } from "@mui/material";
 
 interface NewsItem {
@@ -29,139 +27,107 @@ const NewsDetail = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchNews = async () => {
-      try {
-        const res = await api.get(`/news/${id}`);
-        setNews(res.data);
-      } catch (err) {
-        console.error("Error fetching news detail:", err);
-      } finally {
+    api.get(`/news/${id}`)
+      .then((res) => {
+        setNews(res.data.data || res.data);
         setLoading(false);
-      }
-    };
-
-    fetchNews();
+      })
+      .catch((err) => {
+        console.error("Error fetching news detail:", err);
+        setLoading(false);
+      });
   }, [id]);
 
   if (loading) {
     return (
-      <Box
-        sx={{
-          minHeight: "60vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <CircularProgress />
+      <Box sx={{ minHeight: "80vh", display: "flex", justifyContent: "center", alignItems: "center", background: "#111" }}>
+        <CircularProgress sx={{ color: "#ff6a00" }} />
       </Box>
     );
   }
 
   if (!news) {
     return (
-      <Container maxWidth="md" sx={{ py: 8, textAlign: "center" }}>
-        <Typography variant="h5" mb={3}>
-          Bài viết không tồn tại
-        </Typography>
-        <MuiLink component={Link} to="/news" underline="hover">
-          Quay lại tin tức
-        </MuiLink>
-      </Container>
+      <Box sx={{ minHeight: "80vh", display: "flex", justifyContent: "center", alignItems: "center", background: "#111" }}>
+        <Typography color="#fff">Bài viết không tồn tại</Typography>
+      </Box>
     );
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Breadcrumbs sx={{ mb: 4 }}>
-        <MuiLink
-          component={Link}
-          to="/"
-          underline="hover"
-          sx={{ color: "text.secondary" }}
-        >
-          Trang chủ
-        </MuiLink>
-        <MuiLink
-          component={Link}
-          to="/news"
-          underline="hover"
-          sx={{ color: "text.secondary" }}
-        >
-          Tin tức
-        </MuiLink>
-        <Typography color="text.primary">Chi tiết</Typography>
-      </Breadcrumbs>
-
-      <Paper sx={{ p: { xs: 3, md: 5 }, borderRadius: 3 }}>
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: "bold",
-            mb: 3,
-            lineHeight: 1.3,
-          }}
-        >
-          {news.title}
-        </Typography>
-
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-          <Avatar sx={{ bgcolor: "primary.main" }}>
-            {news.author?.[0]?.toUpperCase() || "A"}
-          </Avatar>
-          <Box>
-            <Typography variant="subtitle2" fontWeight="bold">
-              {news.author}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {new Date(news.createdAt).toLocaleDateString("vi-VN", {
-                day: "2-digit",
-                month: "long",
-                year: "numeric",
-              })}{" "}
-              | {news.views || 0} lượt xem
-            </Typography>
-          </Box>
-        </Box>
-
-        {news.images?.[0] && (
-          <Box
-            component="img"
-            src={news.images[0]}
-            onError={(e: any) => {
-              e.target.style.display = "none";
-            }}
-            sx={{
+    <Box sx={{ background: "#111", minHeight: "100vh", pb: 10 }}>
+      {/* Feature Image Header */}
+      {news.images[0] && (
+        <Box 
+          sx={{ 
+            width: "100%", 
+            height: "40vh", 
+            backgroundImage: `url(${news.images[0]})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            position: "relative",
+            "&::after": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
               width: "100%",
-              height: "auto",
-              borderRadius: 2,
-              mb: 4,
-            }}
-          />
-        )}
-
-        <Divider sx={{ mb: 4 }} />
-
-        <Typography
-          sx={{
-            fontSize: "1.1rem",
-            lineHeight: 1.8,
-            "& p": { mb: 2 },
-            "& img": { maxWidth: "100%", height: "auto", borderRadius: 2, my: 2 },
+              height: "100%",
+              backgroundColor: "rgba(0,0,0,0.5)"
+            }
           }}
-          dangerouslySetInnerHTML={{ __html: news.content }}
         />
+      )}
 
-        <Divider sx={{ my: 4 }} />
+      <Box sx={{ maxWidth: 900, mx: "auto", px: 2, mt: news.images[0] ? -10 : 4, position: "relative", zIndex: 2 }}>
+        <Card sx={{ backgroundColor: "#1a1a1a", border: "1px solid #333", borderRadius: 4, overflow: "hidden" }}>
+          <Box sx={{ p: { xs: 3, md: 6 } }}>
+            <Breadcrumbs sx={{ color: "#aaa", mb: 3 }}>
+              <MuiLink component={Link} to="/" sx={{ color: "#aaa", textDecoration: "none" }}>
+                Trang chủ
+              </MuiLink>
+              <MuiLink component={Link} to="/news" sx={{ color: "#aaa", textDecoration: "none" }}>
+                Tin tức
+              </MuiLink>
+              <Typography color="#ff6a00" sx={{ display: { xs: "none", sm: "block" } }}>Chi tiết</Typography>
+            </Breadcrumbs>
 
-        <Box sx={{ display: "flex", justifyContent: "center" }}>
-          <MuiLink component={Link} to="/news" underline="hover">
-            ← Quay lại danh sách tin tức
-          </MuiLink>
-        </Box>
-      </Paper>
-    </Container>
+            <Typography variant="h3" sx={{ color: "#fff", fontWeight: "bold", mb: 4, lineHeight: 1.2, fontSize: { xs: "2rem", md: "3rem" } }}>
+              {news.title}
+            </Typography>
+
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 4 }}>
+              <Avatar sx={{ bgcolor: "#ff6a00" }}>{news.author[0].toUpperCase()}</Avatar>
+              <Box>
+                <Typography variant="subtitle2" sx={{ color: "#fff" }}>{news.author}</Typography>
+                <Typography variant="caption" sx={{ color: "#aaa" }}>
+                  Ngày đăng: {new Date(news.createdAt).toLocaleDateString("vi-VN")} | {news.views || 0} lượt xem
+                </Typography>
+              </Box>
+            </Box>
+
+            <Divider sx={{ borderColor: "#333", mb: 4 }} />
+
+            <Typography 
+              sx={{ 
+                color: "#eee", 
+                fontSize: "1.1rem", 
+                lineHeight: 1.8,
+                "& p": { mb: 2 },
+                "& img": { maxWidth: "100%", height: "auto", borderRadius: 2, my: 2 }
+              }}
+              dangerouslySetInnerHTML={{ __html: news.content }}
+            />
+          </Box>
+        </Card>
+      </Box>
+    </Box>
   );
 };
+
+// Simple Card container for the content
+const Card = ({ children, sx }: any) => (
+    <Box sx={{ ...sx }}>{children}</Box>
+);
 
 export default NewsDetail;

@@ -4,198 +4,189 @@ import {
   ListItemButton,
   ListItemText,
   IconButton,
-  Typography,
-  useMediaQuery,
-  useTheme
 } from "@mui/material";
 
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 
-import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
-import AndroidIcon from "@mui/icons-material/Android";
-import HeadphonesIcon from "@mui/icons-material/Headphones";
-import WatchIcon from "@mui/icons-material/Watch";
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-// 👉 IMPORT ẢNH
-import banner1 from "../img/ac166ae798c54cb4a000c21118458dc0.webp";
-import banner2 from "../img/bl2.jpg";
-import banner3 from "../img/bl3.jpg";
+import mainBanner4 from "../img/ban-phu-kien-dien-thoai-co-lai-khong.jpg";
+import mainBanner6 from "../img/a93517d958abd6f58fba.jpg";
+import mainBanner7 from "../img/5f096f672215ac4bf504.jpg";
+import mainBanner9 from "../img/bl2.jpg";
+import mainBanner10 from "../img/bl3.jpg";
 
-import ad1 from "../img/5f096f672215ac4bf504.jpg";
-import ad2 from "../img/a93517d958abd6f58fba.jpg";
-
-// 👉 DANH MỤC
-const categories = [
-  { name: "Phụ kiện iPhone", slug: "iphone", icon: <PhoneIphoneIcon fontSize="small" /> },
-  { name: "Phụ kiện Samsung", slug: "samsung", icon: <AndroidIcon fontSize="small" /> },
-  { name: "Phụ kiện Xiaomi", slug: "xiaomi" },
-  { name: "Tai nghe Bluetooth", slug: "tainghe", icon: <HeadphonesIcon fontSize="small" /> },
-  { name: "Đồng hồ thông minh", slug: "dongho", icon: <WatchIcon fontSize="small" /> }
-];
-
-// 👉 BANNER
-const banners = [
-  { img: banner1, title: "Phụ kiện xịn giá sốc 🔥" },
-  { img: banner2, title: "Sale cực mạnh hôm nay 💥" },
-  { img: banner3, title: "Mua là có quà 🎁" }
-];
-
-const rightAds = [ad1, ad2];
+// Dữ liệu sẽ được fetch từ API
 
 const Banner = () => {
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-
   const [index, setIndex] = useState(0);
   const [hover, setHover] = useState(false);
+  const [apiCategories, setApiCategories] = useState<
+    { name: string; _id: string }[]
+  >([]);
+  const [apiBanners, setApiBanners] = useState<
+    { image: string; title: string; _id: string }[]
+  >([]);
 
-  // Auto slide
   useEffect(() => {
-    if (hover) return;
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % banners.length);
-    }, 3500);
-    return () => clearInterval(timer);
-  }, [hover]);
+    const fetchData = async () => {
+      try {
+        const [catRes, banRes] = await Promise.all([
+          fetch("http://localhost:3000/api/categories"),
+          fetch("http://localhost:3000/api/banners"),
+        ]);
+        const cats = await catRes.json();
+        const bans = await banRes.json();
 
-  const next = () => setIndex((prev) => (prev + 1) % banners.length);
-  const prev = () =>
-    setIndex((prev) => (prev === 0 ? banners.length - 1 : prev - 1));
+        setApiCategories(Array.isArray(cats) ? cats : []);
+        // Lọc banner đang hoạt động
+        setApiBanners(
+          Array.isArray(bans)
+            ? bans.filter((b: any) => b.status !== false)
+            : [],
+        );
+      } catch (err) {
+        console.error("Lỗi load banner/categories:", err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (hover || apiBanners.length === 0) return;
+
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % apiBanners.length);
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [hover, apiBanners.length]);
+
+  const next = () => {
+    if (apiBanners.length === 0) return;
+    setIndex((prev) => (prev + 1) % apiBanners.length);
+  };
+
+  const prev = () => {
+    if (apiBanners.length === 0) return;
+    setIndex((prev) => (prev === 0 ? apiBanners.length - 1 : prev - 1));
+  };
+
+  const goCategory = (id: string) => {
+    navigate(`/products?category=${id}`);
+  };
 
   return (
-    <Box sx={{ bgcolor: "#f5f5f7", py: 4 }}>
+    <Box sx={{ mt: 3 }}>
       <Box
         sx={{
           display: "flex",
-          flexDirection: isMobile ? "column" : "row",
           gap: 2,
           maxWidth: 1200,
-          mx: "auto"
+          mx: "auto",
         }}
       >
         {/* SIDEBAR */}
-        {!isMobile && (
-          <Box sx={{ width: 240, bgcolor: "#fff", borderRadius: 3 }}>
-            <Box
-              sx={{
-                bgcolor: "#ee4d2d",
-                color: "#fff",
-                p: 1.5,
-                textAlign: "center",
-                fontWeight: 700
-              }}
-            >
-              DANH MỤC
-            </Box>
 
-            <List sx={{ p: 0 }}>
-              {categories.map((item, i) => (
-                <ListItemButton
-                  key={i}
-                  onClick={() => navigate(`/products?category=${item.slug}`)}
-                  sx={{
-                    borderBottom: "1px solid #f5f5f5",
-                    "&:hover": { background: "#fff1f0", pl: 3 }
-                  }}
-                >
-                  {item.icon}
-                  <ListItemText primary={item.name} sx={{ ml: 1 }} />
-                </ListItemButton>
-              ))}
-            </List>
+        <Box
+          sx={{
+            width: 230,
+            bgcolor: "#fff",
+            borderRadius: 3,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
+          }}
+        >
+          <Box
+            sx={{
+              bgcolor: "#1976d2", // Changed to blue for phone accessories theme
+              color: "#fff",
+              fontWeight: 700,
+              p: 1.5,
+              borderTopLeftRadius: 12,
+              borderTopRightRadius: 12,
+            }}
+          >
+            PHỤ KIỆN ĐIỆN THOẠI
           </Box>
-        )}
 
-        {/* SLIDER */}
+          <List sx={{ p: 0 }}>
+            {apiCategories.map((item, i) => (
+              <ListItemButton
+                key={i}
+                onClick={() => goCategory(item._id)}
+                sx={{
+                  borderBottom: "1px solid #f1f1f1",
+                  transition: "0.25s",
+
+                  "&:hover": {
+                    background: "#e3f2fd", // Light blue hover
+                    pl: 3,
+                  },
+                }}
+              >
+                <ListItemText
+                  primary={item.name}
+                  primaryTypographyProps={{
+                    fontSize: 14,
+                    fontWeight: 500,
+                  }}
+                />
+              </ListItemButton>
+            ))}
+          </List>
+        </Box>
+
+        {/* MAIN SLIDER */}
+
         <Box
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
           sx={{
             flex: 1,
-            height: 400,
+            height:455,
             borderRadius: 3,
             overflow: "hidden",
             position: "relative",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.15)"
+            boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
           }}
         >
-          {/* Slides */}
           <Box
             sx={{
               display: "flex",
-              width: `${banners.length * 100}%`,
-              transform: `translateX(-${index * (100 / banners.length)}%)`,
-              transition: "0.6s"
+              width: `${(apiBanners.length || 1) * 100}%`,
+              transform: `translateX(-${index * 100}%)`,
+              transition: "0.6s",
             }}
           >
-            {banners.map((item, i) => (
+            {apiBanners.map((banner, i) => (
               <Box
                 key={i}
-                sx={{ width: `${100 / banners.length}%`, position: "relative" }}
-              >
-                {/* Blur background */}
-                <Box
-                  component="img"
-                  src={item.img}
-                  sx={{
-                    position: "absolute",
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    filter: "blur(30px)",
-                    transform: "scale(1.2)",
-                  }}
-                />
-
-                {/* Main image */}
-                <Box
-                  component="img"
-                  src={item.img}
-                  sx={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "contain",
-                    position: "relative",
-                    zIndex: 2
-                  }}
-                />
-
-                {/* Overlay gradient */}
-                <Box
-                  sx={{
-                    position: "absolute",
-                    inset: 0,
-                    background:
-                      "linear-gradient(to right, rgba(0,0,0,0.4), transparent)"
-                  }}
-                />
-
-                {/* Text */}
-                <Typography
-                  sx={{
-                    position: "absolute",
-                    bottom: 30,
-                    left: 30,
-                    color: "#fff",
-                    fontSize: 28,
-                    fontWeight: 800,
-                    opacity: index === i ? 1 : 0,
-                    transform: index === i ? "translateY(0)" : "translateY(40px)",
-                    transition: "0.5s"
-                  }}
-                >
-                  {item.title}
-                </Typography>
-              </Box>
+                component="img"
+                src={banner.image}
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+              />
             ))}
+
+            {apiBanners.length === 0 && (
+              <Box
+                component="img"
+                src={mainBanner4}
+                sx={{
+                  width: "100%",
+                  height: 380,
+                  objectFit: "cover",
+                }}
+              />
+            )}
           </Box>
 
-          {/* Arrow Buttons */}
           <IconButton
             onClick={prev}
             sx={{
@@ -205,10 +196,6 @@ const Banner = () => {
               transform: "translateY(-50%)",
               bgcolor: "rgba(0,0,0,0.4)",
               color: "#fff",
-              opacity: hover ? 1 : 0,
-              transition: "0.3s",
-              "&:hover": { bgcolor: "rgba(0,0,0,0.6)" },
-              zIndex: 10
             }}
           >
             <ArrowBackIosNewIcon />
@@ -223,63 +210,56 @@ const Banner = () => {
               transform: "translateY(-50%)",
               bgcolor: "rgba(0,0,0,0.4)",
               color: "#fff",
-              opacity: hover ? 1 : 0,
-              transition: "0.3s",
-              "&:hover": { bgcolor: "rgba(0,0,0,0.6)" },
-              zIndex: 10
             }}
           >
             <ArrowForwardIosIcon />
           </IconButton>
-
-          {/* Dots */}
-          <Box
-            sx={{
-              position: "absolute",
-              bottom: 15,
-              left: "50%",
-              transform: "translateX(-50%)",
-              display: "flex",
-              gap: 1
-            }}
-          >
-            {banners.map((_, i) => (
-              <Box
-                key={i}
-                onClick={() => setIndex(i)}
-                sx={{
-                  width: index === i ? 18 : 8,
-                  height: 8,
-                  borderRadius: 5,
-                  bgcolor: index === i ? "#ee4d2d" : "#fff",
-                  cursor: "pointer",
-                  transition: "all 0.3s",
-                }}
-              />
-            ))}
-          </Box>
         </Box>
 
-        {/* RIGHT ADS */}
-        {!isMobile && (
-          <Box sx={{ width: 250, display: "flex", flexDirection: "column", gap: 2 }}>
-            {rightAds.map((img, i) => (
-              <Box
-                key={i}
-                component="img"
-                src={img}
-                sx={{
-                  width: "100%",
-                  height: 190,
-                  borderRadius: 3,
-                  objectFit: "cover",
-                  transition: "0.3s",
-                  "&:hover": { transform: "scale(1.05)" }
-                }}
-              />
-            ))}
-          </Box>
-        )}
+        {/* RIGHT ADS
+
+        <Box
+          sx={{
+            width:250,
+            display:"flex",
+            flexDirection:"column",
+            gap:2
+          }}
+        >
+
+          <Box
+            component="img"
+            src={mainBanner7}
+            sx={{
+              width:"100%",
+              height:180,
+              borderRadius:3,
+              objectFit:"cover",
+              transition:"0.3s",
+
+              "&:hover":{
+                transform:"scale(1.05)"
+              }
+            }}
+          />
+
+          <Box
+            component="img"
+            src={mainBanner6}
+            sx={{
+              width:"100%",
+              height:180,
+              borderRadius:3,
+              objectFit:"cover",
+              transition:"0.3s",
+
+              "&:hover":{
+                transform:"scale(1.05)"
+              }
+            }}
+          /> */}
+
+        {/* </Box> */}
       </Box>
     </Box>
   );

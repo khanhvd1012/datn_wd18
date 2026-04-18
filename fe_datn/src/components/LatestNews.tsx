@@ -35,9 +35,9 @@ const LatestNews = () => {
   if (news.length === 0) return null;
 
   return (
-    <Box sx={{ maxWidth: 1300, mx: "auto", px: 2, py: 6 }}>
+    <Box sx={{ maxWidth: 1300, mx: "auto", px: 2, py: 6 ,backgroundColor: "#f5f5f5"}}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
-        <Typography variant="h5" sx={{ fontWeight: "bold", color: "#fff" }}>
+        <Typography variant="h5" sx={{ fontWeight: "bold", color: "#656464" }}>
           TIN TỨC MỚI NHẤT
         </Typography>
         <Button 

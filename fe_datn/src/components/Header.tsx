@@ -18,6 +18,7 @@ import PhoneIcon from "@mui/icons-material/Phone";
 
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { getCartApi } from "../services/cartService";
 
 import logo3 from "../img/logo3.png";
 
@@ -43,46 +44,38 @@ const Header = () => {
 
   // ================= LOAD CART =================
   const loadCartCount = async () => {
-    const user = localStorage.getItem("user");
-    if (!user) {
-      setCartCount(0);
-      return;
-    }
-
     try {
-      const token = JSON.parse(user).token;
-      const res = await fetch("http://localhost:3000/api/cart", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.status === 401 || res.status === 403) {
-        setCartCount(0);
-        return;
-      }
-
-      const data = await res.json();
-      const total = Array.isArray(data)
-        ? data.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0)
-        : 0;
+      const data = await getCartApi();
+      const total = data.reduce(
+        (sum: number, item: any) => sum + item.quantity,
+        0
+      );
       setCartCount(total);
     } catch (error) {
+      console.error("Load cart error:", error);
       setCartCount(0);
     }
   };
 
   useEffect(() => {
+    if (user) {
+      loadCartCount();
+    } else {
+      setCartCount(0);
+    }
 
-    loadCartCount();
+    const handleCartUpdate = () => {
+      loadCartCount();
+    };
 
+    window.addEventListener("cartUpdated", handleCartUpdate);
     window.addEventListener("storage", loadCartCount);
 
     return () => {
+      window.removeEventListener("cartUpdated", handleCartUpdate);
       window.removeEventListener("storage", loadCartCount);
     };
-
-  }, []);
+  }, [user]);
 
   // ================= LOGOUT =================
   const handleLogout = () => {

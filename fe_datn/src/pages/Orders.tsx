@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import api from "../services/api";
-
 import {
   Box,
   Typography,
@@ -9,244 +7,298 @@ import {
   Button,
   Chip,
   Container,
+  Tabs,
+  Tab,
   Divider,
-  Breadcrumbs,
-  Link,
-  Skeleton,
+  Grid,
+  alpha,
+  useTheme
 } from "@mui/material";
-
+import {
+  LocalShippingOutlined,
+  CheckCircleOutline,
+  ScheduleOutlined,
+  CancelOutlined,
+  ShoppingBagOutlined,
+  Inventory2Outlined
+} from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { getOrdersApi } from "../services/orderService";
+import type { Order } from "../services/orderService";
+
+// Helper function to get image URL properly
+const getImageUrl = (imagePath: string) => {
+  if (!imagePath) return "https://placehold.co/100x100?text=No+Image";
+  if (imagePath.startsWith("http")) return imagePath;
+  if (imagePath.startsWith("uploads/")) {
+    return `http://localhost:3000/${imagePath}`;
+  }
+  return `http://localhost:3000/uploads/products/${imagePath}`;
+};
 
 const Orders = () => {
-  const [orders, setOrders] = useState<any[]>([]);
+  const theme = useTheme();
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tabValue, setTabValue] = useState("all");
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const res = await api.get("/orders");
-        setOrders(Array.isArray(res.data) ? res.data : res.data.data || []);
-      } catch (err) {
-        console.error("Lỗi load orders:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchOrders();
   }, []);
 
-  const getStatus = (status: string) => {
-    switch (status) {
-      case "pending":
-        return { label: "Chờ xác nhận", color: "warning" as const };
-      case "confirmed":
-        return { label: "Đã xác nhận", color: "info" as const };
-      case "processing":
-        return { label: "Đang xử lý", color: "info" as const };
-      case "shipping":
-        return { label: "Đang giao hàng", color: "primary" as const };
-      case "delivered":
-        return { label: "Đã giao hàng", color: "success" as const };
-      case "completed":
-        return { label: "Hoàn thành", color: "success" as const };
-      case "cancelled":
-        return { label: "Đã hủy", color: "error" as const };
-      default:
-        return { label: "Chờ xác nhận", color: "warning" as const };
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const data = await getOrdersApi();
+      setOrders(data || []);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const formatPrice = (price: number) => {
-    return (price || 0).toLocaleString("vi-VN") + "₫";
+  const getStatusInfo = (status: string) => {
+    switch (status) {
+      case "pending":
+        return { label: "Chờ xác nhận", color: "warning", icon: <ScheduleOutlined fontSize="small" /> };
+      case "confirmed":
+        return { label: "Đã xác nhận", color: "success", icon: <CheckCircleOutline fontSize="small" /> };
+      case "processing":
+        return { label: "Đang xử lý", color: "info", icon: <Inventory2Outlined fontSize="small" /> };
+      case "shipping":
+        return { label: "Đang giao", color: "secondary", icon: <LocalShippingOutlined fontSize="small" /> };
+      case "delivered":
+        return { label: "Đã giao hàng", color: "success", icon: <CheckCircleOutline fontSize="small" /> };
+      case "cancelled":
+        return { label: "Đã hủy", color: "error", icon: <CancelOutlined fontSize="small" /> };
+      default:
+        return { label: status || "Không xác định", color: "default", icon: <ShoppingBagOutlined fontSize="small" /> };
+    }
   };
 
+  const filteredOrders = orders.filter((order) => {
+    if (tabValue === "all") return true;
+    return order.order_status === tabValue;
+  });
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Breadcrumbs sx={{ mb: 3 }}>
-        <Link
-          underline="hover"
-          sx={{ cursor: "pointer" }}
-          onClick={() => navigate("/")}
-        >
-          Trang chủ
-        </Link>
-        <Typography>Đơn hàng của tôi</Typography>
-      </Breadcrumbs>
-
-      <Typography
-        variant="h4"
-        fontWeight="bold"
-        mb={4}
-      >
-        Đơn hàng của bạn
-      </Typography>
-
-      {loading ? (
-        <Stack spacing={3}>
-          {[1, 2, 3].map((i) => (
-            <Paper key={i} sx={{ p: 3 }}>
-              <Skeleton variant="text" width="40%" height={30} />
-              <Skeleton variant="text" width="60%" />
-              <Skeleton variant="text" width="30%" />
-            </Paper>
-          ))}
-        </Stack>
-      ) : orders.length === 0 ? (
-        <Paper
-          sx={{
-            p: 6,
-            textAlign: "center",
-            borderRadius: 3,
-          }}
-        >
-          <Typography variant="h6" mb={2}>
-            Bạn chưa có đơn hàng nào
-          </Typography>
-          <Button
-            variant="contained"
-            onClick={() => navigate("/")}
-            sx={{
-              background: "#d70018",
-              "&:hover": { background: "#b71c1c" }
+    <Box sx={{ bgcolor: "#F8FAFC", minHeight: "100vh", pb: 10, textAlign: 'left' }}>
+      {/* Premium Header */}
+      <Box sx={{
+        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+        color: 'white',
+        py: { xs: 5, md: 8 },
+        mb: 6,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+        textAlign: 'center'
+      }}>
+        <Container maxWidth="lg" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Typography 
+            variant="h4" 
+            fontWeight={700} 
+            sx={{ 
+              mb: 2, 
+              fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+              letterSpacing: '0.5px'
             }}
           >
-            Bắt đầu mua sắm
-          </Button>
+            Lịch sử mua hàng
+          </Typography>
+          <Typography 
+            variant="subtitle1" 
+            sx={{ 
+              color: alpha('#fff', 0.8), 
+              maxWidth: 600,
+              fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif'
+            }}
+          >
+            Kiểm tra trạng thái và theo dõi các đơn hàng bạn đã đặt một cách dễ dàng và nhanh chóng.
+          </Typography>
+        </Container>
+      </Box>
+
+      <Container maxWidth="md">
+        <Paper
+          elevation={0}
+          sx={{
+            borderRadius: 3,
+            overflow: "hidden",
+            border: `1px solid ${theme.palette.divider}`,
+            bgcolor: 'white'
+          }}
+        >
+          <Tabs
+            value={tabValue}
+            onChange={(_, newValue) => setTabValue(newValue)}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{
+              "& .MuiTabs-indicator": {
+                height: 3,
+                borderRadius: "3px 3px 0 0",
+              },
+              "& .MuiTab-root": {
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                minHeight: 56
+              }
+            }}
+          >
+            <Tab label="Tất cả đơn" value="all" />
+            <Tab label="Chờ xác nhận" value="pending" />
+            <Tab label="Đã xác nhận" value="confirmed" />
+            <Tab label="Đang xử lý" value="processing" />
+            <Tab label="Đang giao" value="shipping" />
+            <Tab label="Hoàn thành" value="delivered" />
+            <Tab label="Đã hủy" value="cancelled" />
+          </Tabs>
         </Paper>
-      ) : (
-        <Stack spacing={3}>
-          {orders.map((order: any) => {
-            const status = getStatus(order.order_status || order.status);
 
-            return (
-              <Paper
-                key={order._id || order.id}
-                sx={{
-                  p: 3,
-                  borderRadius: 3,
-                  boxShadow: 2,
-                  transition: "0.3s",
-                  "&:hover": { boxShadow: 4 }
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    flexWrap: "wrap",
-                    gap: 2,
-                    mb: 2
-                  }}
-                >
-                  <Box>
-                    <Typography fontWeight="bold" fontSize={16}>
-                      Mã đơn: #{(order._id || order.id)?.toString().slice(-6).toUpperCase()}
-                    </Typography>
-                    <Typography color="text.secondary" variant="body2">
-                      Ngày đặt: {new Date(order.createdAt || order.created_at).toLocaleDateString("vi-VN")}
-                    </Typography>
-                    <Typography color="text.secondary" variant="body2">
-                      Khách hàng: {order.shipping_info?.name || order.customerName}
-                    </Typography>
-                  </Box>
+        <Box mt={4}>
+          {loading ? (
+            <Typography align="center" color="text.secondary" py={5}>
+              Đang tải danh sách đơn hàng...
+            </Typography>
+          ) : filteredOrders.length === 0 ? (
+            <Paper elevation={0} sx={{ p: 8, textAlign: 'center', borderRadius: 4, bgcolor: 'transparent', border: '1px dashed #cbd5e1' }}>
+              <ShoppingBagOutlined sx={{ fontSize: 60, color: 'text.disabled', mb: 2 }} />
+              <Typography variant="h6" color="text.secondary" fontWeight={600}>
+                Chưa có đơn hàng nào
+              </Typography>
+              <Typography variant="body2" color="text.disabled" mb={3}>
+                Bạn chưa có đơn hàng nào trong trạng thái này.
+              </Typography>
+              <Button variant="contained" onClick={() => navigate('/')} disableElevation sx={{ borderRadius: 2, px: 3, textTransform: 'none', fontWeight: 600 }}>
+                Tiếp tục mua sắm
+              </Button>
+            </Paper>
+          ) : (
+            <Stack spacing={3}>
+              {filteredOrders.map((order) => {
+                const status = getStatusInfo(order.order_status);
+                // Lấy sản phẩm đầu tiên để hiển thị thumbnail, hỗ trợ object (product_id) hoặc string (name)
+                const firstItem = order.order_items[0];
+                const productInfo = firstItem?.product_id || {};
+                
+                let itemName = firstItem?.name;
+                if (!itemName && typeof productInfo === 'object') {
+                  itemName = (productInfo as any).name;
+                }
+                
+                let itemImage = firstItem?.image;
+                if (!itemImage && typeof productInfo === 'object' && Array.isArray((productInfo as any).images)) {
+                  itemImage = (productInfo as any).images[0];
+                }
 
-                  <Chip
-                    label={status.label}
-                    color={status.color}
-                    size="small"
-                  />
-                </Box>
-
-                <Divider sx={{ my: 2 }} />
-
-                {/* Order Items Preview */}
-                <Box sx={{ mb: 2 }}>
-                  {(order.order_items || order.items || []).slice(0, 2).map((item: any, index: number) => (
-                    <Box
-                      key={index}
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
-                        mb: 1
-                      }}
-                    >
-                      <Box
-                        component="img"
-                        src={item.image || item.img}
-                        onError={(e: any) => {
-                          e.target.src = "https://via.placeholder.com/50x50?text=No+Image";
-                        }}
-                        sx={{
-                          width: 50,
-                          height: 50,
-                          objectFit: "contain",
-                          borderRadius: 1,
-                          bgcolor: "#f5f5f5"
-                        }}
-                      />
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="body2" noWrap>
-                          {item.name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          SL: {item.quantity} × {formatPrice(item.price)}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  ))}
-                  {(order.order_items || order.items || []).length > 2 && (
-                    <Typography variant="caption" color="text.secondary">
-                      ... và {(order.order_items || order.items || []).length - 2} sản phẩm khác
-                    </Typography>
-                  )}
-                </Box>
-
-                <Divider sx={{ my: 2 }} />
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center"
-                  }}
-                >
-                  <Box>
-                    <Typography variant="body2" color="text.secondary">
-                      Tổng tiền:
-                    </Typography>
-                    <Typography
-                      fontWeight="bold"
-                      fontSize={18}
-                      color="#d70018"
-                    >
-                      {formatPrice(order.total)}
-                    </Typography>
-                  </Box>
-
-                  <Button
-                    variant="contained"
-                    onClick={() => navigate(`/orders/${order._id || order.id}`)}
+                return (
+                  <Paper
+                    key={order._id}
+                    elevation={0}
                     sx={{
-                      background: "#d70018",
-                      px: 3,
-                      "&:hover": {
-                        background: "#b71c1c"
+                      borderRadius: 3,
+                      border: `1px solid ${theme.palette.divider}`,
+                      transition: "all 0.2s ease",
+                      "&:hover": { 
+                        boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
+                        borderColor: alpha(theme.palette.primary.main, 0.3)
                       }
                     }}
                   >
-                    Xem chi tiết
-                  </Button>
-                </Box>
-              </Paper>
-            );
-          })}
-        </Stack>
-      )}
-    </Container>
+                    <Box sx={{ p: 2.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
+                      <Typography variant="body2" fontWeight={700} sx={{ color: 'text.secondary' }}>
+                        Mã đơn: <Box component="span" sx={{ color: 'text.primary' }}>#{order._id.slice(-8).toUpperCase()}</Box>
+                      </Typography>
+                      <Chip
+                        icon={status.icon}
+                        label={status.label}
+                        color={status.color as any}
+                        size="small"
+                        sx={{ fontWeight: 600, px: 0.5, letterSpacing: '0.3px' }}
+                      />
+                    </Box>
+
+                    <Box sx={{ p: 3 }}>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
+                        <Box sx={{ flexShrink: 0 }}>
+                          <Box sx={{ 
+                            width: 80, 
+                            height: 80, 
+                            borderRadius: 2, 
+                            border: '1px solid #f1f5f9',
+                            overflow: 'hidden',
+                            bgcolor: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <img 
+                              src={getImageUrl(itemImage)} 
+                              alt={itemName || "Product"} 
+                              style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+                            />
+                          </Box>
+                        </Box>
+                        
+                        <Box sx={{ flexGrow: 1, minWidth: 150 }}>
+                          <Typography variant="subtitle1" fontWeight={600} noWrap>
+                            {itemName || "Sản phẩm"}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" mt={0.5}>
+                            {order.order_items.length > 1 ? `và ${order.order_items.length - 1} sản phẩm khác` : `Số lượng: ${firstItem?.quantity || 1}`}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" mt={0.5}>
+                            Ngày đặt: {new Date(order.createdAt).toLocaleDateString('vi-VN')}
+                          </Typography>
+                        </Box>
+                        
+                        <Box sx={{ flexShrink: 0, width: { xs: '100%', sm: 'auto' }, textAlign: { xs: 'left', sm: 'right' }, mt: { xs: 2, sm: 0 } }}>
+                          <Typography variant="body2" color="text.secondary" mb={0.5}>
+                            Tổng tiền
+                          </Typography>
+                          <Typography variant="h6" fontWeight={700} color="primary.main">
+                            {order.total?.toLocaleString('vi-VN')}₫
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      <Divider sx={{ my: 2.5 }} />
+
+                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                        {order.order_status === "delivered" && (
+                          <Button 
+                            variant="outlined" 
+                            color="inherit" 
+                            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+                          >
+                            Đánh giá
+                          </Button>
+                        )}
+                        <Button
+                          variant="contained"
+                          disableElevation
+                          onClick={() => navigate(`/orders/${order._id}`)}
+                          sx={{
+                            borderRadius: 2,
+                            px: 3,
+                            textTransform: "none",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Xem chi tiết
+                        </Button>
+                      </Box>
+                    </Box>
+                  </Paper>
+                );
+              })}
+            </Stack>
+          )}
+        </Box>
+      </Container>
+    </Box>
   );
 };
 

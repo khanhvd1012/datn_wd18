@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { getPaymentInfoApi } from "../services/paymentService";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Container,
@@ -26,9 +26,9 @@ const PaymentBank = () => {
   useEffect(() => {
     const fetchBankInfo = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/api/payment/info");
-        if (response.data && response.data.bankInfo) {
-          setBankInfo(response.data.bankInfo);
+        const data = await getPaymentInfoApi();
+        if (data && data.bankInfo) {
+          setBankInfo(data.bankInfo);
         }
       } catch (error) {
         console.error("Error fetching bank info:", error);

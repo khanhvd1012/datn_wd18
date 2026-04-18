@@ -10,16 +10,13 @@ import {
   Breadcrumbs,
   Link as MuiLink,
   Pagination,
-  Skeleton,
-  Container,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 
 interface NewsItem {
   _id: string;
   title: string;
-  excerpt?: string;
-  content?: string;
+  excerpt: string;
   images: string[];
   author: string;
   createdAt: string;
@@ -27,23 +24,13 @@ interface NewsItem {
 
 const NewsPage = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const itemsPerPage = 6;
 
   useEffect(() => {
-    const fetchNews = async () => {
-      try {
-        const res = await api.get("/news");
-        setNews(Array.isArray(res.data) ? res.data : res.data.docs || []);
-      } catch (err) {
-        console.error("Error fetching news:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchNews();
+    api.get("/news")
+      .then((res) => setNews(res.data.data || res.data))
+      .catch((err) => console.error("Error fetching news:", err));
   }, []);
 
   const totalPages = Math.ceil(news.length / itemsPerPage);
@@ -53,151 +40,133 @@ const NewsPage = () => {
   );
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Breadcrumbs sx={{ mb: 4 }}>
-        <MuiLink
-          component={Link}
-          to="/"
-          underline="hover"
-          sx={{ color: "text.secondary", textDecoration: "none" }}
+    <Box sx={{ background: "#111", minHeight: "100vh", py: 4 }}>
+      <Box sx={{ maxWidth: 1200, mx: "auto", px: 2 }}>
+        <Breadcrumbs sx={{ color: "#aaa", mb: 4 }}>
+          <MuiLink
+            component={Link}
+            to="/"
+            sx={{ color: "#aaa", textDecoration: "none" }}
+          >
+            Trang chủ
+          </MuiLink>
+          <Typography color="#fff">Tin tức</Typography>
+        </Breadcrumbs>
+
+        <Typography
+          variant="h4"
+          sx={{ color: "#fff", fontWeight: "bold", mb: 4 }}
         >
-          Trang chủ
-        </MuiLink>
-        <Typography color="text.primary">Tin tức</Typography>
-      </Breadcrumbs>
+          TIN TỨC CÔNG NGHỆ
+        </Typography>
 
-      <Typography
-        variant="h4"
-        sx={{ fontWeight: "bold", mb: 4 }}
-      >
-        TIN TỨC MỚI NHẤT
-      </Typography>
-
-      {loading ? (
         <Grid container spacing={4}>
-          {[...Array(6)].map((_, i) => (
-            <Grid item xs={12} md={6} lg={4} key={i}>
-              <Card>
-                <Skeleton variant="rectangular" height={240} />
-                <CardContent>
-                  <Skeleton variant="text" height={30} />
-                  <Skeleton variant="text" />
-                  <Skeleton variant="text" width="60%" />
+          {displayedNews.map((item) => (
+            <Grid size={{ xs: 12, md: 6, lg: 4 }} key={item._id}>
+              <Card
+                sx={{
+                  height: "100%",
+                  backgroundColor: "#1a1a1a",
+                  border: "1px solid #333",
+                  transition: "0.3s",
+                  display: "flex",
+                  flexDirection: "column",
+                  "&:hover": {
+                    transform: "translateY(-5px)",
+                    borderColor: "#ff6a00",
+                  },
+                }}
+              >
+                <Link
+                  to={`/news/${item._id}`}
+                  style={{ textDecoration: "none" }}
+                >
+                  <CardMedia
+                    component="img"
+                    height="240"
+                    image={
+                      item.images[0] || "https://via.placeholder.com/400x240"
+                    }
+                    alt={item.title}
+                  />
+                </Link>
+                <CardContent
+                  sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
+                >
+                  <Typography
+                    variant="h6"
+                    component={Link}
+                    to={`/news/${item._id}`}
+                    sx={{
+                      color: "#fff",
+                      fontWeight: "bold",
+                      textDecoration: "none",
+                      mb: 2,
+                      "&:hover": { color: "#ff6a00" },
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {item.title}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "#aaa",
+                      mb: 2,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {item.excerpt}
+                  </Typography>
+                  <Box
+                    sx={{
+                      mt: "auto",
+                      pt: 2,
+                      borderTop: "1px solid #333",
+                      display: "flex",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <Typography variant="caption" sx={{ color: "#666" }}>
+                      Bởi: {item.author}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: "#666" }}>
+                      {new Date(item.createdAt).toLocaleDateString("vi-VN")}
+                    </Typography>
+                  </Box>
                 </CardContent>
               </Card>
             </Grid>
           ))}
         </Grid>
-      ) : displayedNews.length === 0 ? (
-        <Box textAlign="center" py={8}>
-          <Typography variant="h6" color="text.secondary">
-            Chưa có bài viết nào
-          </Typography>
-        </Box>
-      ) : (
-        <>
-          <Grid container spacing={4}>
-            {displayedNews.map((item) => (
-              <Grid item xs={12} md={6} lg={4} key={item._id}>
-                <Card
-                  sx={{
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    transition: "0.3s",
-                    "&:hover": {
-                      transform: "translateY(-5px)",
-                      boxShadow: 4,
-                    },
-                  }}
-                >
-                  <Link
-                    to={`/news/${item._id}`}
-                    style={{ textDecoration: "none" }}
-                  >
-                    <CardMedia
-                      component="img"
-                      height="240"
-                      image={
-                        item.images?.[0] || "https://via.placeholder.com/400x240?text=No+Image"
-                      }
-                      alt={item.title}
-                      onError={(e: any) => {
-                        e.target.src = "https://via.placeholder.com/400x240?text=No+Image";
-                      }}
-                    />
-                  </Link>
-                  <CardContent
-                    sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
-                  >
-                    <Typography
-                      variant="h6"
-                      component={Link}
-                      to={`/news/${item._id}`}
-                      sx={{
-                        fontWeight: "bold",
-                        textDecoration: "none",
-                        color: "text.primary",
-                        mb: 2,
-                        "&:hover": { color: "primary.main" },
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {item.title}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{
-                        mb: 2,
-                        flexGrow: 1,
-                        display: "-webkit-box",
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {item.excerpt || item.content?.substring(0, 150) || ""}
-                    </Typography>
-                    <Box
-                      sx={{
-                        pt: 2,
-                        borderTop: "1px solid",
-                        borderColor: "divider",
-                        display: "flex",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <Typography variant="caption" color="text.secondary">
-                        Tác giả: {item.author}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {new Date(item.createdAt).toLocaleDateString("vi-VN")}
-                      </Typography>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
 
-          {totalPages > 1 && (
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
-              <Pagination
-                count={totalPages}
-                page={page}
-                onChange={(_, value) => setPage(value)}
-                color="primary"
-                size="large"
-              />
-            </Box>
-          )}
-        </>
-      )}
-    </Container>
+        {totalPages > 1 && (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
+            <Pagination
+              count={totalPages}
+              page={page}
+              onChange={(_, value) => setPage(value)}
+              sx={{
+                "& .MuiPaginationItem-root": {
+                  color: "#fff",
+                  borderColor: "#333",
+                },
+                "& .Mui-selected": {
+                  backgroundColor: "#ff6a00 !important",
+                  color: "#fff",
+                },
+              }}
+            />
+          </Box>
+        )}
+      </Box>
+    </Box>
   );
 };
 

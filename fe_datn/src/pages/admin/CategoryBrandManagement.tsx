@@ -103,6 +103,8 @@ const CategoryBrandManagement: React.FC = () => {
     description: '',
     logo_image: '',
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [notification, setNotification] = useState({
     open: false,
     message: '',
@@ -154,6 +156,8 @@ const CategoryBrandManagement: React.FC = () => {
 
   const handleCreate = () => {
     setFormData({ name: '', description: '', logo_image: '' });
+    setImageFile(null);
+    setImagePreview(null);
     setDialogMode('create');
     setOpenDialog(true);
   };
@@ -165,9 +169,29 @@ const CategoryBrandManagement: React.FC = () => {
       description: item.description,
       logo_image: item.logo_image || '',
     });
+    setImageFile(null);
+    setImagePreview(item.logo_image || null);
     setDialogMode('edit');
     setOpenDialog(true);
     setAnchorEl(null); // Chỉ đóng menu, không xóa selectedItem
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setFormData({ ...formData, logo_image: '' });
   };
 
   const handleSave = async () => {
@@ -198,33 +222,42 @@ const CategoryBrandManagement: React.FC = () => {
         return;
       }
 
-      const dataToSend = {
-        name: formData.name.trim(),
-        description: formData.description.trim(),
-        logo_image: formData.logo_image.trim() || '',
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name.trim());
+      formDataToSend.append('description', formData.description.trim());
+      if (imageFile) {
+        formDataToSend.append('logo_image', imageFile);
+      } else if (formData.logo_image) {
+        formDataToSend.append('logo_image', formData.logo_image);
+      }
+
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       };
 
       if (tabValue === 0) {
         // Category operations
         if (dialogMode === 'create') {
-          await api.post('/categories', dataToSend);
+          await api.post('/categories', formDataToSend, config);
           showNotification('Tạo danh mục thành công', 'success');
         } else if (dialogMode === 'edit' && selectedItem) {
-          await api.put(`/categories/${selectedItem._id}`, dataToSend);
+          await api.put(`/categories/${selectedItem._id}`, formDataToSend, config);
           showNotification('Cập nhật danh mục thành công', 'success');
         }
       } else {
         // Brand operations - logo_image is required for brands
-        if (!formData.logo_image.trim()) {
+        if (!imageFile && !formData.logo_image.trim()) {
           showNotification('Thương hiệu yêu cầu logo', 'error');
           return;
         }
 
         if (dialogMode === 'create') {
-          await api.post('/brands', dataToSend);
+          await api.post('/brands', formDataToSend, config);
           showNotification('Tạo thương hiệu thành công', 'success');
         } else if (dialogMode === 'edit' && selectedItem) {
-          await api.put(`/brands/${selectedItem._id}`, dataToSend);
+          await api.put(`/brands/${selectedItem._id}`, formDataToSend, config);
           showNotification('Cập nhật thương hiệu thành công', 'success');
         }
       }
@@ -427,7 +460,11 @@ const CategoryBrandManagement: React.FC = () => {
                   <TableRow key={category._id} hover>
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar sx={{ bgcolor: alpha(theme.palette.primary.main, 0.2), color: 'primary.main' }}>
+                        <Avatar 
+                          src={category.logo_image} 
+                          variant="rounded" 
+                          sx={{ bgcolor: alpha(theme.palette.primary.main, 0.2), color: 'primary.main', width: 40, height: 40 }}
+                        >
                           <Category />
                         </Avatar>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -487,7 +524,11 @@ const CategoryBrandManagement: React.FC = () => {
                   <TableRow key={brand._id} hover>
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar sx={{ bgcolor: alpha(theme.palette.secondary.main, 0.2), color: 'secondary.main' }}>
+                        <Avatar 
+                          src={brand.logo_image} 
+                          variant="rounded" 
+                          sx={{ bgcolor: alpha(theme.palette.secondary.main, 0.2), color: 'secondary.main', width: 40, height: 40 }}
+                        >
                           <BrandingWatermark />
                         </Avatar>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -567,13 +608,44 @@ const CategoryBrandManagement: React.FC = () => {
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             />
-            <TextField
-              fullWidth
-              label="URL Logo"
-              value={formData.logo_image}
-              onChange={(e) => setFormData({ ...formData, logo_image: e.target.value })}
-              helperText="Để trống nếu không có logo"
-            />
+            <Box>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>Logo / Hình ảnh</Typography>
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                <Avatar
+                  src={imagePreview || undefined}
+                  variant="rounded"
+                  sx={{ width: 80, height: 80, border: '1px dashed grey' }}
+                >
+                  <Image />
+                </Avatar>
+                <Box>
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    startIcon={<Image />}
+                    size="small"
+                  >
+                    Chọn ảnh
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={handleFileChange}
+                    />
+                  </Button>
+                  {(imagePreview) && (
+                    <Button
+                      color="error"
+                      size="small"
+                      onClick={handleRemoveImage}
+                      sx={{ ml: 1 }}
+                    >
+                      Xóa
+                    </Button>
+                  )}
+                </Box>
+              </Box>
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions>

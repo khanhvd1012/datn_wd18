@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import api from "../../services/api";
+import { createContactApi } from "../../services/contactService";
 
 import {
   Container,
@@ -12,7 +12,7 @@ import {
   Stack,
   Snackbar,
   Alert,
-  InputAdornment,
+  InputAdornment
 } from "@mui/material";
 
 import LocationOnIcon from "@mui/icons-material/LocationOn";
@@ -22,7 +22,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import MessageIcon from "@mui/icons-material/Message";
 
 const Contact = () => {
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" as "success" | "error" });
+  const [open, setOpen] = useState(false);
 
   const [form, setForm] = useState({
     username: "",
@@ -31,10 +31,6 @@ const Contact = () => {
     address: "",
     message: ""
   });
-
-  const showSnackbar = (message: string, severity: "success" | "error" = "success") => {
-    setSnackbar({ open: true, message, severity });
-  };
 
   const handleChange = (e: any) => {
     setForm({
@@ -47,9 +43,9 @@ const Contact = () => {
     e.preventDefault();
 
     try {
-      await api.post("/contacts", form);
+      await createContactApi(form);
 
-      showSnackbar("Gửi liên hệ thành công!");
+      setOpen(true);
 
       setForm({
         username: "",
@@ -59,8 +55,7 @@ const Contact = () => {
         message: ""
       });
     } catch (error) {
-      console.error("Error submitting contact:", error);
-      showSnackbar("Không thể gửi liên hệ. Vui lòng thử lại.", "error");
+      console.log(error);
     }
   };
 
@@ -110,7 +105,7 @@ const Contact = () => {
               text: "support@shop.com"
             }
           ].map((item, index) => (
-            <Grid item xs={12} md={4} key={index}>
+            <Grid xs={12} md={4} key={index}>
               <Paper
                 sx={{
                   p: 5,
@@ -139,7 +134,7 @@ const Contact = () => {
       {/* FORM */}
       <Container sx={{ py: 10 }}>
         <Grid container spacing={5}>
-          <Grid item xs={12} md={6}>
+          <Grid xs={12} md={6}>
             <Paper sx={{ p: 6, borderRadius: 4 }}>
               <Typography variant="h5" fontWeight="bold" mb={4}>
                 Gửi tin nhắn
@@ -153,7 +148,6 @@ const Contact = () => {
                     value={form.username}
                     onChange={handleChange}
                     fullWidth
-                    required
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -166,11 +160,9 @@ const Contact = () => {
                   <TextField
                     label="Email"
                     name="email"
-                    type="email"
                     value={form.email}
                     onChange={handleChange}
                     fullWidth
-                    required
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -186,7 +178,6 @@ const Contact = () => {
                     value={form.phone}
                     onChange={handleChange}
                     fullWidth
-                    required
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -219,7 +210,6 @@ const Contact = () => {
                     multiline
                     rows={4}
                     fullWidth
-                    required
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -233,12 +223,7 @@ const Contact = () => {
                     type="submit"
                     variant="contained"
                     size="large"
-                    sx={{ 
-                      height: 50, 
-                      fontWeight: "bold",
-                      background: "#d70018",
-                      "&:hover": { background: "#b71c1c" }
-                    }}
+                    sx={{ height: 50, fontWeight: "bold" }}
                   >
                     Gửi liên hệ
                   </Button>
@@ -248,8 +233,8 @@ const Contact = () => {
           </Grid>
 
           {/* MAP */}
-          <Grid item xs={12} md={6}>
-            <Paper sx={{ borderRadius: 4, overflow: "hidden", height: "100%", minHeight: 400 }}>
+          <Grid xs={12} md={6}>
+            <Paper sx={{ borderRadius: 4, overflow: "hidden", height: "100%" }}>
               <iframe
                 title="map"
                 src="https://maps.google.com/maps?q=13%20Tr%E1%BB%8Bnh%20V%C4%83n%20B%C3%B4%20H%C3%A0%20N%E1%BB%99i&t=&z=15&ie=UTF8&iwloc=&output=embed"
@@ -264,14 +249,11 @@ const Contact = () => {
 
       {/* ALERT */}
       <Snackbar
-        open={snackbar.open}
+        open={open}
         autoHideDuration={3000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        onClose={() => setOpen(false)}
       >
-        <Alert severity={snackbar.severity} sx={{ width: "100%" }}>
-          {snackbar.message}
-        </Alert>
+        <Alert severity="success">Gửi liên hệ thành công</Alert>
       </Snackbar>
     </Box>
   );

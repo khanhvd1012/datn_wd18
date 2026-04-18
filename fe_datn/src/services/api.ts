@@ -8,11 +8,11 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const user = JSON.parse(localStorage.getItem("user") || "null");
-  if (user?.token) {
+  // Đọc token từ localStorage["token"] — đây là nơi loginAPI lưu token
+  const token = localStorage.getItem("token");
+  if (token) {
     config.headers = config.headers || ({} as import("axios").AxiosRequestHeaders);
-    // Luôn gộp Authorization vào headers có sẵn (tránh mất token khi gửi FormData)
-    config.headers.Authorization = `Bearer ${user.token}`;
+    config.headers.Authorization = `Bearer ${token}`;
   }
 
   // Ensure we don't send empty bodies for GET requests
@@ -27,17 +27,15 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error("API Error:", error);
-    if (error.response?.status === 400 && error.response?.data?.message) {
-      console.error("Bad Request:", error.response.data.message);
-    }
-    // Token hết hạn hoặc không hợp lệ → chỉ xóa user + redirect khi ở trang admin
-    if (error.response?.status === 401) {
-      const msg = error.response?.data?.message || "";
-      if (msg.includes("Token") || msg.includes("đăng nhập")) {
-        // Chỉ clear user + redirect trên trang admin (trang client giữ nguyên, component tự xử lý)
-        if (window.location.pathname.startsWith("/admin")) {
-          localStorage.removeItem("user");
-          window.location.href = "/login";
+    if (error.response) {
+      // Log full response body to help debugging validation errors
+      console.error("API Response data:", error.response.data);
+      if (error.response?.status === 400) {
+        const data = error.response.data;
+        if (data?.message) {
+          console.error("Bad Request:", data.message);
+        } else if (data?.messages) {
+          console.error("Bad Request (messages):", data.messages);
         }
       }
     }

@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import api from "../../services/api";
-
 import {
   Box,
   Container,
@@ -12,514 +10,541 @@ import {
   Stack,
   IconButton,
   Rating,
-  TextField,
   Chip,
-  Divider,
-  Tabs,
-  Tab,
-  Paper,
   LinearProgress,
   Snackbar,
-  Alert,
-  Skeleton,
+  Paper,
+  Divider,
+  Alert
 } from "@mui/material";
-
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
+import HistoryIcon from "@mui/icons-material/History";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { Breadcrumbs } from "@mui/material";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
+import { getProductDetailApi } from "../../services/productService";
+import { addToCartApi } from "../../services/cartService";
+import { getReviewsByProductApi } from "../../services/reviewService";
+import { getFavoritesApi, toggleFavoriteApi } from "../../services/userService";
 
-import { useParams, useNavigate } from "react-router-dom";
+interface Variant {
+  _id: string;
+  name: string;
+  price: number;
+  stock: number;
+  color?: string;
+  size?: string;
+  storage?: string;
+  material?: string;
+  images?: string[];
+}
+
+interface Product {
+  id?: string;
+  _id?: string;
+  name: string;
+  description: string;
+  price: number;
+  rating?: number;
+  images?: string[];
+  img?: string;
+  countInStock?: number;
+  variants?: Variant[];
+  category?: string | { name: string };
+  brand?: string | { name: string };
+  original_price?: number;
+}
 
 const ProductDetail = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [product, setProduct] = useState<any>(null);
-  const [related, setRelated] = useState<any[]>([]);
-  const [images, setImages] = useState<string[]>([]);
-  const [selectedImage, setSelectedImage] = useState("");
-  const [qty, setQty] = useState(1);
-  const [tab, setTab] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [snackbar, setSnackbar] = useState({
+  const [product, setProduct] = useState<Product | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+  const [quantity, setQuantity] = useState(1);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [notification, setNotification] = useState({
     open: false,
     message: "",
-    severity: "success" as "success" | "error",
+    severity: "success",
   });
 
-  const [reviews, setReviews] = useState<any[]>([]);
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState("");
-
-  const formatPrice = (price: number) => {
-    return price?.toLocaleString("vi-VN") + "₫";
-  };
-
-  const showSnackbar = (message: string, severity: "success" | "error" = "success") => {
-    setSnackbar({ open: true, message, severity });
-  };
-
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchProductAndReviews = async () => {
+      if (!id) return;
       try {
-        setLoading(true);
-        const res = await api.get(`/products/${id}`);
-        const productData = res.data;
+        const productData = await getProductDetailApi(id);
         setProduct(productData);
-
-        // Handle images
-        const productImages = productData.images || [];
-        if (productData.img) {
-          productImages.unshift(productData.img);
+        // Default select first variant if exists
+        if (productData.variants && productData.variants.length > 0) {
+          setSelectedVariant(productData.variants[0]);
         }
-        setImages(productImages.length > 0 ? productImages : []);
-        setSelectedImage(productImages[0] || "");
+        
+        // Fetch reviews
+        try {
+          const reviewsRes = await getReviewsByProductApi(id);
+          if (reviewsRes && reviewsRes.data) {
+            setReviews(reviewsRes.data);
+          }
+        } catch (reviewErr) {
+          console.error("Lỗi khi tải đánh giá:", reviewErr);
+        }
+
+        if (localStorage.getItem("token")) {
+          getFavoritesApi()
+            .then(data => {
+              if (Array.isArray(data)) {
+                setFavorites(data.map((fav: any) => typeof fav === 'string' ? fav : fav._id));
+              }
+            })
+            .catch(err => console.error(err));
+        }
+
       } catch (error) {
-        console.error("Error fetching product:", error);
-        showSnackbar("Không thể tải thông tin sản phẩm", "error");
-      } finally {
-        setLoading(false);
+        setNotification({
+          open: true,
+          message: "Không thể tải thông tin sản phẩm",
+          severity: "error",
+        });
       }
     };
-
-    fetchProduct();
+    fetchProductAndReviews();
   }, [id]);
 
-  useEffect(() => {
-    const fetchRelated = async () => {
-      if (!product?.category) return;
-      try {
-        const res = await api.get(`/products?category=${product.category}&limit=4`);
-        const list = Array.isArray(res.data) ? res.data : res.data.docs || res.data.data || [];
-        const filtered = list.filter((p: any) => p._id !== id);
-        setRelated(filtered.slice(0, 4));
-      } catch (error) {
-        console.error("Error fetching related products:", error);
-      }
-    };
-
-    fetchRelated();
-  }, [product?.category, id]);
-
-  useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const res = await api.get(`/reviews?productId=${id}`);
-        setReviews(res.data || []);
-      } catch (error) {
-        console.error("Error fetching reviews:", error);
-      }
-    };
-
-    fetchReviews();
-  }, [id]);
-
-  const addToCart = async () => {
+  const handleAddToCart = async () => {
+    if (!product) return;
     try {
-      await api.post("/cart", {
-        productId: product._id || product.id,
-        name: product.name,
-        img: selectedImage || product.img,
-        price: product.price,
-        quantity: qty,
+      await addToCartApi({ 
+        product_id: product._id || product.id || "", 
+        variant_id: selectedVariant?._id,
+        quantity 
       });
-
       window.dispatchEvent(new Event("cartUpdated"));
-      showSnackbar("Đã thêm vào giỏ hàng!");
+      setNotification({
+        open: true,
+        message: "Đã thêm vào giỏ hàng",
+        severity: "success",
+      });
     } catch (error) {
-      console.error("Add cart error:", error);
-      showSnackbar("Không thể thêm vào giỏ hàng", "error");
+      setNotification({
+        open: true,
+        message: "Lỗi khi thêm vào giỏ hàng",
+        severity: "error",
+      });
     }
   };
 
-  const buyNow = async () => {
-    await addToCart();
-    navigate("/cart");
-  };
-
-  const submitReview = async () => {
-    if (!comment) return;
-
+  const handleToggleFavorite = async () => {
+    if (!product || (!product._id && !product.id)) return;
+    const productId = (product._id || product.id) as string;
+    
     try {
-      const newReview = {
-        productId: id,
-        rating,
-        comment,
-      };
-
-      const res = await api.post("/reviews", newReview);
-      setReviews([...reviews, res.data]);
-      setComment("");
-      setRating(5);
-      showSnackbar("Cảm ơn bạn đã đánh giá!");
-    } catch (error) {
-      console.error("Error submitting review:", error);
-      showSnackbar("Không thể gửi đánh giá", "error");
+      if (!localStorage.getItem("token")) {
+        setNotification({ open: true, message: "Vui lòng đăng nhập để lưu sản phẩm yêu thích", severity: "warning" });
+        return;
+      }
+      await toggleFavoriteApi(productId);
+      if (favorites.includes(productId)) {
+        setFavorites(favorites.filter(id => id !== productId));
+      } else {
+        setFavorites([...favorites, productId]);
+      }
+    } catch (err: any) {
+      setNotification({ open: true, message: err.response?.data?.message || "Lỗi khi xử lý", severity: "error" });
     }
   };
 
-  const total = reviews.length;
-  const avg = total ? reviews.reduce((a, b) => a + b.rating, 0) / total : 0;
-
-  const countStar = (star: number) => {
-    return reviews.filter((r) => r.rating === star).length;
+  const handleBuyNow = async () => {
+    if (!product) return;
+    
+    const buyNowItem = {
+      _id: "buynow-" + (product._id || product.id || Date.now()),
+      product: {
+        _id: product._id || product.id || "",
+        name: product.name,
+        images: selectedVariant?.images || product.images || [product.img],
+        price: selectedVariant?.price || product.price,
+      },
+      variant: selectedVariant ? {
+        _id: selectedVariant._id,
+        name: selectedVariant.name,
+        images: selectedVariant.images,
+        price: selectedVariant.price,
+      } : undefined,
+      quantity: quantity,
+      totalPrice: (selectedVariant?.price || product.price) * quantity,
+    };
+    
+    navigate("/checkout", { state: { buyNowItem } });
   };
-
-  if (loading) {
-    return (
-      <Box sx={{ background: "#f5f5f5", py: 6 }}>
-        <Container maxWidth="lg">
-          <Card sx={{ p: 4, borderRadius: 4 }}>
-            <Grid container spacing={6}>
-              <Grid item xs={12} md={5}>
-                <Skeleton variant="rectangular" height={420} sx={{ borderRadius: 3 }} />
-                <Stack direction="row" spacing={1} mt={2}>
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} variant="rectangular" width={70} height={70} />
-                  ))}
-                </Stack>
-              </Grid>
-              <Grid item xs={12} md={7}>
-                <Skeleton variant="text" height={60} />
-                <Skeleton variant="text" height={40} />
-                <Skeleton variant="text" height={60} />
-              </Grid>
-            </Grid>
-          </Card>
-        </Container>
-      </Box>
-    );
-  }
-
-  if (!product) {
-    return (
-      <Container sx={{ py: 10, textAlign: "center" }}>
-        <Typography variant="h5">Không tìm thấy sản phẩm</Typography>
-        <Button sx={{ mt: 2 }} onClick={() => navigate("/")}>
-          Về trang chủ
-        </Button>
-      </Container>
-    );
-  }
 
   return (
-    <Box sx={{ background: "#f5f5f5", py: 6 }}>
-      <Container maxWidth="lg">
-        <Card sx={{ p: 4, borderRadius: 4 }}>
-          <Grid container spacing={6}>
-            {/* IMAGE */}
-            <Grid item xs={12} md={5}>
-              <Box
-                component="img"
-                src={selectedImage}
-                onError={(e: any) => {
-                  e.target.src = "https://via.placeholder.com/400x400?text=No+Image";
-                }}
-                sx={{
-                  width: "100%",
-                  height: 420,
-                  objectFit: "contain",
-                  borderRadius: 3,
-                  bgcolor: "#fff",
-                  border: "1px solid #eee",
-                }}
-              />
+    <Container maxWidth="lg" sx={{ py: 6 }}>
+      {!product ? (
+        <Box sx={{ width: "100%", py: 10 }}>
+          <LinearProgress />
+        </Box>
+      ) : (
+        <>
+          {/* Breadcrumbs */}
+          <Breadcrumbs 
+            separator={<NavigateNextIcon fontSize="small" />} 
+            aria-label="breadcrumb"
+            sx={{ mb: 4 }}
+          >
+            <Link to="/" style={{ textDecoration: 'none', color: '#1976d2' }}>
+              Trang chủ
+            </Link>
+            <Link to="/products" style={{ textDecoration: 'none', color: '#1976d2' }}>
+              Sản phẩm
+            </Link>
+            <Typography color="text.primary" fontWeight="medium">
+              {product.name}
+            </Typography>
+          </Breadcrumbs>
 
-              {images.length > 1 && (
-                <Stack direction="row" spacing={1} mt={2} flexWrap="wrap" gap={1}>
-                  {images.map((img, index) => (
-                    <Box
-                      key={index}
-                      component="img"
-                      src={img}
-                      onClick={() => setSelectedImage(img)}
-                      onError={(e: any) => {
-                        e.target.style.display = "none";
-                      }}
-                      sx={{
-                        width: 70,
-                        height: 70,
-                        border: selectedImage === img ? "2px solid #d70018" : "1px solid #ddd",
-                        borderRadius: 2,
-                        cursor: "pointer",
-                        p: 0.5,
-                        objectFit: "contain",
-                        bgcolor: "#fff",
-                        transition: "all 0.2s",
-                      }}
+          <Grid container spacing={8}>
+            {/* Left column: Images */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Stack spacing={2}>
+                <Paper 
+                  elevation={0} 
+                  sx={{ 
+                    borderRadius: 4, 
+                    overflow: "hidden", 
+                    border: "1px solid #f0f0f0",
+                    backgroundColor: "#fff",
+                    position: 'relative'
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={selectedVariant?.images?.[0] || product.images?.[0] || product.img}
+                    alt={product.name}
+                    sx={{ 
+                      width: "100%", 
+                      height: 500, 
+                      display: "block", 
+                      objectFit: "contain",
+                      transition: '0.3s'
+                    }}
+                  />
+                  {product.original_price && product.original_price > product.price && (
+                    <Chip 
+                      label={`-${Math.round((1 - product.price/product.original_price)*100)}%`}
+                      color="error"
+                      sx={{ position: 'absolute', top: 16, right: 16, fontWeight: 'bold' }}
                     />
-                  ))}
-                </Stack>
-              )}
+                  )}
+                  <IconButton
+                    onClick={handleToggleFavorite}
+                    sx={{
+                      position: 'absolute',
+                      top: 16,
+                      right: product.original_price && product.original_price > product.price ? 80 : 16,
+                      bgcolor: "rgba(255,255,255,0.8)",
+                      zIndex: 1,
+                      "&:hover": { bgcolor: "rgba(255,255,255,1)" }
+                    }}
+                  >
+                    {favorites.includes((product._id || product.id) as string) ? (
+                      <FavoriteIcon color="error" />
+                    ) : (
+                      <FavoriteBorderIcon />
+                    )}
+                  </IconButton>
+                </Paper>
+
+                {/* Thumbnails (if available) */}
+                {(product.images && product.images.length > 1) && (
+                  <Stack direction="row" spacing={2} sx={{ overflowX: 'auto', pb: 1 }}>
+                    {product.images.map((img, index) => (
+                      <Box
+                        key={index}
+                        component="img"
+                        src={img}
+                        sx={{
+                          width: 80,
+                          height: 80,
+                          borderRadius: 2,
+                          border: "2px solid #eee",
+                          cursor: 'pointer',
+                          objectFit: 'cover',
+                          "&:hover": { borderColor: 'primary.main' }
+                        }}
+                      />
+                    ))}
+                  </Stack>
+                )}
+              </Stack>
             </Grid>
 
-            {/* INFO */}
-            <Grid item xs={12} md={7}>
-              <Stack spacing={2}>
-                <Typography variant="h5" fontWeight="bold">
-                  {product.name}
-                </Typography>
-
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Rating value={avg} precision={0.5} readOnly size="small" />
-                  <Typography variant="body2" color="text.secondary">
-                    ({total} đánh giá)
-                  </Typography>
-                </Stack>
-
+            {/* Right column: Info */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Stack spacing={3} sx={{ textAlign: 'left' }}>
                 <Box>
-                  <Typography variant="h4" fontWeight="bold" color="#d70018">
-                    {formatPrice(product.price)}
+                  <Typography variant="overline" color="primary" fontWeight="bold" letterSpacing={1}>
+                    {(typeof product.brand === 'object' ? product.brand.name : product.brand) || "CHÍNH HÃNG"}
                   </Typography>
-                  {product.original_price && product.original_price > product.price && (
-                    <Typography variant="body2" color="text.secondary" sx={{ textDecoration: "line-through" }}>
-                      {formatPrice(product.original_price)}
-                    </Typography>
-                  )}
+                  <Typography variant="h4" fontWeight="700" sx={{ mt: 1, mb: 1.5, color: '#1a1a1a', lineHeight: 1.4 }}>
+                    {product.name}
+                  </Typography>
+                  <Stack direction="row" spacing={3} alignItems="center">
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Rating value={product.rating || 4.5} readOnly precision={0.5} size="small" />
+                      <Typography variant="body2" sx={{ ml: 1, fontWeight: 'bold' }}>{product.rating || 4.5}</Typography>
+                    </Box>
+                    <Divider orientation="vertical" flexItem />
+                    <Typography color="text.secondary" variant="body2">1.2k Đánh giá</Typography>
+                    <Divider orientation="vertical" flexItem />
+                    <Typography color="text.secondary" variant="body2">2.5k Đã bán</Typography>
+                  </Stack>
                 </Box>
 
-                <Chip label="Miễn phí vận chuyển" color="success" variant="outlined" />
-
-                <Divider />
-
-                {/* QUANTITY */}
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <Typography fontWeight="bold">Số lượng:</Typography>
-
-                  <Stack direction="row" alignItems="center" sx={{ border: "1px solid #ddd", borderRadius: 2 }}>
-                    <IconButton onClick={() => setQty(qty > 1 ? qty - 1 : 1)} size="small">
-                      <RemoveIcon />
-                    </IconButton>
-
-                    <TextField
-                      size="small"
-                      value={qty}
-                      onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
-                      sx={{ width: 70 }}
-                      inputProps={{ style: { textAlign: "center" } }}
-                    />
-
-                    <IconButton onClick={() => setQty(qty + 1)} size="small">
-                      <AddIcon />
-                    </IconButton>
+                <Box sx={{ p: 2.5, borderRadius: 2, backgroundColor: "#fafafa", border: '1px solid #f0f0f0' }}>
+                  <Stack direction="row" alignItems="center" spacing={2}>
+                    <Typography variant="h4" color="error" fontWeight="700">
+                      {(selectedVariant?.price || product.price)?.toLocaleString()}₫
+                    </Typography>
+                    {product.original_price && (
+                      <Typography variant="h6" color="text.secondary" sx={{ textDecoration: 'line-through' }}>
+                        {product.original_price?.toLocaleString()}₫
+                      </Typography>
+                    )}
                   </Stack>
-
-                  <Typography variant="body2" color="text.secondary">
-                    Còn lại: {product.countInStock || 0} sản phẩm
+                  <Typography variant="body2" color="success.main" sx={{ mt: 1, fontWeight: '500' }}>
+                    Tiết kiệm: {(product.original_price ? (product.original_price - product.price) : 0).toLocaleString()}₫
                   </Typography>
-                </Stack>
+                </Box>
 
-                {/* BUTTON */}
-                <Stack direction="row" spacing={2}>
+                {product.variants && product.variants.length > 0 && (
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight="bold" mb={1.5} color="text.secondary" textTransform="uppercase">
+                      Lựa chọn phiên bản:
+                    </Typography>
+                  <Stack direction="row" spacing={1.5} flexWrap="wrap">
+                    {product.variants.map((v) => (
+                      <Button
+                        key={v._id}
+                        variant={selectedVariant?._id === v._id ? "contained" : "outlined"}
+                        onClick={() => setSelectedVariant(v)}
+                        sx={{
+                          borderRadius: 2,
+                          px: 3,
+                          py: 1,
+                          textTransform: 'none',
+                          fontWeight: 'bold',
+                          boxShadow: 'none',
+                          minWidth: 'fit-content',
+                          "&:hover": { boxShadow: 'none' }
+                        }}
+                      >
+                        {v.name}
+                      </Button>
+                    ))}
+                  </Stack>
+                  </Box>
+                )}
+
+                <Box>
+                  <Typography variant="subtitle2" fontWeight="bold" mb={1.5} color="text.secondary" textTransform="uppercase">
+                    Số lượng:
+                  </Typography>
+                  <Stack direction="row" spacing={3} alignItems="center">
+                    <Box 
+                      sx={{ 
+                        display: "flex", 
+                        alignItems: "center",
+                        backgroundColor: "#f5f5f5",
+                        borderRadius: 2,
+                        p: 0.5,
+                        width: 'fit-content'
+                      }}
+                    >
+                      <IconButton 
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))} 
+                        size="medium"
+                        sx={{ color: '#000' }}
+                      >
+                        <RemoveIcon />
+                      </IconButton>
+                      <Typography sx={{ px: 3, minWidth: 50, textAlign: "center", fontWeight: "bold", fontSize: 18 }}>
+                        {quantity}
+                      </Typography>
+                      <IconButton 
+                        onClick={() => setQuantity((q) => q + 1)} 
+                        size="medium"
+                        sx={{ color: '#000' }}
+                      >
+                        <AddIcon />
+                      </IconButton>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      {selectedVariant ? selectedVariant.stock : (product.countInStock || 0)} sản phẩm có sẵn
+                    </Typography>
+                  </Stack>
+                </Box>
+
+                <Stack direction="row" spacing={2} sx={{ pt: 2 }}>
                   <Button
-                    variant="contained"
+                    fullWidth
+                    variant="outlined"
+                    size="large"
+                    onClick={handleAddToCart}
                     startIcon={<ShoppingCartIcon />}
-                    sx={{ flex: 1, background: "#ff6b35" }}
-                    onClick={addToCart}
+                    sx={{ 
+                      py: 2, 
+                      borderRadius: 3, 
+                      borderWidth: 2, 
+                      fontWeight: 'bold',
+                      fontSize: 16,
+                      "&:hover": { borderWidth: 2 } 
+                    }}
                   >
-                    Thêm giỏ hàng
+                    Thêm vào giỏ
                   </Button>
-
                   <Button
+                    fullWidth
                     variant="contained"
-                    sx={{ flex: 1, background: "#d70018" }}
-                    onClick={buyNow}
+                    size="large"
+                    onClick={handleBuyNow}
+                    sx={{
+                      py: 2,
+                      borderRadius: 3,
+                      fontSize: 16,
+                      fontWeight: 'bold',
+                      background: "linear-gradient(90deg,#ff512f,#dd2476)",
+                      boxShadow: "0 4px 15px rgba(221,36,118,0.3)",
+                      "&:hover": {
+                        background: "linear-gradient(90deg,#e94426,#c21d64)",
+                        boxShadow: "0 6px 20px rgba(221,36,118,0.4)",
+                      }
+                    }}
                   >
                     Mua ngay
                   </Button>
-
-                  <IconButton sx={{ border: "1px solid #ddd" }}>
-                    <FavoriteBorderIcon />
-                  </IconButton>
                 </Stack>
 
-                <Divider />
+                {/* Trust Signals */}
+                <Box sx={{ mt: 2, pt: 3, borderTop: '1px solid #eee' }}>
+                  <Stack 
+                    direction={{ xs: "column", sm: "row" }} 
+                    spacing={3} 
+                    justifyContent="space-between"
+                  >
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <VerifiedUserIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+                      <Typography fontSize={12} fontWeight="bold">CHÍNH HÃNG 100%</Typography>
+                    </Stack>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <LocalShippingIcon sx={{ color: '#2196f3', fontSize: 20 }} />
+                      <Typography fontSize={12} fontWeight="bold">MIỄN PHÍ VẬN CHUYỂN</Typography>
+                    </Stack>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <HistoryIcon sx={{ color: '#ff9800', fontSize: 20 }} />
+                      <Typography fontSize={12} fontWeight="bold">DỄ DÀNG ĐỔI TRẢ</Typography>
+                    </Stack>
+                  </Stack>
+                </Box>
 
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <LocalShippingIcon color="action" />
-                  <Typography variant="body2">
-                    Giao hàng toàn quốc - Giao nhanh 24h
+                <Box>
+                  <Typography variant="subtitle1" fontWeight="bold" mb={1}>
+                    Mô tả sản phẩm:
                   </Typography>
-                </Stack>
+                  <Typography color="text.secondary" sx={{ whiteSpace: "pre-line", lineHeight: 1.8 }}>
+                    {product.description || "Thông tin sản phẩm đang được cập nhật..."}
+                  </Typography>
+                </Box>
               </Stack>
             </Grid>
           </Grid>
-        </Card>
 
-        {/* TABS */}
-        <Box mt={5}>
-          <Tabs value={tab} onChange={(e, v) => setTab(v)} sx={{ borderBottom: "1px solid #eee" }}>
-            <Tab label="Mô tả" />
-            <Tab label={`Đánh giá (${total})`} />
-          </Tabs>
-
-          <Paper sx={{ p: 3, mt: 2 }}>
-            {tab === 0 && (
-              <Box>
-                <Typography variant="h6" mb={2}>
-                  Mô tả sản phẩm
-                </Typography>
-                <Typography sx={{ whiteSpace: "pre-wrap" }}>
-                  {product.description || "Chưa có mô tả cho sản phẩm này."}
-                </Typography>
-              </Box>
-            )}
-
-            {tab === 1 && (
-              <Box>
-                <Grid container spacing={4} mb={4}>
-                  <Grid item xs={12} md={3} textAlign="center">
-                    <Typography variant="h3" color="error" fontWeight="bold">
-                      {avg.toFixed(1)}
-                    </Typography>
-
-                    <Rating value={avg} precision={0.5} readOnly />
-                    <Typography variant="body2">{total} đánh giá</Typography>
-                  </Grid>
-
-                  <Grid item xs={12} md={9}>
-                    {[5, 4, 3, 2, 1].map((star) => {
-                      const percent = total ? (countStar(star) / total) * 100 : 0;
-
-                      return (
-                        <Stack key={star} direction="row" spacing={2} alignItems="center" mb={1}>
-                          <Typography>{star} sao</Typography>
-                          <LinearProgress
-                            variant="determinate"
-                            value={percent}
-                            sx={{ flex: 1, height: 10, borderRadius: 5 }}
-                          />
-                          <Typography variant="body2" color="text.secondary" sx={{ minWidth: 40 }}>
-                            {Math.round(percent)}%
-                          </Typography>
-                        </Stack>
-                      );
-                    })}
-                  </Grid>
-                </Grid>
-
-                {/* REVIEW FORM */}
-                <Paper sx={{ p: 3, mb: 4, bgcolor: "#f9f9f9" }}>
-                  <Typography variant="h6" mb={2}>
-                    Viết đánh giá của bạn
-                  </Typography>
-
-                  <Stack spacing={2}>
-                    <Stack direction="row" alignItems="center" spacing={2}>
-                      <Typography>Đánh giá:</Typography>
-                      <Rating
-                        value={rating}
-                        onChange={(e, v: any) => setRating(v || 5)}
-                      />
-                    </Stack>
-
-                    <TextField
-                      label="Bình luận"
-                      multiline
-                      rows={3}
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                      placeholder="Chia sẻ cảm nhận của bạn về sản phẩm..."
-                    />
-
-                    <Button variant="contained" onClick={submitReview} sx={{ alignSelf: "flex-start" }}>
-                      Gửi đánh giá
-                    </Button>
-                  </Stack>
-                </Paper>
-
-                {/* REVIEW LIST */}
-                <Stack spacing={2}>
-                  {reviews.length === 0 ? (
-                    <Typography textAlign="center" color="text.secondary" py={4}>
-                      Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá sản phẩm này!
-                    </Typography>
-                  ) : (
-                    reviews.map((r: any) => (
-                      <Paper key={r._id || r.id} sx={{ p: 2, border: "1px solid #eee" }}>
-                        <Stack direction="row" justifyContent="space-between">
-                          <Stack direction="row" alignItems="center" spacing={1}>
-                            <Typography fontWeight="bold">
-                              {r.user?.username || r.user?.name || "Người dùng"}
-                            </Typography>
-                            <Rating value={r.rating} readOnly size="small" />
-                          </Stack>
-                          <Typography variant="caption" color="text.secondary">
-                            {r.createdAt ? new Date(r.createdAt).toLocaleDateString("vi-VN") : ""}
-                          </Typography>
-                        </Stack>
-                        <Typography mt={1}>{r.comment}</Typography>
-                      </Paper>
-                    ))
-                  )}
-                </Stack>
-              </Box>
-            )}
-          </Paper>
-        </Box>
-
-        {/* RELATED */}
-        {related.length > 0 && (
-          <Box mt={6}>
-            <Typography variant="h5" fontWeight="bold" mb={3}>
-              Sản phẩm liên quan
+          {/* ĐÁNH GIÁ SẢN PHẨM */}
+          <Box sx={{ mt: 10 }}>
+            <Typography variant="h5" fontWeight="bold" mb={4}>
+              Đánh giá từ khách hàng ({reviews.length})
             </Typography>
 
-            <Grid container spacing={3}>
-              {related.map((item: any) => (
-                <Grid item xs={12} sm={6} md={3} key={item._id || item.id}>
-                  <Card
-                    sx={{
-                      cursor: "pointer",
-                      "&:hover": {
-                        transform: "translateY(-6px)",
-                        boxShadow: 6,
-                      },
-                    }}
-                    onClick={() => navigate(`/product/${item._id || item.id}`)}
-                  >
-                    <CardContent>
-                      <Box
-                        component="img"
-                        src={item.images?.[0] || item.img}
-                        onError={(e: any) => {
-                          e.target.src = "https://via.placeholder.com/200x200?text=No+Image";
-                        }}
-                        sx={{
-                          width: "100%",
-                          height: 160,
-                          objectFit: "contain",
-                        }}
-                      />
-                      <Typography fontWeight="bold" sx={{ mt: 1 }}>
-                        {item.name}
-                      </Typography>
-                      <Typography color="#d70018" fontWeight="bold">
-                        {formatPrice(item.price)}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        )}
-      </Container>
+            {reviews.length === 0 ? (
+              <Paper elevation={0} sx={{ p: 5, textAlign: 'center', bgcolor: '#fafafa', borderRadius: 4, border: '1px dashed #e0e0e0' }}>
+                <Typography color="text.secondary" variant="subtitle1">
+                  Chưa có đánh giá nào cho sản phẩm này. Hãy là người đầu tiên đánh giá!
+                </Typography>
+              </Paper>
+            ) : (
+              <Stack spacing={3}>
+                {reviews.map((review) => (
+                  <Paper key={review._id} elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid #f0f0f0' }}>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 3 }}>
+                      <Box sx={{ flexShrink: 0 }}>
+                        <Stack alignItems="center" spacing={1}>
+                          <Box
+                            component="img"
+                            src={review.user_id?.avatar || "https://ui-avatars.com/api/?name=" + (review.user_id?.username || 'User')}
+                            sx={{ width: 60, height: 60, borderRadius: '50%', objectFit: 'cover' }}
+                          />
+                          <Typography variant="subtitle2" fontWeight="bold">
+                            {review.user_id?.username || "Khách hàng"}
+                          </Typography>
+                        </Stack>
+                      </Box>
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Stack direction="row" alignItems="center" spacing={2} mb={1}>
+                          <Rating value={review.rating} readOnly size="small" />
+                          <Typography variant="caption" color="text.secondary">
+                            {new Date(review.createdAt).toLocaleDateString('vi-VN')}
+                          </Typography>
+                        </Stack>
+                        {review.product_variant_id && (
+                          <Typography variant="caption" sx={{ color: 'text.disabled', display: 'block', mb: 1 }}>
+                            Phân loại: {review.product_variant_id.name}
+                          </Typography>
+                        )}
+                        <Typography variant="body2" sx={{ lineHeight: 1.6, color: '#333' }}>
+                          {review.comment}
+                        </Typography>
 
-      {/* Snackbar */}
+                        {/* Admin Reply */}
+                        {review.admin_reply && (
+                          <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f8ff', borderRadius: 2, borderLeft: '3px solid #1976d2' }}>
+                            <Typography variant="subtitle2" color="primary" fontWeight="bold" mb={0.5}>
+                              Phản hồi từ người bán:
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {review.admin_reply}
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    </Box>
+                  </Paper>
+                ))}
+              </Stack>
+            )}
+          </Box>
+        </>
+      )}
       <Snackbar
-        open={snackbar.open}
+        open={notification.open}
         autoHideDuration={3000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        onClose={() => setNotification({ ...notification, open: false })}
       >
-        <Alert severity={snackbar.severity} sx={{ width: "100%" }}>
-          {snackbar.message}
+        <Alert
+          onClose={() => setNotification({ ...notification, open: false })}
+          severity={notification.severity as any}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
         </Alert>
       </Snackbar>
-    </Box>
+    </Container>
   );
 };
 

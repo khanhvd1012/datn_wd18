@@ -10,14 +10,16 @@ import Checkout from "../pages/Checkout";
 
 import Orders from "../pages/Orders";
 import OrderDetail from "../pages/OrderDetail";
-import OrderSuccess from "../pages/OrderSuccess";
+import OrderSuccess from "../pages/OrderSuccessPage";
 
-/* PAYMENT */
+import PaymentBank from "../pages/PaymentBank";
 import PaymentSuccess from "../pages/PaymentSuccess";
 import PaymentFailed from "../pages/PaymentFailed";
-import PaymentProcess from "../pages/PaymentProcess";
-import PaymentBank from "../pages/PaymentBank";
+import PaymentCallback from "../pages/PaymentCallback";
 import PaymentMock from "../pages/PaymentMock";
+import PaymentProcess from "../pages/PaymentProcess";
+
+
 
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
@@ -26,11 +28,17 @@ import Profile from "../pages/Profile";
 import MyAccount from "../pages/account/MyAccount";
 
 /* NEW PAGES */
-import News from "../pages/news/News";
-import NewsDetail from "../pages/news/NewsDetail";
 
-import About from "../pages/about/About";
-import Contact from "../pages/contact/Contact";
+import News from "../pages/news/News.tsx";
+import NewsDetail from "../pages/news/NewsDetail.tsx";
+
+import About from "../pages/about/About.tsx";
+import Contact from "../pages/contact/Contact.tsx";
+import PrivacyPolicy from "../pages/policies/PrivacyPolicy";
+import ReturnPolicy from "../pages/policies/ReturnPolicy";
+import ShippingPolicy from "../pages/policies/ShippingPolicy";
+import PurchaseGuide from "../pages/policies/PurchaseGuide";
+import TermsOfService from "../pages/policies/TermsOfService";
 
 /* ADMIN */
 import Users from "../pages/admin/Users";
@@ -44,6 +52,7 @@ import NewsManagement from "../pages/admin/NewsManagement";
 import ModernDashboard from "../pages/admin/ModernDashboard";
 import AdminBanner from "../pages/admin/AdminBanner";
 import AdminFeedback from "../pages/admin/AdminFeedback";
+import AdminReviews from "../pages/admin/AdminReviews";
 import Category from "../pages/admin/Category";
 import Dashboard from "../pages/admin/Dashboard";
 
@@ -68,14 +77,22 @@ const AppRouter = () => {
         <Route path="product/:id" element={<ProductDetail />} />
         <Route path="news" element={<News />} />
         <Route path="news/:id" element={<NewsDetail />} />
+
+        {/* NEW PAGES */}
         <Route path="about" element={<About />} />
         <Route path="contact" element={<Contact />} />
+        <Route path="privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="return-policy" element={<ReturnPolicy />} />
+        <Route path="shipping-policy" element={<ShippingPolicy />} />
+        <Route path="purchase-guide" element={<PurchaseGuide />} />
+        <Route path="terms-of-service" element={<TermsOfService />} />
 
         {/* AUTH */}
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
 
         {/* NEED LOGIN */}
+
         <Route
           path="cart"
           element={
@@ -121,11 +138,12 @@ const AppRouter = () => {
           }
         />
 
+        {/* MY ACCOUNT - Redirected to Profile */}
         <Route
           path="my-account"
           element={
             <PrivateRoute>
-              <MyAccount />
+              <Profile />
             </PrivateRoute>
           }
         />
@@ -139,34 +157,7 @@ const AppRouter = () => {
           }
         />
 
-        {/* PAYMENT ROUTES */}
-        <Route
-          path="payment/success"
-          element={
-            <PrivateRoute>
-              <PaymentSuccess />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="payment/failed"
-          element={
-            <PrivateRoute>
-              <PaymentFailed />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="payment/process"
-          element={
-            <PrivateRoute>
-              <PaymentProcess />
-            </PrivateRoute>
-          }
-        />
-
+        {/* PAYMENT FLOW */}
         <Route
           path="payment/bank"
           element={
@@ -175,12 +166,43 @@ const AppRouter = () => {
             </PrivateRoute>
           }
         />
-
+        <Route
+          path="payment/success"
+          element={
+            <PrivateRoute>
+              <PaymentSuccess />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="payment/failed"
+          element={
+            <PrivateRoute>
+              <PaymentFailed />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="payment/callback"
+          element={
+            <PrivateRoute>
+              <PaymentCallback />
+            </PrivateRoute>
+          }
+        />
         <Route
           path="payment/mock"
           element={
             <PrivateRoute>
               <PaymentMock />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="payment/process"
+          element={
+            <PrivateRoute>
+              <PaymentProcess />
             </PrivateRoute>
           }
         />
@@ -207,7 +229,9 @@ const AppRouter = () => {
         <Route path="news" element={<NewsManagement />} />
         <Route path="banners" element={<AdminBanner />} />
         <Route path="contacts" element={<AdminFeedback />} />
+        <Route path="reviews" element={<AdminReviews />} />
         <Route path="users" element={<Users />} />
+        <Route path="profile" element={<Profile />} />
       </Route>
 
       {/* 404 */}

@@ -28,3 +28,15 @@ export const getMeAPI = async () => {
   const res = await api.get("/auth/me");
   return res.data;
 };
+
+// UPDATE ME
+export const updateMeAPI = async (data: any) => {
+  const res = await api.patch("/auth/me/update", data);
+  return res.data;
+};
+
+// CHANGE PASSWORD
+export const changePasswordAPI = async (data: any) => {
+  const res = await api.put("/auth/me/change-password", data);
+  return res.data;
+};
