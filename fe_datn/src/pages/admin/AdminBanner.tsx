@@ -38,10 +38,12 @@ interface Banner {
   _id: string;
   title: string;
   image: string;
-  status: any;
+  status: boolean | string | number;
 }
 
 const AdminBanner: React.FC = () => {
+  const isBannerActive = (value: Banner["status"]) =>
+    value === true || value === "active" || value === "true" || value === 1;
 
   const [banners, setBanners] = useState<Banner[]>([]);
   const [open, setOpen] = useState(false);
@@ -140,12 +142,19 @@ const AdminBanner: React.FC = () => {
 
       fetchData();
 
-    } catch (error: any) {
-
-      if (error.response?.data?.message) {
-        showNotification(error.response.data.message, "error");
-      } else if (error.response?.data?.errors) {
-        showNotification(error.response.data.errors[0].message, "error");
+    } catch (error: unknown) {
+      const apiError = error as {
+        response?: {
+          data?: {
+            message?: string;
+            errors?: { message: string }[];
+          };
+        };
+      };
+      if (apiError.response?.data?.message) {
+        showNotification(apiError.response.data.message, "error");
+      } else if (apiError.response?.data?.errors) {
+        showNotification(apiError.response.data.errors[0].message, "error");
       } else {
         console.log(error);
         showNotification("Có lỗi xảy ra", "error");
@@ -160,11 +169,11 @@ const AdminBanner: React.FC = () => {
   };
 
   /* ================= EDIT BANNER ================= */
-  const handleEditClick = (banner: any) => {
+  const handleEditClick = (banner: Banner) => {
     setEditingId(banner._id);
     setTitle(banner.title);
     setPreview(banner.image);
-    setStatus(banner.status === true || banner.status === 'active');
+    setStatus(isBannerActive(banner.status));
     setImage(null);
     setOpen(true);
   };
@@ -309,9 +318,9 @@ const AdminBanner: React.FC = () => {
 
                 <TableCell align="center">
 
-                  <Tooltip title={item.status ? "Đang hiển thị" : "Đang ẩn"}>
+                  <Tooltip title={isBannerActive(item.status) ? "Đang hiển thị" : "Đang ẩn"}>
                     <Switch
-                      checked={item.status}
+                      checked={isBannerActive(item.status)}
                       onChange={() => handleToggleStatus(item._id)}
                       color="success"
                     />

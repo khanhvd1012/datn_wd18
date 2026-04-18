@@ -21,6 +21,10 @@ import {
   alpha,
   Snackbar,
   Alert,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import {
   TrendingUp,
@@ -91,8 +95,11 @@ const formatPrice = (price: number) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 };
 
+type DashboardRange = '7d' | '30d' | 'month';
+
 const ModernDashboard: React.FC = () => {
   const theme = useTheme();
+  const [selectedRange, setSelectedRange] = useState<DashboardRange>('7d');
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -112,9 +119,40 @@ const ModernDashboard: React.FC = () => {
     setNotification({ ...notification, open: false });
   };
 
+  const getRangeLabel = (range: DashboardRange) => {
+    if (range === '30d') return '30 ngày';
+    if (range === 'month') return 'Tháng này';
+    return '7 ngày';
+  };
+
+  const handleExportReport = () => {
+    if (!stats) return;
+
+    const lines = [
+      `Bao cao dashboard,${getRangeLabel(selectedRange)}`,
+      `Tong don hang,${stats.orders.total}`,
+      `Don cho xu ly,${stats.orders.pending}`,
+      `Tong doanh thu,${stats.orders.revenue}`,
+      '',
+      'Ngay,So don,Doanh thu',
+      ...stats.orders.daily.map((item) => `${item.name},${item.orders},${item.revenue}`),
+    ];
+
+    const csvContent = `\uFEFF${lines.join('\n')}`;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `dashboard-report-${selectedRange}-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [selectedRange]);
 
   const fetchDashboardData = async () => {
     try {
@@ -123,7 +161,9 @@ const ModernDashboard: React.FC = () => {
 
       // Fetch data one by one to avoid overwhelming the backend
       try {
-        const dashboardRes = await api.get('/dashboard');
+        const dashboardRes = await api.get('/dashboard', {
+          params: { range: selectedRange },
+        });
         console.log('Dashboard API response:', dashboardRes.data);
         
         // Handle different response structures
@@ -258,25 +298,29 @@ const ModernDashboard: React.FC = () => {
     },
   ];
 
-  const weeklyData = [
-    { name: 'T2', products: 12, orders: 8 },
-    { name: 'T3', products: 19, orders: 15 },
-    { name: 'T4', products: 15, orders: 12 },
-    { name: 'T5', products: 25, orders: 20 },
-    { name: 'T6', products: 22, orders: 18 },
-    { name: 'T7', products: 30, orders: 25 },
-    { name: 'CN', products: 28, orders: 22 },
-  ];
-
   return (
     <Box sx={{ p: 3, width: '100%', maxWidth: 'none' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
           Tổng quan
         </Typography>
-        <Button variant="outlined" startIcon={<TrendingUp />}>
-          Xuất báo cáo
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <InputLabel>Khoảng thời gian</InputLabel>
+            <Select
+              value={selectedRange}
+              label="Khoảng thời gian"
+              onChange={(e) => setSelectedRange(e.target.value as DashboardRange)}
+            >
+              <MenuItem value="7d">7 ngày</MenuItem>
+              <MenuItem value="30d">30 ngày</MenuItem>
+              <MenuItem value="month">Tháng này</MenuItem>
+            </Select>
+          </FormControl>
+          <Button variant="outlined" startIcon={<TrendingUp />} onClick={handleExportReport}>
+            Xuất báo cáo
+          </Button>
+        </Box>
       </Box>
 
       {/* Stats Cards */}
@@ -343,7 +387,7 @@ const ModernDashboard: React.FC = () => {
         <Box sx={{ flex: { xs: '1 1 100%', lg: '2 1 0' }, minWidth: 300 }}>
           <Paper sx={{ p: 3, height: 400, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: 'text.primary' }}>
-              Doanh thu & Đơn hàng tuần qua
+              Doanh thu & Đơn hàng {selectedRange === '7d' ? '7 ngày qua' : selectedRange === '30d' ? '30 ngày qua' : 'tháng này'}
             </Typography>
             <Box sx={{ height: 300 }}>
               <ResponsiveContainer width="100%" height="100%">

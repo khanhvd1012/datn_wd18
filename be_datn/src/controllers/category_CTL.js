@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import category_MD from "../models/category_MD.js";
-// import product_MD from "../models/product_MD";
+import product_MD from "../models/product_MD.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -135,10 +135,16 @@ export const deleteCategory = async (req, res) => {
     }
 
     // Xóa logo nếu có
-    if (category.logo_image) {
+    if (
+      category.logo_image &&
+      typeof category.logo_image === "string" &&
+      category.logo_image.includes("/uploads/")
+    ) {
       const filename = category.logo_image.split("/uploads/")[1];
-      const filePath = path.join(__dirname, "../../public/uploads", filename);
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      if (filename) {
+        const filePath = path.join(__dirname, "../../public/uploads", filename);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      }
     }
 
     // 👉 Gỡ id category khỏi sản phẩm

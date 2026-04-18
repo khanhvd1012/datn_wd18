@@ -18,14 +18,14 @@ orderRouter.use(checkPermission);
 // Tạo đơn hàng
 orderRouter.post("/", createOrder);
 
-// Lấy danh sách tất cả đơn hàng (Admin/Employee)
-orderRouter.get("/admin/all", checkRole([ROLES.ADMIN, ROLES.EMPLOYEE]), getAllOrders);
+// Lấy danh sách tất cả đơn hàng (Admin)
+orderRouter.get("/admin/all", checkRole([ROLES.ADMIN]), getAllOrders);
 
 // Lấy danh sách đơn hàng của user
 orderRouter.get("/", getUserOrders);
 
-// Cập nhật trạng thái đơn hàng (Admin/Employee)
-orderRouter.put("/:id", checkRole([ROLES.ADMIN, ROLES.EMPLOYEE]), updateOrder);
+// Cập nhật trạng thái đơn hàng (Admin)
+orderRouter.put("/:id", checkRole([ROLES.ADMIN]), updateOrder);
 
 // Xóa đơn hàng (Admin)
 orderRouter.delete("/:id", checkRole([ROLES.ADMIN]), deleteOrder);

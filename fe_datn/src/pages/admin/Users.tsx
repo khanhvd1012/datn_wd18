@@ -28,7 +28,7 @@ import {
 } from "../../services/userService";
 import { ROLES } from "../../config/roles";
 
-const roleOptions = [ROLES.ADMIN, ROLES.EMPLOYEE, ROLES.USER, ROLES.CUSTOMER];
+const roleOptions = [ROLES.ADMIN, ROLES.USER];
 
 const Users = () => {
   const currentUser = JSON.parse(localStorage.getItem("user") || "null");
@@ -139,10 +139,6 @@ const Users = () => {
                     <TableCell>
                       {user.role === ROLES.ADMIN ? (
                         <Chip label="isAdmin" color="primary" size="small" />
-                      ) : user.role === ROLES.EMPLOYEE ? (
-                        <Chip label="employee" color="success" size="small" />
-                      ) : user.role === ROLES.CUSTOMER ? (
-                        <Chip label="customer" color="warning" size="small" />
                       ) : (
                         <Chip label="user" color="default" size="small" />
                       )}

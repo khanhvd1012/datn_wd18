@@ -128,7 +128,7 @@ const Register = () => {
         fullName: form.fullName.trim() || undefined,
         phone: form.phone.trim() || undefined,
         dateOfBirth: form.dateOfBirth || undefined,
-        role: "customer",
+        role: "user",
       };
 
       await registerAPI(payload);

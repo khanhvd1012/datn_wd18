@@ -39,7 +39,7 @@ export const registerValidator = Joi.object({
   }),
   role: Joi.string()
     .valid(...Object.values(ROLES))
-    .default(ROLES.CUSTOMER)
+    .default(ROLES.USER)
     .messages({
       "any.only": "Vai trò không hợp lệ",
     }),

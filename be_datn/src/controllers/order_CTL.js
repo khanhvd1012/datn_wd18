@@ -253,8 +253,8 @@ export const getOrderById = async (req, res) => {
 
         let query = { _id: id };
         
-        // Nếu không phải admin/employee thì chỉ được xem đơn hàng của chính mình
-        if (user.role !== ROLES.ADMIN && user.role !== ROLES.EMPLOYEE) {
+        // Nếu không phải admin thì chỉ được xem đơn hàng của chính mình
+        if (user.role !== ROLES.ADMIN) {
             query.user_id = user._id;
         }
 
@@ -279,7 +279,7 @@ export const getOrderById = async (req, res) => {
     }
 };
 
-// Lấy tất cả đơn hàng (Admin/Employee)
+// Lấy tất cả đơn hàng (Admin)
 export const getAllOrders = async (req, res) => {
     try {
         const { status, search, page = 1, limit = 10 } = req.query;
@@ -335,7 +335,7 @@ export const getAllOrders = async (req, res) => {
     }
 };
 
-// Cập nhật đơn hàng (Admin/Employee)
+// Cập nhật đơn hàng (Admin)
 export const updateOrder = async (req, res) => {
     try {
         const { id } = req.params;

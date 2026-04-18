@@ -36,6 +36,7 @@
     "vite": "^6.3.5"
   },
   "scripts": {
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "migrate:roles": "node scripts/migrate-user-roles.js"
   }
 }

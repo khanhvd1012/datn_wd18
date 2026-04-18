@@ -8,9 +8,21 @@ import news_MD from '../models/news_MD.js';
 import contact_MD from '../models/contact_MD.js';
 import order_MD from '../models/order_MD.js';
 
+const getDashboardRangeConfig = (range) => {
+    if (range === '30d') {
+        return { key: '30d', days: 30 };
+    }
+    if (range === 'month') {
+        return { key: 'month' };
+    }
+    return { key: '7d', days: 7 };
+};
+
 // Lấy thống kê tổng quan
 export const getDashboardStats = async (req, res) => {
     try {
+        const rangeConfig = getDashboardRangeConfig(req.query.range);
+
         // Thống kê sản phẩm
         const totalProducts = await product_MD.countDocuments();
         const productsByBrand = await product_MD.aggregate([
@@ -76,34 +88,41 @@ export const getDashboardStats = async (req, res) => {
         // Thống kê đơn hàng và doanh thu
         const totalOrders = await order_MD.countDocuments();
         const pendingOrders = await order_MD.countDocuments({ order_status: 'pending' });
+        let chartStartDate = new Date();
+        chartStartDate.setHours(0, 0, 0, 0);
+
+        let totalChartPoints = 7;
+        if (rangeConfig.key === 'month') {
+            chartStartDate = new Date(chartStartDate.getFullYear(), chartStartDate.getMonth(), 1);
+            const today = new Date();
+            totalChartPoints = today.getDate();
+        } else {
+            totalChartPoints = rangeConfig.days;
+            chartStartDate.setDate(chartStartDate.getDate() - (totalChartPoints - 1));
+        }
+
         const revenueData = await order_MD.aggregate([
-            { $match: { payment_status: 'paid' } },
+            { $match: { payment_status: 'paid', createdAt: { $gte: chartStartDate } } },
             { $group: { _id: null, total: { $sum: '$total' } } }
         ]);
         const totalRevenue = revenueData[0]?.total || 0;
 
-        // Thống kê theo thời gian (7 ngày gần nhất)
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        sevenDaysAgo.setHours(0, 0, 0, 0);
-
         const productsCreatedLast7Days = await product_MD.countDocuments({
-            createdAt: { $gte: sevenDaysAgo }
+            createdAt: { $gte: chartStartDate }
         });
 
         const vouchersCreatedLast7Days = await voucher_MD.countDocuments({
-            createdAt: { $gte: sevenDaysAgo }
+            createdAt: { $gte: chartStartDate }
         });
 
-        // 7 ngày gần nhất để vẽ biểu đồ
+        // Dữ liệu biểu đồ theo khoảng thời gian đã chọn
         const dailyStats = [];
-        for (let i = 6; i >= 0; i--) {
-            const start = new Date();
-            start.setDate(start.getDate() - i);
+        for (let i = 0; i < totalChartPoints; i++) {
+            const start = new Date(chartStartDate);
+            start.setDate(chartStartDate.getDate() + i);
             start.setHours(0, 0, 0, 0);
             
-            const end = new Date();
-            end.setDate(end.getDate() - i);
+            const end = new Date(start);
             end.setHours(23, 59, 59, 999);
 
             const dayOrders = await order_MD.countDocuments({
@@ -119,7 +138,9 @@ export const getDashboardStats = async (req, res) => {
                 createdAt: { $gte: start, $lte: end }
             });
 
-            const dayName = start.toLocaleDateString('vi-VN', { weekday: 'short' });
+            const dayName = rangeConfig.key === 'month'
+                ? start.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
+                : start.toLocaleDateString('vi-VN', { weekday: 'short' });
             
             dailyStats.push({
                 name: dayName,
@@ -161,7 +182,8 @@ export const getDashboardStats = async (req, res) => {
                     total: totalOrders,
                     pending: pendingOrders,
                     revenue: totalRevenue,
-                    daily: dailyStats
+                    daily: dailyStats,
+                    range: rangeConfig.key
                 },
                 news: {
                     total: totalNews,

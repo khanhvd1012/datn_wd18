@@ -45,12 +45,12 @@ export const register = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user - role default là customer từ model
+    // Create user - role default là user từ model
     const userData = {
       username,
       email,
       password: hashedPassword,
-      role: role || ROLES.CUSTOMER,
+      role: role || ROLES.USER,
       fullName: fullName || undefined,
       phone: phone || undefined,
       dateOfBirth: dateOfBirth || undefined,
