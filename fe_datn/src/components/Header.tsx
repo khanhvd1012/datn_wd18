@@ -127,7 +127,7 @@ const Header = () => {
             border: "1px solid #ddd",
             borderRadius: 3,
             px: 2,
-            width: 450,
+            width: 300,
             
           }}>
             <InputBase
@@ -266,8 +266,8 @@ export default Header;
 
 // ================= STYLE =================
 const navStyle = {
-  color: "#000",
-  fontWeight: 500,
+  color: "#000000",
+  width: "126px",
   textTransform: "none",
   position: "relative",
   "&::after": {
