@@ -37,7 +37,7 @@ const LatestNews = () => {
   return (
     <Box sx={{ maxWidth: 1300, mx: "auto", px: 2, py: 6 ,backgroundColor: "#f5f5f5"}}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
-        <Typography variant="h5" sx={{ fontWeight: "bold", color: "#656464" }}>
+        <Typography variant="h5" sx={{ fontWeight: "bold", color: "#3b3b3b" }}>
           TIN TỨC MỚI NHẤT
         </Typography>
         <Button 
@@ -55,12 +55,12 @@ const LatestNews = () => {
             <Card
               sx={{
                 height: "100%",
-                backgroundColor: "#1a1a1a",
-                border: "1px solid #333",
+                backgroundColor: "#f7f7f7",
+                border: "1px solid #dadada",
                 transition: "0.3s",
                 "&:hover": {
                   transform: "translateY(-5px)",
-                  borderColor: "#ff6a00",
+                  borderColor: "#272727",
                 },
               }}
             >
@@ -74,7 +74,7 @@ const LatestNews = () => {
                 <Typography
                   variant="subtitle1"
                   sx={{
-                    color: "#fff",
+                    color: "#000000",
                     fontWeight: "bold",
                     mb: 1,
                     display: "-webkit-box",
@@ -89,7 +89,7 @@ const LatestNews = () => {
                 <Typography
                   variant="body2"
                   sx={{
-                    color: "#aaa",
+                    color: "#151414",
                     mb: 2,
                     display: "-webkit-box",
                     WebkitLineClamp: 3,

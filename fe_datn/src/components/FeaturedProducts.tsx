@@ -1,25 +1,35 @@
 import { useEffect, useState } from "react";
-import { Box, Card, CardMedia, CardContent, Typography } from "@mui/material";
-import { Link } from "react-router-dom";
-
-interface Product {
-  id: number;
-  name: string;
-  img: string;
-  price: number;
-}
+import {
+  Box,
+  Card,
+  CardMedia,
+  CardContent,
+  Typography,
+  Snackbar,
+  Alert,
+} from "@mui/material";
+import { Link, useNavigate } from "react-router-dom";
+import { addToCartApi, type CartItem } from "../services/cartService";
 
 const FeaturedProducts = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<CartItem[]>([]);
+  const [hoveredId, setHoveredId] = useState<number | null>(null);
+  const [loadingId, setLoadingId] = useState<number | null>(null);
+
+  const navigate = useNavigate();
+
+  const [notification, setNotification] = useState({
+    open: false,
+    message: "",
+    severity: "success" as "success" | "error" | "warning" | "info",
+  });
 
   useEffect(() => {
     fetch("http://localhost:3000/api/products")
       .then((res) => res.json())
       .then((data) => {
-        // Handle array or paginated object
         const list = Array.isArray(data) ? data : data.docs || data.data || [];
 
-        // Map data to match local interface if needed
         const mappedList = list.map((item: any) => ({
           id: item._id || item.id,
           name: item.name,
@@ -31,27 +41,51 @@ const FeaturedProducts = () => {
         }));
 
         setProducts(mappedList);
-      })
-      .catch((err) => console.error("Lỗi load products:", err));
+      });
   }, []);
 
-  const formatPrice = (price: number) => price.toLocaleString("vi-VN") + " đ";
+  const formatPrice = (price: number) =>
+    price.toLocaleString("vi-VN") + " đ";
+
+  const handleAddToCart = async (productId: number) => {
+    try {
+      if (!localStorage.getItem("token")) {
+        setNotification({
+          open: true,
+          message: "Vui lòng đăng nhập",
+          severity: "warning",
+        });
+        navigate("/login");
+        return;
+      }
+
+      setLoadingId(productId);
+
+      await addToCartApi({
+        product_id: productId,
+        quantity: 1,
+      });
+
+      window.dispatchEvent(new Event("cartUpdated"));
+
+      setNotification({
+        open: true,
+        message: "Đã thêm vào giỏ hàng!",
+        severity: "success",
+      });
+    } finally {
+      setLoadingId(null);
+    }
+  };
 
   return (
-    <Box sx={{ backgroundColor: "#ffffff", py: 4 }}>
-      {/* Container */}
-      <Box
-        sx={{
-          maxWidth: "1300px",
-          margin: "auto",
-          px: 2,
-        }}
-      >
+    <Box sx={{ py: 4 }}>
+      <Box sx={{ maxWidth: 1300, mx: "auto", px: 2 }}>
         {/* HEADER */}
-        <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+        <Box sx={{ display: "flex", mb: 3 }}>
           <Box
             sx={{
-              backgroundColor: "#1976d2", // Changed to blue to match banner theme
+              background: "#1976d2",
               color: "#fff",
               px: 5,
               py: 1,
@@ -69,85 +103,184 @@ const FeaturedProducts = () => {
           sx={{
             display: "grid",
             gridTemplateColumns: {
-              xs: "repeat(1, 1fr)",
+              xs: "1fr",
               sm: "repeat(2, 1fr)",
-              md: "repeat(4, 1fr)", // 4 cột cho cả màn hình trung bình
-              lg: "repeat(4, 1fr)", 
+              md: "repeat(4, 1fr)",
             },
             gap: 2,
           }}
         >
           {products.slice(0, 8).map((item) => (
-            <Link
+            <Card
               key={item.id}
-              to={`/product/${item.id}`}
-              style={{ textDecoration: "none" }}
+              sx={{
+                width: 280,
+                height: 380,
+                mx: "auto",
+                display: "flex",
+                flexDirection: "column",
+                transition: "0.3s",
+                "&:hover": {
+                  transform: "translateY(-6px)",
+                  boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
+                },
+              }}
             >
-              <Card
-                sx={{
-                  width: "280px", // Chốt chết chiều rộng
-                  height: "380px", 
-                  mx: "auto", 
-                  transition: "all 0.3s ease",
-                  cursor: "pointer",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-                  "&:hover": {
-                    borderColor: "#1976d2",
-                    transform: "translateY(-6px)",
-                    boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-                  },
+              {/* IMAGE - CLICK GO DETAIL */}
+            <Box
+              sx={{
+                height: 200,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                p: 2,
+              }}
+            >
+              <Link
+                to={`/product/${item.id}`}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textDecoration: "none",
                 }}
               >
-                <Box sx={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2, overflow: 'hidden' }}>
-                  <CardMedia
-                    component="img"
-                    image={item.img}
-                    alt={item.name}
-                    sx={{
-                      maxHeight: "100%",
-                      maxWidth: "100%",
-                      objectFit: "contain",
-                    }}
-                  />
-                </Box>
+                <CardMedia
+                  component="img"
+                  image={item.img}
+                  alt={item.name}
+                  sx={{
+                    maxHeight: "100%",
+                    maxWidth: "100%",
+                    objectFit: "contain",
+                    cursor: "pointer",
+                  }}
+                />
+              </Link>
+            </Box>
 
-                <CardContent sx={{ p: 2, flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1, '&:last-child': { pb: 2 } }}>
-                  <Box sx={{ height: 40, overflow: 'hidden', mb: 1 }}>
-                    <Typography
-                      variant="body2"
-                      title={item.name}
-                      sx={{
-                        color: "#1a1a1a",
-                        fontWeight: 600,
-                        fontSize: '0.9rem',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        lineHeight: 1.4
-                      }}
-                    >
-                      {item.name}
-                    </Typography>
-                  </Box>
+              {/* CONTENT + HOVER AREA ONLY HERE */}
+              <CardContent
+                onMouseEnter={() => setHoveredId(item.id)}
+                onMouseLeave={() => setHoveredId(null)}
+                sx={{
+                  position: "relative",
+                  flexGrow: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Box>
+                  <Typography
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: 14,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {item.name}
+                  </Typography>
 
                   <Typography
                     sx={{
                       color: "#d70018",
                       fontWeight: "bold",
-                      fontSize: 16,
-                      mt: "auto" // Đẩy giá xuống đáy CardContent
+                      mt: 1,
                     }}
                   >
                     {formatPrice(item.price)}
                   </Typography>
-                </CardContent>
-              </Card>
-            </Link>
+                </Box>
+
+                {/* HOVER BUTTONS ONLY IN CONTENT AREA */}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    background: "rgba(208, 208, 208, 0.75)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    py: 2,
+
+                    opacity: hoveredId === item.id ? 1 : 0,
+                    transform:
+                      hoveredId === item.id
+                        ? "translateY(0)"
+                        : "translateY(20px)",
+                    transition: "0.25s ease",
+                    pointerEvents:
+                      hoveredId === item.id ? "auto" : "none",
+                  }}
+                >
+                  <Box
+                    onClick={() =>
+                      (window.location.href = `/product/${item.id}`)
+                    }
+                    sx={{
+                      background: "#ff0000",
+                      color: "#fff",
+                      px: 2,
+                      py: 0.8,
+                      borderRadius: 2,
+                      width: 140,
+                      textAlign: "center",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Mua ngay
+                  </Box>
+
+                  <Box
+                    onClick={() => handleAddToCart(item.id)}
+                    sx={{
+                      background: "#1976d2",
+                      color: "#fff",
+                      px: 2,
+                      py: 0.8,
+                      borderRadius: 2,
+                      width: 140,
+                      textAlign: "center",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      opacity: loadingId === item.id ? 0.6 : 1,
+                    }}
+                  >
+                    {loadingId === item.id
+                      ? "Đang thêm..."
+                      : "Thêm vào giỏ"}
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
           ))}
         </Box>
       </Box>
+
+      {/* NOTIFICATION */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={3000}
+        onClose={() =>
+          setNotification((p) => ({ ...p, open: false }))
+        }
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert severity={notification.severity}>
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

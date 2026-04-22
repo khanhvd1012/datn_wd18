@@ -1,9 +1,10 @@
-
 import React, { useEffect, useState } from "react";
 import { Box, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import DealMallBanner from "./DealMallBanner";
 
+const FALLBACK_IMAGE =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100%25' height='100%25' fill='%23e0e0e0'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle' fill='%23999' font-size='12'%3ENo Image%3C/text%3E%3C/svg%3E";
 
 const Deal = () => {
   const navigate = useNavigate();
@@ -16,7 +17,6 @@ const Deal = () => {
     { _id: string; image: string; status?: boolean }[]
   >([]);
 
-  // 👉 FETCH GIỐNG BANNER
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -45,15 +45,10 @@ const Deal = () => {
   };
 
   const getImage = (item: any) => {
-    return (
-      item.logo_image ||
-      item.image ||
-      "https://via.placeholder.com/100"
-    );
+    return item.logo_image || item.image || FALLBACK_IMAGE;
   };
 
   return (
-
     <Box sx={{ background: "#f5f5f5", py: 5 }}>
       <Box sx={{ maxWidth: 1200, mx: "auto", px: 2 }}>
         {/* HEADER */}
@@ -94,8 +89,9 @@ const Deal = () => {
             gap: 2,
           }}
         >
-          {/* 🔥 LEFT BANNER SLIDER */}
+          {/* BANNER */}
           <DealMallBanner banners={banners} />
+
           {/* CATEGORY GRID */}
           <Box
             sx={{
@@ -117,7 +113,6 @@ const Deal = () => {
                     cursor: "pointer",
                     transition: "0.25s",
                     border: "1px solid #eee",
-
                     "&:hover": {
                       transform: "translateY(-6px)",
                       boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
@@ -128,7 +123,7 @@ const Deal = () => {
                     component="img"
                     src={getImage(item)}
                     onError={(e: any) => {
-                      e.target.src = "https://via.placeholder.com/100";
+                      e.target.src = FALLBACK_IMAGE;
                     }}
                     sx={{
                       width: "100%",
@@ -148,7 +143,6 @@ const Deal = () => {
             )}
           </Box>
         </Box>
-
       </Box>
     </Box>
   );
