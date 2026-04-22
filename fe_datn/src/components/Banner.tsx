@@ -62,8 +62,8 @@ const Banner = () => {
         onMouseLeave={() => setHover(false)}
         sx={{
           width: "100%",
-          maxWidth: 1200,
-          borderRadius: 3,
+          height: "100%",
+          borderRadius: 2,
           overflow: "hidden",
           position: "relative",
           boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
