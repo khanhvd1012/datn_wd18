@@ -18,7 +18,7 @@ dotenv.config();
 
 export const register = async (req, res) => {
   try {
-    const { username, email, password, fullName, phone, dateOfBirth, role } =
+    const { username, email, password, fullName, phone, dateOfBirth } =
       req.body;
 
     // Validate input
@@ -45,12 +45,12 @@ export const register = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user - role default là customer từ model
+    // Role luôn bị ép về CUSTOMER — không cho client quyết định để tránh tự nâng quyền.
     const userData = {
       username,
       email,
       password: hashedPassword,
-      role: role || ROLES.CUSTOMER,
+      role: ROLES.CUSTOMER,
       fullName: fullName || undefined,
       phone: phone || undefined,
       dateOfBirth: dateOfBirth || undefined,

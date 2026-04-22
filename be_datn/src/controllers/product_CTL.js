@@ -87,8 +87,13 @@ export const getAllProducts = async (req, res) => {
             price: p.price,
             original_price: p.original_price,
             description: p.description,
-            category: p.category?.name || '',
-            brand: p.brand?.name || '',
+            // Trả dạng object { _id, name } để FE có thể filter theo ID
+            category: p.category
+                ? { _id: p.category._id.toString(), name: p.category.name || '' }
+                : null,
+            brand: p.brand
+                ? { _id: p.brand._id.toString(), name: p.brand.name || '' }
+                : null,
             countInStock: p.countInStock,
             sold: 0,
             rating: 4.5,

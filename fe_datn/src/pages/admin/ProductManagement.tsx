@@ -431,7 +431,11 @@ const ProductManagement: React.FC = () => {
                   <TableCell>
                     <Chip
                       icon={<Category />}
-                      label={product.category}
+                      label={
+                        typeof product.category === "string"
+                          ? product.category
+                          : (product.category as any)?.name || "-"
+                      }
                       size="small"
                       variant="outlined"
                     />
@@ -439,7 +443,11 @@ const ProductManagement: React.FC = () => {
                   <TableCell>
                     <Chip
                       icon={<BrandingWatermark />}
-                      label={product.brand}
+                      label={
+                        typeof product.brand === "string"
+                          ? product.brand
+                          : (product.brand as any)?.name || "-"
+                      }
                       size="small"
                       variant="outlined"
                     />

@@ -72,17 +72,8 @@ const AppRouter = () => {
         <Route path="product/:id" element={<ProductDetail />} />
         <Route path="news" element={<News />} />
         <Route path="news/:id" element={<NewsDetail />} />
-
-        {/* NEW PAGES */}
         <Route path="about" element={<About />} />
         <Route path="contact" element={<Contact />} />
-
-        {/* NEW PAGES */}
-        <Route path="news" element={<News />} />
-                <Route path="/news/:id" element={<NewsDetail />} />
-        <Route path="about" element={<About />} />
-        <Route path="contact" element={<Contact />} />
-        <Route path="/news/:id" element={<NewsDetail />} />
 
         {/* AUTH */}
         <Route path="login" element={<Login />} />

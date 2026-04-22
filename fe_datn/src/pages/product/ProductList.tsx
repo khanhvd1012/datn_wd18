@@ -75,13 +75,20 @@ const ProductList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const categoryFromUrl = searchParams.get("category");
+  const categoryFromUrl = searchParams.get("category") || "";
   const searchFromUrl = searchParams.get("search") || "";
 
+  // Đồng bộ state từ URL: khi URL đổi (kể cả khi xoá param), state reset theo.
   useEffect(() => {
     setSearch(searchFromUrl);
-    if (categoryFromUrl) setSelectedCategory(categoryFromUrl);
+    setSelectedCategory(categoryFromUrl);
+    setPage(1);
   }, [searchFromUrl, categoryFromUrl]);
+
+  // Reset page về 1 mỗi khi đổi filter / sắp xếp / brand để tránh trang trống.
+  useEffect(() => {
+    setPage(1);
+  }, [selectedBrand, sortType]);
 
   useEffect(() => {
     const fetchData = async () => {

@@ -37,13 +37,8 @@ export const registerValidator = Joi.object({
     "date.base": "Ngày sinh không hợp lệ",
     "date.less": "Ngày sinh phải nhỏ hơn ngày hiện tại",
   }),
-  role: Joi.string()
-    .valid(...Object.values(ROLES))
-    .default(ROLES.CUSTOMER)
-    .messages({
-      "any.only": "Vai trò không hợp lệ",
-    }),
-});
+  // Không cho client gửi role khi đăng ký — role luôn mặc định là CUSTOMER ở controller.
+}).unknown(false);
 
 export const loginValidator = Joi.object({
   email: Joi.string().email().required().messages({

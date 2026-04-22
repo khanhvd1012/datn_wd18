@@ -22,7 +22,6 @@ import mainBanner10 from "../img/bl3.jpg";
 
 const Banner = () => {
   const navigate = useNavigate();
-  const [index, setIndex] = useState(0);
   const [hover, setHover] = useState(false);
   const [apiCategories, setApiCategories] = useState<
     { name: string; _id: string }[]
@@ -30,6 +29,17 @@ const Banner = () => {
   const [apiBanners, setApiBanners] = useState<
     { image: string; title: string; _id: string }[]
   >([]);
+
+  // Index trên "slide ảo" (đã gồm clone 2 đầu). Slide thật số i tương ứng index = i + 1.
+  const realCount = apiBanners.length;
+  const [index, setIndex] = useState(1);
+  const [enableTransition, setEnableTransition] = useState(true);
+
+  // Danh sách slide hiển thị: [clone(last), ...banners, clone(first)]
+  const displaySlides =
+    realCount > 0
+      ? [apiBanners[realCount - 1], ...apiBanners, apiBanners[0]]
+      : [];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,24 +65,69 @@ const Banner = () => {
     fetchData();
   }, []);
 
+  // Reset vị trí về slide thật đầu tiên mỗi khi data load xong
   useEffect(() => {
-    if (hover || apiBanners.length === 0) return;
+    if (realCount > 0) {
+      setEnableTransition(false);
+      setIndex(1);
+    }
+  }, [realCount]);
+
+  // Auto-slide mỗi 2 giây
+  useEffect(() => {
+    if (hover || realCount === 0) return;
 
     const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % apiBanners.length);
-    }, 4000);
+      setEnableTransition(true);
+      setIndex((prev) => prev + 1);
+    }, 2000);
 
     return () => clearInterval(timer);
-  }, [hover, apiBanners.length]);
+  }, [hover, realCount]);
+
+  // Khi lướt tới clone, snap ngầm về slide thật tương ứng (mắt không thấy).
+  useEffect(() => {
+    if (realCount === 0) return;
+
+    if (index === realCount + 1) {
+      // Đang đứng ở clone(first) ở cuối → chờ animation xong rồi nhảy về slide thật đầu tiên
+      const t = setTimeout(() => {
+        setEnableTransition(false);
+        setIndex(1);
+      }, 600);
+      return () => clearTimeout(t);
+    }
+
+    if (index === 0) {
+      // Đang đứng ở clone(last) ở đầu → nhảy ngầm về slide thật cuối cùng
+      const t = setTimeout(() => {
+        setEnableTransition(false);
+        setIndex(realCount);
+      }, 600);
+      return () => clearTimeout(t);
+    }
+  }, [index, realCount]);
+
+  // Sau khi snap không transition, bật lại transition cho lần kế tiếp
+  useEffect(() => {
+    if (!enableTransition) {
+      const raf = requestAnimationFrame(() => {
+        requestAnimationFrame(() => setEnableTransition(true));
+      });
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [enableTransition]);
 
   const next = () => {
-    if (apiBanners.length === 0) return;
-    setIndex((prev) => (prev + 1) % apiBanners.length);
+    if (realCount === 0) return;
+    setEnableTransition(true);
+    setIndex((prev) => prev + 1);
   };
 
   const prev = () => {
-    if (apiBanners.length === 0) return;
-    setIndex((prev) => (prev === 0 ? apiBanners.length - 1 : prev - 1));
+    if (realCount === 0) return;
+    setEnableTransition(true);
+    setIndex((prev) => prev - 1);
   };
 
   const goCategory = (id: string) => {
@@ -156,31 +211,34 @@ const Banner = () => {
           <Box
             sx={{
               display: "flex",
-              width: `${(apiBanners.length || 1) * 100}%`,
+              width: "100%",
+              height: "100%",
               transform: `translateX(-${index * 100}%)`,
-              transition: "0.6s",
+              transition: enableTransition ? "transform 0.6s ease" : "none",
             }}
           >
-            {apiBanners.map((banner, i) => (
-              <Box
-                key={i}
-                component="img"
-                src={banner.image}
-                sx={{
-                  width: "100%",
-                  height: 380,
-                  objectFit: "cover",
-                }}
-              />
-            ))}
-
-            {apiBanners.length === 0 && (
+            {realCount > 0 ? (
+              displaySlides.map((banner, i) => (
+                <Box
+                  key={`${banner._id}-${i}`}
+                  component="img"
+                  src={banner.image}
+                  sx={{
+                    flex: "0 0 100%",
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                />
+              ))
+            ) : (
               <Box
                 component="img"
                 src={mainBanner4}
                 sx={{
+                  flex: "0 0 100%",
                   width: "100%",
-                  height: 380,
+                  height: "100%",
                   objectFit: "cover",
                 }}
               />

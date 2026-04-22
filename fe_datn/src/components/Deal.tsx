@@ -143,9 +143,10 @@ const Deal = () => {
             <Box
               sx={{
                 display: "flex",
-                width: `${(banners.length || 1) * 100}%`,
+                width: "100%",
+                height: "100%",
                 transform: `translateX(-${index * 100}%)`,
-                transition: "0.5s",
+                transition: "transform 0.5s ease",
               }}
             >
               {banners.length > 0 ? (
@@ -155,6 +156,7 @@ const Deal = () => {
                     component="img"
                     src={item.image}
                     sx={{
+                      flex: "0 0 100%",
                       width: "100%",
                       height: 300,
                       objectFit: "cover",
@@ -165,7 +167,12 @@ const Deal = () => {
                 <Box
                   component="img"
                   src="https://via.placeholder.com/400"
-                  sx={{ width: "100%", height: 300 }}
+                  sx={{
+                    flex: "0 0 100%",
+                    width: "100%",
+                    height: 300,
+                    objectFit: "cover",
+                  }}
                 />
               )}
             </Box>
