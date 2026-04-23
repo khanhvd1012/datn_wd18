@@ -1,4 +1,4 @@
-import { useState, ChangeEvent } from "react";
+import { useState, type ChangeEvent } from "react";
 import { Box, IconButton, Paper, TextField, Typography } from "@mui/material";
 import ChatIcon from "@mui/icons-material/Chat";
 import CloseIcon from "@mui/icons-material/Close";

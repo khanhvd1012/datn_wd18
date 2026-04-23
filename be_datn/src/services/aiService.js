@@ -1,4 +1,4 @@
-import { findProducts } from "./src/services/productSearch.js";
+import { findProducts } from "../services/productSearch.js";
 
 app.post("/api/chat", async (req, res) => {
   try {
@@ -8,10 +8,10 @@ app.post("/api/chat", async (req, res) => {
       return res.status(400).json({ error: "message is required" });
     }
 
-    // 🧠 STEP 1: Find products from DB
+    //  STEP 1: Find products from DB
     const products = await findProducts(message);
 
-    // 🧠 STEP 2: Send to AI
+    //  STEP 2: Send to AI
     const response = await groq.chat.completions.create({
       model: "llama-3.1-8b-instant",
       messages: [
