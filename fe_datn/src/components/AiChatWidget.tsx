@@ -1,7 +1,7 @@
-import { useState, type ChangeEvent } from "react";
+import { useState, type ChangeEvent, useRef, useEffect } from "react";
 import { Box, IconButton, Paper, TextField, Typography } from "@mui/material";
-import ChatIcon from "@mui/icons-material/Chat";
 import CloseIcon from "@mui/icons-material/Close";
+import api from "../services/api";
 
 type Product = {
   name: string;
@@ -19,6 +19,13 @@ export default function AiChatWidget() {
   const [open, setOpen] = useState<boolean>(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -30,21 +37,18 @@ export default function AiChatWidget() {
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:3000/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message: input }),
+      const res = await api.post("/chat", {
+        message: input,
       });
 
-      const data = await res.json();
+      const data = res.data;
 
       const aiMessage: Message = {
         role: "ai",
-        text: data.message || data.reply || "Không có phản hồi",
+        text: data.message || "Không có phản hồi",
         products: data.products || [],
       };
 
@@ -57,6 +61,8 @@ export default function AiChatWidget() {
           text: "Lỗi kết nối đến AI server.",
         },
       ]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,37 +70,48 @@ export default function AiChatWidget() {
     setInput(e.target.value);
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      sendMessage();
+    }
+  };
+
   return (
     <>
       {/* Floating Button */}
-<IconButton
-  onClick={() => setOpen(!open)}
-  sx={{
-    position: "fixed",
-    bottom: 20,
-    right: 40,
-    width: 70,
-    height: 70,
-    zIndex: 9999,
-    p: 0,
-    borderRadius: "50%",
-    overflow: "hidden",
-    boxShadow: 3,
-    "&:hover": {
-      transform: "scale(1.1)",
-    },
-  }}
->
-  <img
-    src="https://png.pngtree.com/png-clipart/20240310/original/pngtree-little-cute-robot-funny-virtual-assistant-bot-png-image_14551911.png"
-    alt="AI Assistant"
-    style={{
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-    }}
-  />
-</IconButton>
+      <IconButton
+        onClick={() => setOpen(!open)}
+        sx={{
+          position: "fixed",
+          bottom: 20,
+          right: 20,
+          width: 70,
+          height: 70,
+          zIndex: 9999,
+          p: 0,
+          borderRadius: "50%",
+          overflow: "hidden",
+          boxShadow: "0 0 12px rgba(25,118,210,0.6)",
+          backgroundColor: open ? "#1976d2" : "transparent",
+          "&:hover": {
+            transform: "scale(1.1)",
+          },
+        }}
+      >
+        {open ? (
+          <CloseIcon sx={{ color: "white" }} />
+        ) : (
+          <img
+            src="https://png.pngtree.com/png-clipart/20240310/original/pngtree-little-cute-robot-funny-virtual-assistant-bot-png-image_14551911.png"
+            alt="AI Assistant"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
+          />
+        )}
+      </IconButton>
 
       {/* Chat Box */}
       {open && (
@@ -137,7 +154,6 @@ export default function AiChatWidget() {
           >
             {messages.map((msg, index) => (
               <Box key={index} sx={{ mb: 1 }}>
-                {/* Text */}
                 <Typography
                   sx={{
                     fontSize: 14,
@@ -147,7 +163,7 @@ export default function AiChatWidget() {
                   <b>{msg.role === "user" ? "Bạn" : "AI"}:</b> {msg.text}
                 </Typography>
 
-                {/* 🛒 PRODUCT CARDS */}
+                {/* PRODUCTS */}
                 {msg.products && msg.products.length > 0 && (
                   <Box sx={{ mt: 1 }}>
                     {msg.products.map((p, i) => (
@@ -162,15 +178,17 @@ export default function AiChatWidget() {
                         }}
                       >
                         <Box>
-                          <Typography fontSize={14}>
-                            {p.name}
-                          </Typography>
+                          <Typography fontSize={14}>{p.name}</Typography>
                           <Typography fontSize={12} color="gray">
                             {p.price.toLocaleString()} VND
                           </Typography>
                         </Box>
 
-                        <a href={p.url}>
+                        <a
+                          href={p.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           <button
                             style={{
                               background: "#1976d2",
@@ -190,6 +208,15 @@ export default function AiChatWidget() {
                 )}
               </Box>
             ))}
+
+            {/* LOADING */}
+            {loading && (
+              <Typography fontSize={12} color="gray">
+                AI đang trả lời...
+              </Typography>
+            )}
+
+            <div ref={messagesEndRef} />
           </Box>
 
           {/* Input */}
@@ -199,6 +226,7 @@ export default function AiChatWidget() {
               fullWidth
               value={input}
               onChange={handleInputChange}
+              onKeyDown={handleKeyPress}
               placeholder="Hỏi gì đó..."
             />
             <button

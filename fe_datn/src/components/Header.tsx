@@ -231,12 +231,12 @@ const Header = () => {
         </Box>
 
         {/* RIGHT */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2,  }}>
 
           {user && (
             <>
               <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
-                <Avatar src={user.avatar} />
+                <Avatar src={user.avatar}  />
               </IconButton>
 
               <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>

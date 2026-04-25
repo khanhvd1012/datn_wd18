@@ -3,8 +3,7 @@ import cors from "cors";
 import connectDB from "./src/config/db.js";
 import dotenv from "dotenv";
 import router from "./src/routers/index.js";
-
-import Groq from "groq-sdk";
+import { handleChat } from "./src/services/aiService.js";
 
 
 dotenv.config();
@@ -17,64 +16,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static("public/uploads"));
 
+// ===================== ROUTES =====================
 app.use("/api", router);
+
+// ✅ USE AI ROUTE (THIS IS THE ONLY /api/chat NOW)
+app.use("/api",handleChat );
 
 // ===================== ROOT ROUTE =====================
 app.get("/", (req, res) => {
   res.json({ status: "ok" });
-});
-
-// =====================  AI SETUP =====================
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
-
-//  NEW: AI CHAT API
-app.post("/api/chat", async (req, res) => {
-  try {
-    const message = req.body?.message;
-
-    if (!message) {
-      return res.status(400).json({
-        error: "message is required",
-      });
-    }
-
-    const response = await groq.chat.completions.create({
-      model: "llama-3.1-8b-instant",
-      messages: [
-        {
-        role: "system",
-        content: `
-      Bạn là một trợ lý AI bán hàng cho cửa hàng phụ kiện điện thoại tại Việt Nam.
-
-      QUY TẮC:
-      - Luôn trả lời bằng TIẾNG VIỆT
-      - Giọng thân thiện, tự nhiên như nhân viên tư vấn
-      - Ngắn gọn, dễ hiểu
-      - Nếu có sản phẩm → giới thiệu sản phẩm rõ ràng (tên, giá, công dụng)
-      - Nếu không có thông tin → nói sẽ kiểm tra giúp khách hàng
-
-      Không trả lời bằng tiếng Anh.
-        `
-      },
-        {
-          role: "user",
-          content: message,
-        },
-      ],
-    });
-
-    res.json({
-      reply: response.choices[0].message.content,
-    });
-  } catch (error) {
-    console.error("❌ Groq error:", error);
-
-    res.status(500).json({
-      error: error.message,
-    });
-  }
 });
 
 // ===================== START SERVER =====================

@@ -83,7 +83,7 @@ const Banner = () => {
                 key={banner._id || i}
                 sx={{
                   minWidth: "100%",
-                  aspectRatio: "16 / 6", // ⭐ FIXED PROPORTION (no distortion)
+                  aspectRatio: "16 / 6", //  FIXED PROPORTION (no distortion)
                   position: "relative",
                 }}
               >

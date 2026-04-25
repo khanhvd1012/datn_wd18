@@ -13,6 +13,10 @@ const productSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Brands"
     },
+    url: {
+    type: String,
+    required: true,
+    },
     category: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Categories"
