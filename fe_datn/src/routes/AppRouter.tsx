@@ -63,6 +63,8 @@ import ModernAdminLayout from "../layouts/ModernAdminLayout";
 import NotFound from "../pages/NotFound";
 import PrivateRoute from "./PrivateRoute";
 import AdminRoute from "./AdminRoute";
+import ForgotPassword from "../pages/auth/ForgotPassword.tsx";
+
 
 const AppRouter = () => {
   return (
@@ -90,7 +92,7 @@ const AppRouter = () => {
         {/* AUTH */}
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
-
+        <Route path="forgot-password" element={<ForgotPassword />} />
         {/* NEED LOGIN */}
 
         <Route

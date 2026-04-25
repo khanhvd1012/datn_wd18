@@ -188,6 +188,16 @@ export const forgotPassword = async (req, res) => {
 
     await transporter.sendMail(mailOptions);
 
+    try {
+      await transporter.sendMail(mailOptions);
+    } catch (err) {
+      console.error("MAIL ERROR:", err);
+      return res.status(500).json({
+        message: "Gửi email thất bại",
+        error: err.message,
+      });
+    }
+    
     return res
       .status(200)
       .json({ message: "Email đặt lại mật khẩu đã được gửi đi" });

@@ -127,7 +127,7 @@ const Header = () => {
             border: "1px solid #ddd",
             borderRadius: 3,
             px: 2,
-            width: 300,
+            width: 250,
             
           }}>
             <InputBase
@@ -234,8 +234,17 @@ const Header = () => {
         <Box sx={{ display: "flex", alignItems: "center", gap: 2,  }}>
 
           {user && (
-            <>
-              <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
+            < >
+            <div style={{display:"flex",}}>
+            <p style={{
+              color: "black",
+              fontSize: 14,
+              marginTop: 14,
+              whiteSpace: "nowrap"
+            }} >Xin chào, {user.username}</p>
+              <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}
+                 sx={{ p: 0.5 }}
+                >
                 <Avatar src={user.avatar}  />
               </IconButton>
 
@@ -246,6 +255,7 @@ const Header = () => {
                   Đăng xuất
                 </MenuItem>
               </Menu>
+              </div>
             </>
           )}
 

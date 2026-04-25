@@ -192,7 +192,7 @@ const Login = () => {
             <Divider sx={{ my: 3 }}>Hoặc</Divider>
 
             <Typography variant="body2">
-              Chưa có tài khoản?{" "}
+              Bạn <Link href="/forgot-password" style={{}} >Quên mật khẩu?</Link>, Chưa có tài khoản?{" "}
               <Link href="/register" underline="hover" sx={{ fontWeight: "bold" }}>
                 Đăng ký ngay
               </Link>
