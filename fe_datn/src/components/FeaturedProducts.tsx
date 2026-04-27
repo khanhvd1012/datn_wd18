@@ -3,21 +3,16 @@ import {
   Box,
   Card,
   CardMedia,
-  CardContent,
   Typography,
   Snackbar,
   Alert,
 } from "@mui/material";
-import { Link, useNavigate } from "react-router-dom";
-import { addToCartApi, type CartItem } from "../services/cartService";
 
 const FeaturedProducts = () => {
-  const [products, setProducts] = useState<CartItem[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
-  const [loadingId, setLoadingId] = useState<number | null>(null);
-
-  const navigate = useNavigate();
-
+  const [startIndex, setStartIndex] = useState(0); 
+const [hoverSide, setHoverSide] = useState<"left" | "right" | null>(null);
   const [notification, setNotification] = useState({
     open: false,
     message: "",
@@ -36,7 +31,7 @@ const FeaturedProducts = () => {
           img:
             item.img ||
             (item.images && item.images[0]) ||
-            "https://via.placeholder.com/200",
+            "/no-image.png",
           price: item.price,
         }));
 
@@ -47,34 +42,16 @@ const FeaturedProducts = () => {
   const formatPrice = (price: number) =>
     price.toLocaleString("vi-VN") + " đ";
 
-  const handleAddToCart = async (productId: number) => {
-    try {
-      if (!localStorage.getItem("token")) {
-        setNotification({
-          open: true,
-          message: "Vui lòng đăng nhập",
-          severity: "warning",
-        });
-        navigate("/login");
-        return;
-      }
+  //  next / prev
+  const handleNext = () => {
+    if (startIndex + 4 < products.length) {
+      setStartIndex(startIndex + 4);
+    }
+  };
 
-      setLoadingId(productId);
-
-      await addToCartApi({
-        product_id: productId,
-        quantity: 1,
-      });
-
-      window.dispatchEvent(new Event("cartUpdated"));
-
-      setNotification({
-        open: true,
-        message: "Đã thêm vào giỏ hàng!",
-        severity: "success",
-      });
-    } finally {
-      setLoadingId(null);
+  const handlePrev = () => {
+    if (startIndex - 4 >= 0) {
+      setStartIndex(startIndex - 4);
     }
   };
 
@@ -82,102 +59,136 @@ const FeaturedProducts = () => {
     <Box sx={{ py: 4 }}>
       <Box sx={{ maxWidth: 1300, mx: "auto", px: 2 }}>
         {/* HEADER */}
-        <Box sx={{ display: "flex", mb: 3 }}>
-          <Box
-            sx={{
-              background: "#1976d2",
-              color: "#fff",
-              px: 5,
-              py: 1,
-              fontWeight: "bold",
-              fontSize: 18,
-              clipPath: "polygon(0 0, 90% 0, 100% 50%, 90% 100%, 0 100%)",
-            }}
-          >
-            PHỤ KIỆN NỔI BẬT
-          </Box>
-        </Box>
-
-        {/* GRID */}
         <Box
           sx={{
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr",
-              sm: "repeat(2, 1fr)",
-              md: "repeat(4, 1fr)",
-            },
-            gap: 2,
+            fontFamily: "Anton, sans-serif",
+            fontSize: 28,
+            letterSpacing: "2px",
+            color: "#ff3b1f",
+            textTransform: "uppercase",
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            pb: 2,
           }}
         >
-          {products.slice(0, 8).map((item) => (
-            <Card
+          PHỤ KIỆN NỔI BẬT
+        </Box>
+
+       <Box sx={{ position: "relative" }}>
+
+  {/* VÙNG CLICK TRÁI */}
+      <Box
+        onClick={handlePrev}
+        sx={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: 60,
+          zIndex: 5,
+          cursor: startIndex > 0 ? "pointer" : "default",
+
+          "&:active": {
+            background: "rgba(158, 42, 42, 0.05)", // hiệu ứng click
+          },
+        }}
+      />
+
+      {/* VÙNG CLICK PHẢI */}
+      <Box
+        onClick={handleNext}
+        sx={{
+          position: "absolute",
+          right: 0,
+          top: 0,
+          bottom: 0,
+          width: 60,
+          zIndex: 5,
+          cursor:
+            startIndex + 4 < products.length ? "pointer" : "default",
+
+          "&:active": {
+            background: "rgba(92, 223, 66, 0.05)",
+          },
+        }}
+      />
+
+      <Box
+        sx={{
+          overflow: "hidden",
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            transition: "transform 0.4s ease",
+            transform: `translateX(-${startIndex * (100 / 4)}%)`,
+          }}
+        >
+          {products.map((item) => (
+            <Box
               key={item.id}
               sx={{
-                width: 280,
-                height: 380,
-                mx: "auto",
-                display: "flex",
-                flexDirection: "column",
-                transition: "0.3s",
-                "&:hover": {
-                  transform: "translateY(-6px)",
-                  boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
-                },
+                width: "25%", 
+                flexShrink: 0,
+                px: 1,
               }}
             >
-              {/* IMAGE - CLICK GO DETAIL */}
-            <Box
-              sx={{
-                height: 200,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                p: 2,
-              }}
-            >
-              <Link
-                to={`/product/${item.id}`}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  textDecoration: "none",
-                }}
-              >
-                <CardMedia
-                  component="img"
-                  image={item.img}
-                  alt={item.name}
-                  sx={{
-                    maxHeight: "100%",
-                    maxWidth: "100%",
-                    objectFit: "contain",
-                    cursor: "pointer",
-                  }}
-                />
-              </Link>
-            </Box>
-
-              {/* CONTENT + HOVER AREA ONLY HERE */}
-              <CardContent
+              <Card
                 onMouseEnter={() => setHoveredId(item.id)}
                 onMouseLeave={() => setHoveredId(null)}
                 sx={{
+                  height: 300,
+                  width: "100%",
                   position: "relative",
-                  flexGrow: 1,
+                  overflow: "hidden",
+                  cursor: "pointer",
                   display: "flex",
                   flexDirection: "column",
-                  justifyContent: "space-between",
+                  transition: "0.3s",
+                  "&:hover": {
+                    transform: "translateY(-6px)",
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
+                  },
                 }}
               >
-                <Box>
-                  <Typography
+                {/* IMAGE */}
+                <Box
+                  sx={{
+                    width: "100%",
+                    height: 180,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "#ebeaea",
+                  }}
+                >
+                  <CardMedia
+                    component="img"
+                    image={item.img}
+                    alt={item.name}
+                    onError={(e: any) => {
+                      e.target.src = "/no-image.png";
+                    }}
                     sx={{
-                      fontWeight: 600,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "contain",
+                    }}
+                  />
+                </Box>
+
+                {/* INFO */}
+                <Box sx={{ p: 1.5 }}>
+                  <Box sx={{ color: "#fadb14", fontSize: 14 ,pl:25}}>
+                    {"★★★★☆"}
+                  </Box>
+
+                  <Box
+                    sx={{
                       fontSize: 14,
+                      fontWeight: 500,
                       display: "-webkit-box",
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: "vertical",
@@ -185,42 +196,31 @@ const FeaturedProducts = () => {
                     }}
                   >
                     {item.name}
-                  </Typography>
+                  </Box>
 
-                  <Typography
+                  <Box
                     sx={{
-                      color: "#d70018",
+                      color: "#ff4d4f",
                       fontWeight: "bold",
+                      fontSize: 15,
                       mt: 1,
                     }}
                   >
                     {formatPrice(item.price)}
-                  </Typography>
+                  </Box>
                 </Box>
 
-                {/* HOVER BUTTONS ONLY IN CONTENT AREA */}
+                {/* OVERLAY */}
                 <Box
                   sx={{
                     position: "absolute",
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    background: "rgba(208, 208, 208, 0.75)",
+                    inset: 0,
+                    background: "rgba(0,0,0,0.5)",
                     display: "flex",
-                    flexDirection: "column",
-                    gap: 1,
                     alignItems: "center",
                     justifyContent: "center",
-                    py: 2,
-
                     opacity: hoveredId === item.id ? 1 : 0,
-                    transform:
-                      hoveredId === item.id
-                        ? "translateY(0)"
-                        : "translateY(20px)",
-                    transition: "0.25s ease",
-                    pointerEvents:
-                      hoveredId === item.id ? "auto" : "none",
+                    transition: "0.3s",
                   }}
                 >
                   <Box
@@ -230,42 +230,21 @@ const FeaturedProducts = () => {
                     sx={{
                       background: "#ff0000",
                       color: "#fff",
-                      px: 2,
-                      py: 0.8,
+                      px: 3,
+                      py: 1,
                       borderRadius: 2,
-                      width: 140,
-                      textAlign: "center",
-                      fontWeight: 600,
-                      cursor: "pointer",
+                      fontWeight: "bold",
                     }}
                   >
                     Mua ngay
                   </Box>
-
-                  <Box
-                    onClick={() => handleAddToCart(item.id)}
-                    sx={{
-                      background: "#1976d2",
-                      color: "#fff",
-                      px: 2,
-                      py: 0.8,
-                      borderRadius: 2,
-                      width: 140,
-                      textAlign: "center",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      opacity: loadingId === item.id ? 0.6 : 1,
-                    }}
-                  >
-                    {loadingId === item.id
-                      ? "Đang thêm..."
-                      : "Thêm vào giỏ"}
-                  </Box>
                 </Box>
-              </CardContent>
-            </Card>
+              </Card>
+            </Box>
           ))}
         </Box>
+      </Box>
+    </Box>
       </Box>
 
       {/* NOTIFICATION */}
