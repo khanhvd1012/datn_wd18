@@ -45,12 +45,12 @@ export const register = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user - role default là customer từ model
+    // Create user - role default là user từ model
     const userData = {
       username,
       email,
       password: hashedPassword,
-      role: role || ROLES.CUSTOMER,
+      role: role || ROLES.USER,
       fullName: fullName || undefined,
       phone: phone || undefined,
       dateOfBirth: dateOfBirth || undefined,
@@ -188,6 +188,16 @@ export const forgotPassword = async (req, res) => {
 
     await transporter.sendMail(mailOptions);
 
+    try {
+      await transporter.sendMail(mailOptions);
+    } catch (err) {
+      console.error("MAIL ERROR:", err);
+      return res.status(500).json({
+        message: "Gửi email thất bại",
+        error: err.message,
+      });
+    }
+    
     return res
       .status(200)
       .json({ message: "Email đặt lại mật khẩu đã được gửi đi" });

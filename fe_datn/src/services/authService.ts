@@ -10,7 +10,15 @@ export const registerAPI = async (data: any) => {
 export const loginAPI = async (data: any) => {
   const res = await api.post("/auth/login", data);
 
-  localStorage.setItem("token", res.data.accessToken);
+  const userData = {
+    _id: res.data.user._id,
+    email: res.data.user.email,
+    username: res.data.user.username,
+    role: res.data.user.role,
+    avatar: res.data.user.avatar,
+    token: res.data.accessToken,
+  };
+  localStorage.setItem("user", JSON.stringify(userData));
 
   return res.data;
 };
@@ -30,5 +38,18 @@ export const updateMeAPI = async (data: any) => {
 // CHANGE PASSWORD
 export const changePasswordAPI = async (data: any) => {
   const res = await api.put("/auth/me/change-password", data);
+  return res.data;
+};
+// FORGOT PASSWORD
+export const forgotPasswordAPI = async (email: string) => {
+  const res = await api.post("/auth/forgot-password", { email });
+  return res.data;
+};
+
+// RESET PASSWORD
+export const resetPasswordAPI = async (token: string, password: string) => {
+  const res = await api.post(`/auth/reset-password/${token}`, {
+    password,
+  });
   return res.data;
 };

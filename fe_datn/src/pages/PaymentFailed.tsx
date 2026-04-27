@@ -1,47 +1,50 @@
 import React from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
   Button,
   Paper,
-  Stack
+  Stack,
+  Container
 } from "@mui/material";
 import ErrorIcon from "@mui/icons-material/Error";
 
 const PaymentFailed = () => {
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const navigate = useNavigate();
-  const orderId = searchParams.get("orderId");
+  const orderId = location.state?.orderId || location.search?.split("orderId=")[1];
 
   return (
-    <Box
-      sx={{
-        minHeight: "80vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "#f5f5f5",
-        p: 3
-      }}
-    >
+    <Container maxWidth="sm" sx={{ py: 8 }}>
       <Paper
         elevation={4}
         sx={{
           p: 6,
           borderRadius: 4,
-          textAlign: "center",
-          maxWidth: 500,
-          width: "100%"
+          textAlign: "center"
         }}
       >
-        <ErrorIcon
+        <Box
           sx={{
-            fontSize: 90,
-            color: "#f44336",
-            mb: 2
+            width: 120,
+            height: 120,
+            borderRadius: "50%",
+            bgcolor: "#ffebee",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            mx: "auto",
+            mb: 3
           }}
-        />
+        >
+          <ErrorIcon
+            sx={{
+              fontSize: 80,
+              color: "#f44336"
+            }}
+          />
+        </Box>
 
         <Typography variant="h4" fontWeight="bold" mb={2}>
           Thanh toán thất bại
@@ -52,15 +55,39 @@ const PaymentFailed = () => {
           {orderId && (
             <>
               <br />
-              <strong>Mã đơn hàng: {orderId.slice(-6).toUpperCase()}</strong>
+              <strong>Mã đơn hàng: #{orderId.toString().slice(-6).toUpperCase()}</strong>
             </>
           )}
         </Typography>
+
+        <Paper
+          sx={{
+            bgcolor: "#fff3e0",
+            p: 3,
+            borderRadius: 2,
+            mb: 4,
+            textAlign: "left"
+          }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            <strong>Lưu ý:</strong>
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            • Đơn hàng của bạn vẫn được lưu trong hệ thống
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            • Bạn có thể thử thanh toán lại từ trang đơn hàng
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            • Nếu đã thanh toán, vui lòng liên hệ hỗ trợ
+          </Typography>
+        </Paper>
 
         <Stack direction="row" spacing={2} justifyContent="center">
           <Button
             variant="outlined"
             onClick={() => navigate("/orders")}
+            sx={{ px: 4 }}
           >
             Xem đơn hàng
           </Button>
@@ -68,15 +95,16 @@ const PaymentFailed = () => {
             variant="contained"
             onClick={() => navigate("/")}
             sx={{
-              background: "#f44336",
-              "&:hover": { background: "#d32f2f" }
+              background: "#d70018",
+              "&:hover": { background: "#b71c1c" },
+              px: 4
             }}
           >
             Về trang chủ
           </Button>
         </Stack>
       </Paper>
-    </Box>
+    </Container>
   );
 };
 

@@ -1,47 +1,51 @@
 import React from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
   Button,
   Paper,
-  Stack
+  Stack,
+  Container
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 
 const PaymentSuccess = () => {
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const navigate = useNavigate();
-  const orderId = searchParams.get("orderId");
+  const orderId = location.state?.orderId || location.search?.split("orderId=")[1];
 
   return (
-    <Box
-      sx={{
-        minHeight: "80vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "#f5f5f5",
-        p: 3
-      }}
-    >
+    <Container maxWidth="sm" sx={{ py: 8 }}>
       <Paper
         elevation={4}
         sx={{
           p: 6,
           borderRadius: 4,
-          textAlign: "center",
-          maxWidth: 500,
-          width: "100%"
+          textAlign: "center"
         }}
       >
-        <CheckCircleIcon
+        <Box
           sx={{
-            fontSize: 90,
-            color: "#4caf50",
-            mb: 2
+            width: 120,
+            height: 120,
+            borderRadius: "50%",
+            bgcolor: "#e8f5e9",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            mx: "auto",
+            mb: 3
           }}
-        />
+        >
+          <CheckCircleIcon
+            sx={{
+              fontSize: 80,
+              color: "#4caf50"
+            }}
+          />
+        </Box>
 
         <Typography variant="h4" fontWeight="bold" mb={2}>
           Thanh toán thành công!
@@ -52,15 +56,32 @@ const PaymentSuccess = () => {
           {orderId && (
             <>
               <br />
-              <strong>Mã đơn hàng: {orderId.slice(-6).toUpperCase()}</strong>
+              <strong>Mã đơn hàng: #{orderId.toString().slice(-6).toUpperCase()}</strong>
             </>
           )}
         </Typography>
+
+        <Box
+          sx={{
+            bgcolor: "#f5f5f5",
+            p: 3,
+            borderRadius: 2,
+            mb: 4
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1 }}>
+            <LocalShippingIcon color="action" />
+            <Typography fontWeight="bold">
+              Đơn hàng sẽ được giao trong 2-5 ngày làm việc
+            </Typography>
+          </Box>
+        </Box>
 
         <Stack direction="row" spacing={2} justifyContent="center">
           <Button
             variant="outlined"
             onClick={() => navigate("/")}
+            sx={{ px: 4 }}
           >
             Tiếp tục mua
           </Button>
@@ -69,14 +90,15 @@ const PaymentSuccess = () => {
             onClick={() => navigate("/orders")}
             sx={{
               background: "#4caf50",
-              "&:hover": { background: "#388e3c" }
+              "&:hover": { background: "#388e3c" },
+              px: 4
             }}
           >
             Xem đơn hàng
           </Button>
         </Stack>
       </Paper>
-    </Box>
+    </Container>
   );
 };
 

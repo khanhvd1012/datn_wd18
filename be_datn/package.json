@@ -5,13 +5,14 @@
     "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
     "compression": "^1.8.0",
-    "cors": "^2.8.5",
+    "cors": "^2.8.6",
     "crypto": "^1.0.1",
     "dateformat": "^5.0.3",
-    "dotenv": "^16.5.0",
-    "express": "^5.1.0",
+    "dotenv": "^16.6.1",
+    "express": "^5.2.1",
     "express-rate-limit": "^7.5.0",
     "google-auth-library": "^10.2.1",
+    "groq-sdk": "^1.1.2",
     "helmet": "^8.1.0",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
@@ -22,6 +23,7 @@
     "mongoose-paginate-v2": "^1.9.0",
     "multer": "^2.0.0",
     "nodemailer": "^7.0.5",
+    "openai": "^6.34.0",
     "qs": "^6.14.0",
     "querystring": "^0.2.1",
     "slugify": "^1.6.6",
@@ -36,6 +38,7 @@
     "vite": "^6.3.5"
   },
   "scripts": {
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "migrate:roles": "node scripts/migrate-user-roles.js"
   }
 }

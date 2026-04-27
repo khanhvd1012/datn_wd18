@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../services/api";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Container,
@@ -11,7 +11,7 @@ import {
   Alert,
   Card,
   CardContent,
-  Divider
+  Divider,
 } from "@mui/material";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -24,6 +24,7 @@ const PaymentProcess = () => {
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "error" as "error" | "success" });
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -33,21 +34,13 @@ const PaymentProcess = () => {
       }
 
       try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(
-          `http://localhost:3000/api/orders/${orderId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
-
-        if (response.data && response.data.order) {
-          setOrder(response.data.order);
+        const response = await api.get(`/orders/${orderId}`);
+        if (response.data) {
+          setOrder(response.data);
         }
       } catch (error) {
         console.error("Error fetching order:", error);
+        setSnackbar({ open: true, message: "Không thể tải thông tin đơn hàng", severity: "error" });
       } finally {
         setLoading(false);
       }
@@ -61,20 +54,11 @@ const PaymentProcess = () => {
 
     try {
       setProcessing(true);
-      const token = localStorage.getItem("token");
 
       if (paymentMethod === "vnpay") {
         // Tạo payment URL cho VNPay
         try {
-          const response = await axios.post(
-            "http://localhost:3000/api/payment/vnpay/create",
-            { orderId },
-            {
-              headers: {
-                Authorization: `Bearer ${token}`
-              }
-            }
-          );
+          const response = await api.post("/payment/vnpay/create", { orderId });
 
           if (response.data && response.data.paymentUrl) {
             // Redirect đến VNPay
@@ -84,7 +68,7 @@ const PaymentProcess = () => {
             navigate("/payment/mock", { state: { orderId } });
             setProcessing(false);
           } else {
-            alert("Không thể tạo link thanh toán");
+            setSnackbar({ open: true, message: "Không thể tạo link thanh toán", severity: "error" });
             setProcessing(false);
           }
         } catch (error: any) {
@@ -93,37 +77,33 @@ const PaymentProcess = () => {
             navigate("/payment/mock", { state: { orderId } });
             setProcessing(false);
           } else {
-            alert(error.response?.data?.message || "Không thể tạo link thanh toán VNPay");
+            setSnackbar({ open: true, message: error.response?.data?.message || "Không thể tạo link thanh toán VNPay", severity: "error" });
             setProcessing(false);
           }
         }
       } else if (paymentMethod === "momo") {
         // Mock MoMo payment - simulate thanh toán thành công
         try {
-          const paymentResponse = await axios.post(
-            "http://localhost:3000/api/payment/mock/process",
-            { orderId },
-            {
-              headers: {
-                Authorization: `Bearer ${token}`
-              }
-            }
-          );
+          const paymentResponse = await api.post("/payment/mock/process", { orderId });
 
           if (paymentResponse.data) {
             navigate("/payment/success", { state: { orderId } });
           }
         } catch (error: any) {
           console.error("Error processing MoMo payment:", error);
-          alert(error.response?.data?.message || "Thanh toán thất bại");
+          setSnackbar({ open: true, message: error.response?.data?.message || "Thanh toán thất bại", severity: "error" });
           setProcessing(false);
         }
       }
     } catch (error: any) {
       console.error("Error processing payment:", error);
-      alert(error.response?.data?.message || "Không thể xử lý thanh toán");
+      setSnackbar({ open: true, message: error.response?.data?.message || "Không thể xử lý thanh toán", severity: "error" });
       setProcessing(false);
     }
+  };
+
+  const formatPrice = (price: number) => {
+    return (price || 0).toLocaleString("vi-VN") + "₫";
   };
 
   if (loading) {
@@ -181,13 +161,13 @@ const PaymentProcess = () => {
 
             <Box display="flex" justifyContent="space-between" mb={1}>
               <Typography>Tạm tính:</Typography>
-              <Typography>{order.subtotal?.toLocaleString("vi-VN")}₫</Typography>
+              <Typography>{formatPrice(order.subtotal)}</Typography>
             </Box>
 
             <Box display="flex" justifyContent="space-between" mb={1}>
               <Typography>Phí ship:</Typography>
               <Typography>
-                {order.shipping_fee === 0 ? "Miễn phí" : `${order.shipping_fee?.toLocaleString("vi-VN")}₫`}
+                {order.shipping_fee === 0 ? "Miễn phí" : formatPrice(order.shipping_fee)}
               </Typography>
             </Box>
 
@@ -195,7 +175,7 @@ const PaymentProcess = () => {
               <Box display="flex" justifyContent="space-between" mb={1}>
                 <Typography>Giảm giá:</Typography>
                 <Typography color="success.main">
-                  -{order.discount?.toLocaleString("vi-VN")}₫
+                  -{formatPrice(order.discount)}
                 </Typography>
               </Box>
             )}
@@ -207,7 +187,7 @@ const PaymentProcess = () => {
                 Tổng tiền:
               </Typography>
               <Typography variant="h6" fontWeight="bold" color="#d70018">
-                {order.total?.toLocaleString("vi-VN")}₫
+                {formatPrice(order.total)}
               </Typography>
             </Box>
           </CardContent>
@@ -268,7 +248,7 @@ const PaymentProcess = () => {
                 Đã thanh toán
               </>
             ) : (
-              `Thanh toán ${order.total?.toLocaleString("vi-VN")}₫`
+              `Thanh toán ${formatPrice(order.total)}`
             )}
           </Button>
 
@@ -281,6 +261,15 @@ const PaymentProcess = () => {
           </Button>
         </Box>
       </Paper>
+
+      {/* Snackbar */}
+      <Alert 
+        severity={snackbar.severity} 
+        sx={{ mt: 2, display: snackbar.open ? "flex" : "none" }}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        {snackbar.message}
+      </Alert>
     </Container>
   );
 };

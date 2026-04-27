@@ -7,40 +7,25 @@ const api = axios.create({
   },
 });
 
+//  REQUEST INTERCEPTOR
 api.interceptors.request.use((config) => {
-  // Đọc token từ localStorage["token"] — đây là nơi loginAPI lưu token
   const token = localStorage.getItem("token");
-  if (token) {
-    config.headers = config.headers || ({} as import("axios").AxiosRequestHeaders);
-    config.headers.Authorization = `Bearer ${token}`;
-  }
 
-  // Ensure we don't send empty bodies for GET requests
-  if (config.method === "get" && config.data) {
-    delete config.data;
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers.Authorization = `Bearer ${token}`;
   }
 
   return config;
 });
 
+//  RESPONSE INTERCEPTOR
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error("API Error:", error);
-    if (error.response) {
-      // Log full response body to help debugging validation errors
-      console.error("API Response data:", error.response.data);
-      if (error.response?.status === 400) {
-        const data = error.response.data;
-        if (data?.message) {
-          console.error("Bad Request:", data.message);
-        } else if (data?.messages) {
-          console.error("Bad Request (messages):", data.messages);
-        }
-      }
-    }
+    console.error("API Error:", error?.response?.data || error.message);
     return Promise.reject(error);
-  },
+  }
 );
 
 export default api;

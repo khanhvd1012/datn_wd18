@@ -87,6 +87,7 @@ const Login = () => {
   return (
     <Box
       sx={{
+        mt:3,
         py: 6,
         background: "linear-gradient(135deg, #0f2027, #203a43, #2c5364)",
         minHeight: "100vh",
@@ -107,7 +108,7 @@ const Login = () => {
             sx={{
               flex: 1,
               background:
-                "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1512436991641-6745cdb1723f')",
+                "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.6)), url('https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/smartphone_2025_4f932a1994.jpg')",
               backgroundSize: "cover",
               backgroundPosition: "center",
               color: "#fff",
@@ -191,7 +192,7 @@ const Login = () => {
             <Divider sx={{ my: 3 }}>Hoặc</Divider>
 
             <Typography variant="body2">
-              Chưa có tài khoản?{" "}
+              Bạn <Link href="/forgot-password" style={{}} >Quên mật khẩu?</Link>, Chưa có tài khoản?{" "}
               <Link href="/register" underline="hover" sx={{ fontWeight: "bold" }}>
                 Đăng ký ngay
               </Link>

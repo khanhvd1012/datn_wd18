@@ -180,6 +180,8 @@ const ProductList = () => {
 
   const filteredProducts = useMemo(() => {
     let filtered = [...products];
+    const selectedCategoryName =
+      categories.find((c) => c._id === selectedCategory)?.name?.toLowerCase() || "";
 
     // Filter by search
     if (search) {
@@ -193,11 +195,16 @@ const ProductList = () => {
     // Filter by category
     if (selectedCategory) {
       filtered = filtered.filter((product) => {
-        const categoryId =
-          typeof product.category === "string"
-            ? product.category
-            : product.category?._id;
-        return categoryId === selectedCategory;
+        // Backend hiện có thể trả category là id/object hoặc name string
+        if (typeof product.category === "string") {
+          const productCategoryValue = product.category.toLowerCase();
+          return (
+            productCategoryValue === selectedCategory.toLowerCase() ||
+            (selectedCategoryName && productCategoryValue === selectedCategoryName)
+          );
+        }
+
+        return product.category?._id === selectedCategory;
       });
     }
 

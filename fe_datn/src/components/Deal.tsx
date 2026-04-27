@@ -1,11 +1,10 @@
-
 import React, { useEffect, useState } from "react";
-import { Box, Typography, IconButton } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import DealMallBanner from "./DealMallBanner";
 
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-
+const FALLBACK_IMAGE =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100%25' height='100%25' fill='%23e0e0e0'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle' fill='%23999' font-size='12'%3ENo Image%3C/text%3E%3C/svg%3E";
 
 const Deal = () => {
   const navigate = useNavigate();
@@ -18,10 +17,6 @@ const Deal = () => {
     { _id: string; image: string; status?: boolean }[]
   >([]);
 
-  const [index, setIndex] = useState(0);
-  const [hover, setHover] = useState(false);
-
-  // 👉 FETCH GIỐNG BANNER
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -45,48 +40,15 @@ const Deal = () => {
     fetchData();
   }, []);
 
-  // 👉 AUTO SLIDER
-  useEffect(() => {
-    if (hover || banners.length === 0) return;
-
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % banners.length);
-    }, 3000);
-
-    return () => clearInterval(timer);
-  }, [hover, banners]);
-
-  // 👉 FIX index khi data đổi
-  useEffect(() => {
-    if (index >= banners.length) setIndex(0);
-  }, [banners]);
-
-  const next = () => {
-    if (banners.length === 0) return;
-    setIndex((prev) => (prev + 1) % banners.length);
-  };
-
-  const prev = () => {
-    if (banners.length === 0) return;
-    setIndex((prev) =>
-      prev === 0 ? banners.length - 1 : prev - 1
-    );
-  };
-
   const goCategory = (id: string) => {
     navigate(`/products?category=${id}`);
   };
 
   const getImage = (item: any) => {
-    return (
-      item.logo_image ||
-      item.image ||
-      "https://via.placeholder.com/100"
-    );
+    return item.logo_image || item.image || FALLBACK_IMAGE;
   };
 
   return (
-
     <Box sx={{ background: "#f5f5f5", py: 5 }}>
       <Box sx={{ maxWidth: 1200, mx: "auto", px: 2 }}>
         {/* HEADER */}
@@ -127,49 +89,9 @@ const Deal = () => {
             gap: 2,
           }}
         >
-          {/* 🔥 LEFT BANNER SLIDER */}
-          <Box
-            onMouseEnter={() => setHover(true)}
-            onMouseLeave={() => setHover(false)}
-            sx={{
-              width: "100%",
-              height: "100%",
-              overflow: "hidden",
-              borderRadius: 2,
-              position: "relative",
-              background: "#000",
-            }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                width: `${(banners.length || 1) * 100}%`,
-                transform: `translateX(-${index * 100}%)`,
-                transition: "0.5s",
-              }}
-            >
-              {banners.length > 0 ? (
-                banners.map((item) => (
-                  <Box
-                    key={item._id}
-                    component="img"
-                    src={item.image}
-                    sx={{
-                      width: "100%",
-                      height: 300,
-                      objectFit: "cover",
-                    }}
-                  />
-                ))
-              ) : (
-                <Box
-                  component="img"
-                  src="https://via.placeholder.com/400"
-                  sx={{ width: "100%", height: 300 }}
-                />
-              )}
-            </Box>
-          </Box>
+          {/* BANNER */}
+          <DealMallBanner banners={banners} />
+
           {/* CATEGORY GRID */}
           <Box
             sx={{
@@ -191,7 +113,6 @@ const Deal = () => {
                     cursor: "pointer",
                     transition: "0.25s",
                     border: "1px solid #eee",
-
                     "&:hover": {
                       transform: "translateY(-6px)",
                       boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
@@ -202,7 +123,7 @@ const Deal = () => {
                     component="img"
                     src={getImage(item)}
                     onError={(e: any) => {
-                      e.target.src = "https://via.placeholder.com/100";
+                      e.target.src = FALLBACK_IMAGE;
                     }}
                     sx={{
                       width: "100%",
@@ -222,7 +143,6 @@ const Deal = () => {
             )}
           </Box>
         </Box>
-
       </Box>
     </Box>
   );

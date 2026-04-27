@@ -24,7 +24,7 @@ const Home = () => {
 
 
       {/* Zalo Floating Button */}
-      <Box
+      {/* <Box
         sx={{
           position: 'fixed',
           bottom: 24,
@@ -66,7 +66,7 @@ const Home = () => {
         >
           <ChatIcon sx={{ fontSize: 32 }} />
         </Fab>
-      </Box>
+      </Box> */}
     </div>
   )
 }

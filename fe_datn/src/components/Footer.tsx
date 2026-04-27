@@ -101,7 +101,7 @@ const Footer = () => {
       {/* ===== FOOTER BOTTOM ===== */}
       <Box
         sx={{
-          backgroundColor: "#ffffff",
+          backgroundColor: "#efeeee",
           borderTop: "1px solid #333",
         }}
       >
