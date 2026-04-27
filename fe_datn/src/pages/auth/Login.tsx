@@ -73,6 +73,7 @@ const Login = () => {
         token: res.accessToken,
       };
       localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("token", res.accessToken);
       alert("Đăng nhập thành công!");
       if (user.role === "admin") {
         navigate("/admin");

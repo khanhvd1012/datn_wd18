@@ -9,7 +9,18 @@ const api = axios.create({
 
 //  REQUEST INTERCEPTOR
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  let token = localStorage.getItem("token");
+
+  // Fallback: Lấy token từ object user nếu không tìm thấy key token riêng lẻ
+  if (!token) {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        token = user.token || user.accessToken;
+      } catch (e) {}
+    }
+  }
 
   if (token) {
     config.headers = config.headers || {};
