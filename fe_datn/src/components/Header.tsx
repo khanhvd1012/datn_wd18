@@ -142,7 +142,7 @@ const Header = () => {
           </Box>
 
           {/* NAV */}
-          <Box sx={{ display: "flex", gap: 2, alignItems: "center",paddingLeft:"45px" }}>
+          <Box sx={{ display: "flex", gap: 2, alignItems: "center",paddingLeft:"30px" }}>
 
             <Button component={Link} to="/" sx={navStyle}>
               TRANG CHỦ
@@ -172,7 +172,6 @@ const Header = () => {
                   display: "flex",
                   borderRadius: "10px",
                   zIndex: 9999,
-
                   opacity: openMega ? 1 : 0,
                   visibility: openMega ? "visible" : "hidden",
                   transform: openMega ? "translateY(0px)" : "translateY(10px)",
@@ -216,8 +215,8 @@ const Header = () => {
               </Box>
             </Box>
 
-            <Button component={Link} to="/support" sx={navStyle}>
-              HỖ TRỢ
+            <Button component={Link} to="/contact" sx={navStyle} >
+              LIÊN HỆ
             </Button>
 
             {!user && (
