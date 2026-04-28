@@ -19,38 +19,59 @@ export const createOrder = async (req, res) => {
         }
 
         const userId = req.user._id;
-        const { shipping_info, payment_method, coupon_code, notes } = req.body;
+        const { shipping_info, payment_method, coupon_code, notes, order_items } = req.body;
 
-        // 1. Lấy giỏ hàng của user
-        const cart = await Cart.findOne({ user_id: userId });
-        if (!cart) {
-            return res.status(404).json({ message: "Giỏ hàng trống" });
-        }
+        let itemsToProcess = [];
+        let dbCart = null;
 
-        // 2. Lấy tất cả items trong giỏ hàng
-        const cartItems = await CartItem.find({
-            cart_id: cart._id,
-            deletedAt: null
-        })
-        .populate({
-            path: "product_id",
-            select: "name price images countInStock"
-        })
-        .populate({
-            path: "variant_id",
-            select: "name price stock",
-            options: { lean: false } // Đảm bảo populate đúng cách
-        });
+        if (order_items && order_items.length > 0) {
+            // 1a. Chế độ Mua ngay (truyền order_items từ frontend)
+            for (const item of order_items) {
+                const product = await Product.findById(item.product_id);
+                if (!product) return res.status(404).json({ message: "Sản phẩm không tồn tại" });
+                
+                let variant = null;
+                if (item.variant_id) {
+                    variant = await Variant.findById(item.variant_id);
+                }
 
-        if (cartItems.length === 0) {
-            return res.status(400).json({ message: "Giỏ hàng trống" });
+                itemsToProcess.push({
+                    product_id: product,
+                    variant_id: variant,
+                    quantity: item.quantity,
+                });
+            }
+        } else {
+            // 1b. Chế độ Mua từ giỏ hàng
+            dbCart = await Cart.findOne({ user_id: userId });
+            if (!dbCart) {
+                return res.status(404).json({ message: "Giỏ hàng trống" });
+            }
+
+            itemsToProcess = await CartItem.find({
+                cart_id: dbCart._id,
+                deletedAt: null
+            })
+            .populate({
+                path: "product_id",
+                select: "name price images countInStock"
+            })
+            .populate({
+                path: "variant_id",
+                select: "name price stock",
+                options: { lean: false } 
+            });
+
+            if (itemsToProcess.length === 0) {
+                return res.status(400).json({ message: "Giỏ hàng trống" });
+            }
         }
 
         // 3. Kiểm tra tồn kho và tính toán giá
         const orderItems = [];
         let subtotal = 0;
 
-        for (const item of cartItems) {
+        for (const item of itemsToProcess) {
             const product = item.product_id;
             if (!product) {
                 return res.status(404).json({ message: "Sản phẩm không tồn tại" });
@@ -168,11 +189,12 @@ export const createOrder = async (req, res) => {
             notes: notes || ""
         });
 
-        // 9. Xóa giỏ hàng sau khi tạo đơn hàng thành công
-        await CartItem.updateMany(
-            { cart_id: cart._id },
-            { deletedAt: new Date() }
-        );
+        if (dbCart) {
+            await CartItem.updateMany(
+                { cart_id: dbCart._id },
+                { deletedAt: new Date() }
+            );
+        }
 
         // 10. Tăng used_count của voucher nếu có áp dụng
         if (appliedVoucher) {
@@ -180,7 +202,7 @@ export const createOrder = async (req, res) => {
         }
 
         // 10. Cập nhật stock (giảm số lượng trong kho)
-        for (const item of cartItems) {
+        for (const item of itemsToProcess) {
             const product = item.product_id;
             const stockToReduce = item.quantity;
             

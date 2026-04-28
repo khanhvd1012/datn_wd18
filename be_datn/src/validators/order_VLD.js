@@ -22,5 +22,13 @@ export const createOrderValidator = Joi.object({
     }).required(),
     payment_method: Joi.string().valid('cod', 'bank', 'momo', 'vnpay').default('cod'),
     coupon_code: Joi.string().optional().allow(null, ''),
-    notes: Joi.string().optional().allow('')
+    notes: Joi.string().optional().allow(''),
+    order_items: Joi.array().items(
+        Joi.object({
+            product_id: Joi.string().required(),
+            variant_id: Joi.string().allow(null, '').optional(),
+            quantity: Joi.number().min(1).required(),
+            price: Joi.number().optional()
+        })
+    ).optional()
 });

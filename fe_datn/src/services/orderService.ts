@@ -49,6 +49,12 @@ export interface CreateOrderData {
   payment_method: string;
   notes?: string;
   coupon_code?: string;
+  order_items?: {
+    product_id: string;
+    variant_id?: string;
+    quantity: number;
+    price?: number;
+  }[];
 }
 
 export const createOrderApi = async (

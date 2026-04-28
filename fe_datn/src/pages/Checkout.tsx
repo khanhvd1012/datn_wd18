@@ -157,7 +157,7 @@ const Checkout: React.FC = () => {
 
     setLoading(true);
     try {
-      const orderData = {
+      const orderData: any = {
         shipping_info: {
           name: formData.customerName,
           email: formData.email,
@@ -168,6 +168,15 @@ const Checkout: React.FC = () => {
         coupon_code: appliedCoupon ? appliedCoupon.code : undefined,
         notes: ""
       };
+
+      if (isBuyNowMode) {
+        orderData.order_items = cart.map(item => ({
+          product_id: item.product._id || item.product.id,
+          variant_id: item.variant?._id || item.variant?.id,
+          quantity: item.quantity,
+          price: item.variant?.price || item.product.price
+        }));
+      }
 
       const order = await createOrderApi(orderData);
       if (!isBuyNowMode) {
