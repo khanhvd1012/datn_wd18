@@ -234,7 +234,7 @@ const Contact = () => {
 
           {/* MAP */}
           <Grid xs={12} md={6}>
-            <Paper sx={{ borderRadius: 4, overflow: "hidden", height: "100%" }}>
+            <Paper sx={{ borderRadius: 4, overflow: "hidden", height: "100%", width:"770px" }}>
               <iframe
                 title="map"
                 src="https://maps.google.com/maps?q=13%20Tr%E1%BB%8Bnh%20V%C4%83n%20B%C3%B4%20H%C3%A0%20N%E1%BB%99i&t=&z=15&ie=UTF8&iwloc=&output=embed"
