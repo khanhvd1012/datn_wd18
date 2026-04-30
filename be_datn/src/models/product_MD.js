@@ -15,7 +15,7 @@ const productSchema = new mongoose.Schema({
     },
     url: {
     type: String,
-    required: true,
+    // required: true,
     },
     category: {
         type: mongoose.Schema.Types.ObjectId,
@@ -30,7 +30,7 @@ const productSchema = new mongoose.Schema({
     original_price: { type: Number },
     images: [{ type: String }],
     countInStock: { type: Number, default: 0 },
-    url: {  type: String,  required: true},// URL sản phẩm
+    url: {  type: String},
     is_active: { type: Boolean, default: true }
 }, { timestamps: true });
 
