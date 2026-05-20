@@ -46,6 +46,7 @@ const Checkout: React.FC = () => {
     message: string;
     severity: "success" | "error" | "warning";
   }>({ open: false, message: "", severity: "success" });
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
   // Coupon state
   const [couponInput, setCouponInput] = useState("");
@@ -71,12 +72,15 @@ const Checkout: React.FC = () => {
   const premiumFont = { fontFamily: "'Inter', system-ui, sans-serif" };
 
   useEffect(() => {
-    const state = location.state as { buyNowItem?: CartItem } | null;
+    const state = location.state as { buyNowItem?: CartItem; selectedItems?: string[] } | null;
     if (state?.buyNowItem) {
       setCart([state.buyNowItem]);
       setIsBuyNowMode(true);
     } else {
-      fetchCart();
+      if (state?.selectedItems) {
+        setSelectedItems(state.selectedItems);
+      }
+      fetchCart(state?.selectedItems || []);
       setIsBuyNowMode(false);
     }
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -91,11 +95,15 @@ const Checkout: React.FC = () => {
     }
   }, []);
 
-  const fetchCart = async () => {
+  const fetchCart = async (selectedIds: string[]) => {
     setLoading(true);
     try {
       const data = await getCartApi();
-      setCart(data || []);
+      if (selectedIds && selectedIds.length > 0) {
+        setCart(data?.filter((item: CartItem) => selectedIds.includes(item._id)) || []);
+      } else {
+        setCart(data || []);
+      }
     } catch (e) {
       setNotif({
         open: true,
@@ -157,7 +165,7 @@ const Checkout: React.FC = () => {
 
     setLoading(true);
     try {
-      const orderData: any = {
+      const orderData = {
         shipping_info: {
           name: formData.customerName,
           email: formData.email,
@@ -166,21 +174,12 @@ const Checkout: React.FC = () => {
         },
         payment_method: formData.paymentMethod.toLowerCase(),
         coupon_code: appliedCoupon ? appliedCoupon.code : undefined,
-        notes: ""
+        notes: "",
+        selectedCartItemIds: !isBuyNowMode ? selectedItems : undefined
       };
-
-      if (isBuyNowMode) {
-        orderData.order_items = cart.map(item => ({
-          product_id: item.product._id || item.product.id,
-          variant_id: item.variant?._id || item.variant?.id,
-          quantity: item.quantity,
-          price: item.variant?.price || item.product.price
-        }));
-      }
 
       const order = await createOrderApi(orderData);
       if (!isBuyNowMode) {
-        await clearCartApi();
         window.dispatchEvent(new Event("cartUpdated"));
       }
       

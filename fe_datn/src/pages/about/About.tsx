@@ -58,7 +58,7 @@ Cửa hàng công nghệ uy tín hàng đầu
 
 <Grid container spacing={5} alignItems="center">
 
-<Grid item xs={12} md={6}>
+<Grid size={{ xs: 12, md: 6 }}>
 <img
 src="https://images.unsplash.com/photo-1556742031-c6961e8560b0"
 style={{
@@ -68,7 +68,7 @@ borderRadius:12
 />
 </Grid>
 
-<Grid item xs={12} md={6}>
+<Grid size={{ xs: 12, md: 6 }}>
 
 <Typography variant="h4" fontWeight="bold" mb={2}>
 Chúng tôi là ai?
@@ -102,7 +102,7 @@ chất lượng cao cùng dịch vụ chăm sóc khách hàng tốt nhất.
 {number:"24/7",label:"Hỗ trợ khách hàng"}
 ].map((item,index)=>(
 
-<Grid item xs={6} md={3} key={index}>
+<Grid size={{ xs: 6, md: 3 }} key={index}>
 
 <Paper
 sx={{
@@ -180,7 +180,7 @@ text:"Đội ngũ hỗ trợ khách hàng chuyên nghiệp"
 }
 ].map((item,index)=>(
 
-<Grid item xs={12} sm={4} key={index}>
+<Grid size={{ xs: 12, sm: 4 }} key={index}>
 
 <Paper
 sx={{

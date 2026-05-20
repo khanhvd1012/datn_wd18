@@ -49,12 +49,6 @@ export interface CreateOrderData {
   payment_method: string;
   notes?: string;
   coupon_code?: string;
-  order_items?: {
-    product_id: string;
-    variant_id?: string;
-    quantity: number;
-    price?: number;
-  }[];
 }
 
 export const createOrderApi = async (
@@ -86,6 +80,14 @@ export const updateOrderStatusApi = async (
   return response.data.order;
 };
 
+export const cancelOrderApi = async (orderId: string): Promise<Order> => {
+  const response = await api.patch(`/orders/${orderId}/cancel`);
+  return response.data.order;
+};
+
+export const isOnlinePaymentMethod = (method: string) =>
+  ["vnpay", "momo", "bank"].includes(method);
+
 export const getAdminOrdersApi = async (params?: {
   search?: string;
   status?: string;
@@ -96,6 +98,7 @@ export const getAdminOrdersApi = async (params?: {
   return response.data;
 };
 
+/** @deprecated Không được phép xóa đơn hàng */
 export const deleteOrderApi = async (orderId: string) => {
   const response = await api.delete(`/orders/${orderId}`);
   return response.data;

@@ -365,12 +365,16 @@ const ModernAdminLayout: React.FC = () => {
         }}
       >
         <Toolbar />
-        <Box sx={{
-          flex: 1,
-          width: '100%',
-          maxWidth: 'none',
-          overflowX: 'auto',
-        }}>
+        <Box
+          sx={{
+            flex: 1,
+            width: '100%',
+            maxWidth: 'none',
+            overflowX: 'auto',
+            textAlign: 'left',
+            boxSizing: 'border-box',
+          }}
+        >
           <Outlet />
         </Box>
       </Box>

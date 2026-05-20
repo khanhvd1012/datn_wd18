@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import CartItem from "../models/cartItem_MD.js";
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -87,8 +88,13 @@ export const getAllProducts = async (req, res) => {
             price: p.price,
             original_price: p.original_price,
             description: p.description,
-            category: p.category ? { _id: p.category._id, name: p.category.name } : null,
-            brand: p.brand ? { _id: p.brand._id, name: p.brand.name } : null,
+            // Trả dạng object { _id, name } để FE có thể filter theo ID
+            category: p.category
+                ? { _id: p.category._id.toString(), name: p.category.name || '' }
+                : null,
+            brand: p.brand
+                ? { _id: p.brand._id.toString(), name: p.brand.name || '' }
+                : null,
             countInStock: p.countInStock,
             sold: 0,
             rating: 4.5,
@@ -215,35 +221,14 @@ const deleteImageFile = (imageUrl) => {
     }
 };
 
-// Chuẩn hóa dữ liệu từ form (multipart gửi toàn bộ là string)
-const normalizeProductBody = (body) => {
-    const data = { ...body };
-    // ObjectId: chuỗi rỗng hoặc không hợp lệ thì bỏ qua (giữ giá trị cũ khi update)
-    if (data.brand === '' || data.brand === undefined || !mongoose.Types.ObjectId.isValid(data.brand)) {
-        delete data.brand;
-    }
-    if (data.category === '' || data.category === undefined || !mongoose.Types.ObjectId.isValid(data.category)) {
-        delete data.category;
-    }
-    // Số
-    if (data.price !== undefined) {
-        const num = Number(data.price);
-        if (!Number.isNaN(num)) data.price = num;
-    }
-    if (data.original_price !== undefined) {
-        const num = Number(data.original_price);
-        if (!Number.isNaN(num)) data.original_price = num;
-    }
-    if (data.is_active !== undefined) {
-        data.is_active = data.is_active === 'true' || data.is_active === true;
-    }
-    return data;
-};
-
 // Tạo sản phẩm mới (Admin)
 export const createProduct = async (req, res) => {
     try {
-        let productData = normalizeProductBody(req.body);
+        let productData = { ...req.body };
+
+        if (productData.original_price && Number(productData.price) >= Number(productData.original_price)) {
+            return res.status(400).json({ message: 'Giá bán phải nhỏ hơn giá gốc' });
+        }
 
         // Xử lý ảnh upload
         const uploadImages = buildImageUrls(req);
@@ -292,7 +277,11 @@ export const createProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        let updateData = normalizeProductBody(req.body);
+        let updateData = { ...req.body };
+
+        if (updateData.original_price && Number(updateData.price) >= Number(updateData.original_price)) {
+            return res.status(400).json({ message: 'Giá bán phải nhỏ hơn giá gốc' });
+        }
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: 'ID sản phẩm không hợp lệ' });
@@ -363,6 +352,8 @@ export const deleteProduct = async (req, res) => {
         if (!product) {
             return res.status(404).json({ message: 'Sản phẩm không tồn tại' });
         }
+
+        await CartItem.deleteMany({ product_id: id });
 
         res.status(200).json({ message: 'Xóa sản phẩm thành công' });
     } catch (error) {

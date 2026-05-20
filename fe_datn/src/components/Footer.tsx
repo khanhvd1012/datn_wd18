@@ -30,7 +30,7 @@ const Footer = () => {
         <Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 3, md: 4 }, py: 5 }}>
           <Grid container justifyContent="space-between" spacing={3}>
             {/* Cột 1 */}
-            <Grid item xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <Typography color="#000000" fontWeight="bold" mb={1}>
                 TÌM CHÚNG TÔI TRÊN FACEBOOK
               </Typography>
@@ -41,7 +41,7 @@ const Footer = () => {
             </Grid>
 
             {/* Cột 2 */}
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Typography color="#000000" fontWeight="bold" mb={1}>
                 CHÍNH SÁCH & QUY ĐỊNH
               </Typography>
@@ -72,7 +72,7 @@ const Footer = () => {
             </Grid>
 
             {/* Cột 3 */}
-            <Grid item xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <Typography color="#000000" fontWeight="bold" mb={1}>
                 LIÊN HỆ
               </Typography>

@@ -5,9 +5,10 @@ import {
   Button,
   Typography,
   Paper,
+  Link,
 } from "@mui/material";
 import { forgotPasswordAPI } from "../../services/authService";
-import { Link, Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
 

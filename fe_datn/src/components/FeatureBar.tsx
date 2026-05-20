@@ -17,6 +17,7 @@ const features = [
   { img: magiamgia, text: "Mã Giảm Giá", link: "/voucher" }
 ];
 
+
 const FeatureBar = () => {
   return (
     <Box

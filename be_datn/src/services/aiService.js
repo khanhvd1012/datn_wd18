@@ -1,8 +1,8 @@
+import dotenv from "dotenv";
 import Groq from "groq-sdk";
 import { findProducts } from "./productSearch.js";
 
-
-console.log("GROQ KEY:", process.env.GROQ_API_KEY); // 
+dotenv.config();
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,

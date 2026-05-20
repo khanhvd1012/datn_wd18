@@ -329,12 +329,17 @@ const ProductDetail = () => {
                     <Typography variant="subtitle2" fontWeight="bold" mb={1.5} color="text.secondary" textTransform="uppercase">
                       Lựa chọn phiên bản:
                     </Typography>
-                  <Stack direction="row" spacing={1.5} flexWrap="wrap">
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
                     {product.variants.map((v) => (
                       <Button
                         key={v._id}
                         variant={selectedVariant?._id === v._id ? "contained" : "outlined"}
-                        onClick={() => setSelectedVariant(v)}
+                        onClick={() => {
+                          setSelectedVariant(v);
+                          if (quantity > v.stock) {
+                             setQuantity(Math.max(1, v.stock));
+                          }
+                        }}
                         sx={{
                           borderRadius: 2,
                           px: 3,
@@ -349,7 +354,7 @@ const ProductDetail = () => {
                         {v.name}
                       </Button>
                     ))}
-                  </Stack>
+                  </Box>
                   </Box>
                 )}
 
@@ -371,7 +376,8 @@ const ProductDetail = () => {
                       <IconButton 
                         onClick={() => setQuantity((q) => Math.max(1, q - 1))} 
                         size="medium"
-                        sx={{ color: '#000' }}
+                        disabled={quantity <= 1}
+                        sx={{ color: quantity <= 1 ? 'text.disabled' : '#000' }}
                       >
                         <RemoveIcon />
                       </IconButton>
@@ -379,15 +385,21 @@ const ProductDetail = () => {
                         {quantity}
                       </Typography>
                       <IconButton 
-                        onClick={() => setQuantity((q) => q + 1)} 
+                        onClick={() => {
+                          const stock = selectedVariant ? selectedVariant.stock : (product.countInStock || 0);
+                          setQuantity((q) => Math.min(stock, q + 1));
+                        }} 
                         size="medium"
-                        sx={{ color: '#000' }}
+                        disabled={quantity >= (selectedVariant ? selectedVariant.stock : (product.countInStock || 0))}
+                        sx={{ color: quantity >= (selectedVariant ? selectedVariant.stock : (product.countInStock || 0)) ? 'text.disabled' : '#000' }}
                       >
                         <AddIcon />
                       </IconButton>
                     </Box>
-                    <Typography variant="body2" color="text.secondary">
-                      {selectedVariant ? selectedVariant.stock : (product.countInStock || 0)} sản phẩm có sẵn
+                    <Typography variant="body2" color={(selectedVariant ? selectedVariant.stock : (product.countInStock || 0)) > 0 ? "text.secondary" : "error"}>
+                      {(selectedVariant ? selectedVariant.stock : (product.countInStock || 0)) > 0 
+                        ? `${selectedVariant ? selectedVariant.stock : (product.countInStock || 0)} sản phẩm có sẵn` 
+                        : 'Hết hàng'}
                     </Typography>
                   </Stack>
                 </Box>
@@ -398,6 +410,7 @@ const ProductDetail = () => {
                     variant="outlined"
                     size="large"
                     onClick={handleAddToCart}
+                    disabled={(selectedVariant ? selectedVariant.stock : (product.countInStock || 0)) === 0}
                     startIcon={<ShoppingCartIcon />}
                     sx={{ 
                       py: 2, 
@@ -415,6 +428,7 @@ const ProductDetail = () => {
                     variant="contained"
                     size="large"
                     onClick={handleBuyNow}
+                    disabled={(selectedVariant ? selectedVariant.stock : (product.countInStock || 0)) === 0}
                     sx={{
                       py: 2,
                       borderRadius: 3,

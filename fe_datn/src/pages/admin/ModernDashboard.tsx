@@ -97,6 +97,38 @@ const formatPrice = (price: number) => {
 
 type DashboardRange = '7d' | '30d' | 'month';
 
+const EMPTY_STATS: DashboardStats = {
+  products: 0,
+  stock: { totalItems: 0, lowStock: 0, outOfStock: 0, stats: [] },
+  vouchers: 0,
+  brands: 0,
+  categories: 0,
+  news: 0,
+  contacts: 0,
+  orders: { total: 0, pending: 0, revenue: 0, daily: [] },
+};
+
+const mapDashboardResponse = (dashboardData: Record<string, unknown>): DashboardStats => ({
+  products: Number((dashboardData?.products as { total?: number })?.total) || 0,
+  stock: {
+    totalItems: Number((dashboardData?.stock as { totalItems?: number })?.totalItems) || 0,
+    lowStock: Number((dashboardData?.stock as { lowStock?: number })?.lowStock) || 0,
+    outOfStock: Number((dashboardData?.stock as { outOfStock?: number })?.outOfStock) || 0,
+    stats: (dashboardData?.stock as { stats?: unknown[] })?.stats || [],
+  },
+  vouchers: Number((dashboardData?.vouchers as { total?: number })?.total) || 0,
+  brands: Number((dashboardData?.brands as { total?: number })?.total) || 0,
+  categories: Number((dashboardData?.categories as { total?: number })?.total) || 0,
+  news: Number((dashboardData?.news as { total?: number })?.total) || 0,
+  contacts: Number((dashboardData?.contacts as { total?: number })?.total) || 0,
+  orders: {
+    total: Number((dashboardData?.orders as { total?: number })?.total) || 0,
+    pending: Number((dashboardData?.orders as { pending?: number })?.pending) || 0,
+    revenue: Number((dashboardData?.orders as { revenue?: number })?.revenue) || 0,
+    daily: (dashboardData?.orders as { daily?: unknown[] })?.daily || [],
+  },
+});
+
 const ModernDashboard: React.FC = () => {
   const theme = useTheme();
   const [selectedRange, setSelectedRange] = useState<DashboardRange>('7d');
@@ -126,16 +158,15 @@ const ModernDashboard: React.FC = () => {
   };
 
   const handleExportReport = () => {
-    if (!stats) return;
-
+    const data = stats ?? EMPTY_STATS;
     const lines = [
       `Bao cao dashboard,${getRangeLabel(selectedRange)}`,
-      `Tong don hang,${stats.orders.total}`,
-      `Don cho xu ly,${stats.orders.pending}`,
-      `Tong doanh thu,${stats.orders.revenue}`,
+      `Tong don hang,${data.orders.total}`,
+      `Don cho xu ly,${data.orders.pending}`,
+      `Tong doanh thu,${data.orders.revenue}`,
       '',
       'Ngay,So don,Doanh thu',
-      ...stats.orders.daily.map((item) => `${item.name},${item.orders},${item.revenue}`),
+      ...data.orders.daily.map((item) => `${item.name},${item.orders},${item.revenue}`),
     ];
 
     const csvContent = `\uFEFF${lines.join('\n')}`;
@@ -159,100 +190,64 @@ const ModernDashboard: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch data one by one to avoid overwhelming the backend
-      try {
-        const dashboardRes = await api.get('/dashboard', {
-          params: { range: selectedRange },
-        });
-        console.log('Dashboard API response:', dashboardRes.data);
-        
-        // Handle different response structures
-        const dashboardData = dashboardRes.data.data || dashboardRes.data;
-        
-        // Extract stats from nested structure or use defaults
-        const statsData: DashboardStats = {
-          products: dashboardData?.products?.total || 0,
-          stock: {
-            totalItems: dashboardData?.stock?.totalItems || 0,
-            lowStock: dashboardData?.stock?.lowStock || 0,
-            outOfStock: dashboardData?.stock?.outOfStock || 0,
-            stats: dashboardData?.stock?.stats || [],
-          },
-          vouchers: dashboardData?.vouchers?.total || 0,
-          brands: dashboardData?.brands?.total || 0,
-          categories: dashboardData?.categories?.total || 0,
-          news: dashboardData?.news?.total || 0,
-          contacts: dashboardData?.contacts?.total || 0,
-          orders: {
-            total: dashboardData?.orders?.total || 0,
-            pending: dashboardData?.orders?.pending || 0,
-            revenue: dashboardData?.orders?.revenue || 0,
-            daily: dashboardData?.orders?.daily || [],
-          },
-        };
-        
-        setStats(statsData);
-      } catch (error) {
-        console.warn('Dashboard stats not available, using zeros');
-        setStats({
-          products: 0,
-          stock: { totalItems: 0, lowStock: 0, outOfStock: 0, stats: [] },
-          vouchers: 0,
-          brands: 0,
-          categories: 0,
-          news: 0,
-          contacts: 0,
-          orders: { total: 0, pending: 0, revenue: 0, daily: [] },
-        });
-      }
+      const dashboardRes = await api.get('/dashboard', {
+        params: { range: selectedRange },
+      });
 
-      try {
-        const categoriesRes = await api.get('/categories');
-        const categories = categoriesRes.data;
-        const brandsRes = await api.get('/brands');
-        const brands = brandsRes.data;
-        
-        // Update stats with real counts
-        setStats(prev => ({
-          ...prev,
-          categories: Array.isArray(categories) ? categories.length : 0,
-          brands: Array.isArray(brands) ? brands.length : 0,
-        }));
-      } catch (error) {
-        console.warn('Could not fetch categories/brands');
-      }
+      const dashboardData = (dashboardRes.data?.data || dashboardRes.data) as Record<string, unknown>;
+      setStats(mapDashboardResponse(dashboardData));
 
-      try {
-        const newsRes = await api.get('/news?limit=10');
-        const news = newsRes.data.data || newsRes.data;
-        setRecentNews(Array.isArray(news) ? news.slice(0, 5) : []);
-      } catch (error) {
-        console.warn('Could not fetch news');
-        setRecentNews([]);
-      }
+      const newsList = (dashboardData?.news as { recent?: unknown[] })?.recent;
+      setRecentNews(
+        Array.isArray(newsList)
+          ? newsList.slice(0, 5).map((n: Record<string, unknown>) => ({
+              _id: String(n._id ?? ''),
+              title: String(n.title ?? ''),
+              status: String(n.status ?? 'draft'),
+              created_at: String(n.created_at ?? n.createdAt ?? ''),
+            }))
+          : [],
+      );
 
-      try {
-        const contactsRes = await api.get('/contacts?limit=10');
-        const contacts = contactsRes.data.data || contactsRes.data;
-        setRecentContacts(Array.isArray(contacts) ? contacts.slice(0, 5) : []);
-      } catch (error) {
-        console.warn('Could not fetch contacts');
-        setRecentContacts([]);
-      }
-
-    } catch (error: any) {
-      console.error('Error fetching dashboard data:', error);
-      const message = error.response?.data?.message || 'Không thể tải dữ liệu dashboard';
+      const contactList = (dashboardData?.contacts as { recent?: unknown[] })?.recent;
+      setRecentContacts(
+        Array.isArray(contactList)
+          ? contactList.slice(0, 5).map((c: Record<string, unknown>) => ({
+              _id: String(c._id ?? ''),
+              name: String(c.name ?? c.username ?? ''),
+              email: String(c.email ?? ''),
+              message: String(c.message ?? c.content ?? ''),
+              created_at: String(c.created_at ?? c.createdAt ?? ''),
+            }))
+          : [],
+      );
+    } catch (err: unknown) {
+      console.error('Error fetching dashboard data:', err);
+      const axErr = err as { response?: { data?: { message?: string } } };
+      const message = axErr.response?.data?.message || 'Không thể tải dữ liệu dashboard';
       setError(message);
+      setStats(null);
       showNotification(message, 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  if (error || !stats) {
+  if (loading) {
     return (
-      <Box sx={{ p: 3, textAlign: 'center', width: '100%', maxWidth: 'none' }}>
+      <Box sx={{ p: 3, width: '100%' }}>
+        <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 3 }}>
+          Tổng quan
+        </Typography>
+        <LinearProgress sx={{ mb: 2, borderRadius: 1 }} />
+        <Typography color="text.secondary">Đang tải dữ liệu...</Typography>
+      </Box>
+    );
+  }
+
+  if (error && !stats) {
+    return (
+      <Box sx={{ p: 3, textAlign: 'center', width: '100%' }}>
         <Typography color="error" sx={{ mb: 2 }}>
           {error}
         </Typography>
@@ -263,10 +258,12 @@ const ModernDashboard: React.FC = () => {
     );
   }
 
+  const displayStats = stats ?? EMPTY_STATS;
+
   const statCards = [
     {
       title: 'Sản phẩm',
-      value: stats.products,
+      value: displayStats.products,
       icon: <ShoppingBag />,
       bgColor: alpha(theme.palette.primary.main, 0.1),
       trend: '+12%',
@@ -274,23 +271,23 @@ const ModernDashboard: React.FC = () => {
     },
     {
       title: 'Tồn kho',
-      value: stats.stock.totalItems.toLocaleString('vi-VN'),
+      value: displayStats.stock.totalItems.toLocaleString('vi-VN'),
       icon: <Inventory />,
       bgColor: alpha(theme.palette.success.main, 0.1),
-      trend: stats.stock.lowStock + ' sắp hết',
-      trendUp: stats.stock.lowStock === 0,
+      trend: displayStats.stock.lowStock + ' sắp hết',
+      trendUp: displayStats.stock.lowStock === 0,
     },
     {
       title: 'Đơn hàng',
-      value: stats.orders.total,
+      value: displayStats.orders.total,
       icon: <Receipt />,
       bgColor: alpha(theme.palette.warning.main, 0.1),
-      trend: stats.orders.pending + ' chờ',
-      trendUp: stats.orders.pending === 0,
+      trend: displayStats.orders.pending + ' chờ',
+      trendUp: displayStats.orders.pending === 0,
     },
     {
       title: 'Khuyến mãi',
-      value: stats.vouchers,
+      value: displayStats.vouchers,
       icon: <LocalOffer />,
       bgColor: alpha(theme.palette.error.main, 0.1),
       trend: '+15%',
@@ -391,7 +388,7 @@ const ModernDashboard: React.FC = () => {
             </Typography>
             <Box sx={{ height: 300 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={stats.orders.daily}>
+                <AreaChart data={displayStats.orders.daily}>
                   <defs>
                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor={theme.palette.primary.main} stopOpacity={0.8}/>
@@ -450,9 +447,9 @@ const ModernDashboard: React.FC = () => {
                 <PieChart>
                   <Pie
                     data={[
-                      { name: 'Sẵn có', value: stats.stock.totalItems - stats.stock.lowStock - stats.stock.outOfStock },
-                      { name: 'Sắp hết', value: stats.stock.lowStock },
-                      { name: 'Hết hàng', value: stats.stock.outOfStock },
+                      { name: 'Sẵn có', value: displayStats.stock.totalItems - displayStats.stock.lowStock - displayStats.stock.outOfStock },
+                      { name: 'Sắp hết', value: displayStats.stock.lowStock },
+                      { name: 'Hết hàng', value: displayStats.stock.outOfStock },
                     ]}
                     cx="50%"
                     cy="50%"
@@ -586,7 +583,7 @@ const ModernDashboard: React.FC = () => {
                   <BrandingWatermark />
                 </Avatar>
                 <Box>
-                  <Typography variant="h6">{stats.brands}</Typography>
+                  <Typography variant="h6">{displayStats.brands}</Typography>
                   <Typography variant="body2" color="text.secondary">Thương hiệu</Typography>
                 </Box>
               </Box>
@@ -597,7 +594,7 @@ const ModernDashboard: React.FC = () => {
                   <Category />
                 </Avatar>
                 <Box>
-                  <Typography variant="h6">{stats.categories}</Typography>
+                  <Typography variant="h6">{displayStats.categories}</Typography>
                   <Typography variant="body2" color="text.secondary">Danh mục</Typography>
                 </Box>
               </Box>
@@ -608,7 +605,7 @@ const ModernDashboard: React.FC = () => {
                   <Article />
                 </Avatar>
                 <Box>
-                  <Typography variant="h6">{stats.news}</Typography>
+                  <Typography variant="h6">{displayStats.news}</Typography>
                   <Typography variant="body2" color="text.secondary">Tin tức</Typography>
                 </Box>
               </Box>
@@ -619,7 +616,7 @@ const ModernDashboard: React.FC = () => {
                   <Message />
                 </Avatar>
                 <Box>
-                  <Typography variant="h6">{stats.contacts}</Typography>
+                  <Typography variant="h6">{displayStats.contacts}</Typography>
                   <Typography variant="body2" color="text.secondary">Liên hệ</Typography>
                 </Box>
               </Box>

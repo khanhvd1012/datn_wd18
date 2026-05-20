@@ -69,6 +69,11 @@ const LatestNews = () => {
                 height="200"
                 image={item.images[0] || "https://via.placeholder.com/400x200"}
                 alt={item.title}
+                sx={{
+                  objectFit: "contain",
+                  backgroundColor: "#fff",
+                  p: 1,
+                }}
               />
               <CardContent>
                 <Typography

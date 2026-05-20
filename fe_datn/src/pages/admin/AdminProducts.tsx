@@ -88,7 +88,11 @@ const AdminProducts = () => {
                 <TableRow key={product._id || product.id}>
                   <TableCell>{product.name}</TableCell>
                   <TableCell>{product.price ?? "-"}</TableCell>
-                  <TableCell>{product.category ?? "-"}</TableCell>
+                  <TableCell>
+                    {typeof product.category === "string"
+                      ? product.category
+                      : product.category?.name || "-"}
+                  </TableCell>
                   <TableCell>{String(product.description ?? "-").slice(0, 80)}</TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={1}>

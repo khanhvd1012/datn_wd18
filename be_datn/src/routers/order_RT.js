@@ -5,6 +5,7 @@ import {
     getOrderById,
     getAllOrders,
     updateOrder,
+    cancelOrder,
     deleteOrder
 } from "../controllers/order_CTL.js";
 import { checkPermission, checkRole } from "../middleware/checkPermission.js";
@@ -27,7 +28,10 @@ orderRouter.get("/", getUserOrders);
 // Cập nhật trạng thái đơn hàng (Admin)
 orderRouter.put("/:id", checkRole([ROLES.ADMIN]), updateOrder);
 
-// Xóa đơn hàng (Admin)
+// Hủy đơn hàng (User hoặc Admin)
+orderRouter.patch("/:id/cancel", cancelOrder);
+
+// Không cho phép xóa đơn hàng
 orderRouter.delete("/:id", checkRole([ROLES.ADMIN]), deleteOrder);
 
 // Lấy chi tiết một đơn hàng

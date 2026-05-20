@@ -3,16 +3,30 @@ import {
   Box,
   Card,
   CardMedia,
+  CardContent,
   Typography,
   Snackbar,
   Alert,
 } from "@mui/material";
+import { Link, useNavigate } from "react-router-dom";
+import { addToCartApi } from "../services/cartService";
+
+type FeaturedProduct = {
+  id: string;
+  name: string;
+  img: string;
+  price: number;
+  countInStock?: number;
+  variants?: any[];
+};
 
 const FeaturedProducts = () => {
-  const [products, setProducts] = useState<any[]>([]);
-  const [hoveredId, setHoveredId] = useState<number | null>(null);
-  const [startIndex, setStartIndex] = useState(0); 
-const [hoverSide, setHoverSide] = useState<"left" | "right" | null>(null);
+  const [products, setProducts] = useState<FeaturedProduct[]>([]);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+
+  const navigate = useNavigate();
+
   const [notification, setNotification] = useState({
     open: false,
     message: "",
@@ -25,14 +39,16 @@ const [hoverSide, setHoverSide] = useState<"left" | "right" | null>(null);
       .then((data) => {
         const list = Array.isArray(data) ? data : data.docs || data.data || [];
 
-        const mappedList = list.map((item: any) => ({
+        const mappedList: FeaturedProduct[] = list.map((item: any) => ({
           id: item._id || item.id,
           name: item.name,
           img:
             item.img ||
             (item.images && item.images[0]) ||
-            "/no-image.png",
+            "https://via.placeholder.com/200",
           price: item.price,
+          countInStock: item.countInStock || 0,
+          variants: item.variants || [],
         }));
 
         setProducts(mappedList);
@@ -42,16 +58,44 @@ const [hoverSide, setHoverSide] = useState<"left" | "right" | null>(null);
   const formatPrice = (price: number) =>
     price.toLocaleString("vi-VN") + " đ";
 
-  //  next / prev
-  const handleNext = () => {
-    if (startIndex + 4 < products.length) {
-      setStartIndex(startIndex + 4);
+  const getTotalStock = (product: FeaturedProduct) => {
+    if (!product.variants || product.variants.length === 0) {
+      return product.countInStock || 0;
     }
+    return product.variants.reduce(
+      (total, variant) => total + (variant.stock || variant.countInStock || 0),
+      0
+    );
   };
 
-  const handlePrev = () => {
-    if (startIndex - 4 >= 0) {
-      setStartIndex(startIndex - 4);
+  const handleAddToCart = async (productId: string) => {
+    try {
+      if (!localStorage.getItem("token")) {
+        setNotification({
+          open: true,
+          message: "Vui lòng đăng nhập",
+          severity: "warning",
+        });
+        navigate("/login");
+        return;
+      }
+
+      setLoadingId(productId);
+
+      await addToCartApi({
+        product_id: productId,
+        quantity: 1,
+      });
+
+      window.dispatchEvent(new Event("cartUpdated"));
+
+      setNotification({
+        open: true,
+        message: "Đã thêm vào giỏ hàng!",
+        severity: "success",
+      });
+    } finally {
+      setLoadingId(null);
     }
   };
 
@@ -59,136 +103,102 @@ const [hoverSide, setHoverSide] = useState<"left" | "right" | null>(null);
     <Box sx={{ py: 4 }}>
       <Box sx={{ maxWidth: 1300, mx: "auto", px: 2 }}>
         {/* HEADER */}
-        <Box
-          sx={{
-            fontFamily: "Anton, sans-serif",
-            fontSize: 28,
-            letterSpacing: "2px",
-            color: "#ff3b1f",
-            textTransform: "uppercase",
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            pb: 2,
-          }}
-        >
-          PHỤ KIỆN NỔI BẬT
+        <Box sx={{ display: "flex", mb: 3 }}>
+          <Box
+            sx={{
+              background: "#1976d2",
+              color: "#fff",
+              px: 5,
+              py: 1,
+              fontWeight: "bold",
+              fontSize: 18,
+              clipPath: "polygon(0 0, 90% 0, 100% 50%, 90% 100%, 0 100%)",
+            }}
+          >
+            PHỤ KIỆN NỔI BẬT
+          </Box>
         </Box>
 
-       <Box sx={{ position: "relative" }}>
-
-  {/* VÙNG CLICK TRÁI */}
-      <Box
-        onClick={handlePrev}
-        sx={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: 60,
-          zIndex: 5,
-          cursor: startIndex > 0 ? "pointer" : "default",
-
-          "&:active": {
-            background: "rgba(158, 42, 42, 0.05)", // hiệu ứng click
-          },
-        }}
-      />
-
-      {/* VÙNG CLICK PHẢI */}
-      <Box
-        onClick={handleNext}
-        sx={{
-          position: "absolute",
-          right: 0,
-          top: 0,
-          bottom: 0,
-          width: 60,
-          zIndex: 5,
-          cursor:
-            startIndex + 4 < products.length ? "pointer" : "default",
-
-          "&:active": {
-            background: "rgba(92, 223, 66, 0.05)",
-          },
-        }}
-      />
-
-      <Box
-        sx={{
-          overflow: "hidden",
-        }}
-      >
+        {/* GRID */}
         <Box
           sx={{
-            display: "flex",
-            transition: "transform 0.4s ease",
-            transform: `translateX(-${startIndex * (100 / 4)}%)`,
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "repeat(2, 1fr)",
+              md: "repeat(4, 1fr)",
+            },
+            gap: 2,
           }}
         >
-          {products.map((item) => (
-            <Box
+          {products.slice(0, 8).map((item) => (
+            <Card
               key={item.id}
               sx={{
-                width: "25%", 
-                flexShrink: 0,
-                px: 1,
+                width: 280,
+                height: 380,
+                mx: "auto",
+                display: "flex",
+                flexDirection: "column",
+                transition: "0.3s",
+                "&:hover": {
+                  transform: "translateY(-6px)",
+                  boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
+                },
               }}
             >
-              <Card
+              {/* IMAGE - CLICK GO DETAIL */}
+            <Box
+              sx={{
+                height: 200,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                p: 2,
+              }}
+            >
+              <Link
+                to={`/product/${item.id}`}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textDecoration: "none",
+                }}
+              >
+                <CardMedia
+                  component="img"
+                  image={item.img}
+                  alt={item.name}
+                  sx={{
+                    maxHeight: "100%",
+                    maxWidth: "100%",
+                    objectFit: "contain",
+                    cursor: "pointer",
+                  }}
+                />
+              </Link>
+            </Box>
+
+              {/* CONTENT + HOVER AREA ONLY HERE */}
+              <CardContent
                 onMouseEnter={() => setHoveredId(item.id)}
                 onMouseLeave={() => setHoveredId(null)}
                 sx={{
-                  height: 300,
-                  width: "100%",
                   position: "relative",
-                  overflow: "hidden",
-                  cursor: "pointer",
+                  flexGrow: 1,
                   display: "flex",
                   flexDirection: "column",
-                  transition: "0.3s",
-                  "&:hover": {
-                    transform: "translateY(-6px)",
-                    boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
-                  },
+                  justifyContent: "space-between",
                 }}
               >
-                {/* IMAGE */}
-                <Box
-                  sx={{
-                    width: "100%",
-                    height: 180,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "#ebeaea",
-                  }}
-                >
-                  <CardMedia
-                    component="img"
-                    image={item.img}
-                    alt={item.name}
-                    onError={(e: any) => {
-                      e.target.src = "/no-image.png";
-                    }}
+                <Box>
+                  <Typography
                     sx={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "contain",
-                    }}
-                  />
-                </Box>
-
-                {/* INFO */}
-                <Box sx={{ p: 1.5 }}>
-                  <Box sx={{ color: "#fadb14", fontSize: 14 ,pl:25}}>
-                    {"★★★★☆"}
-                  </Box>
-
-                  <Box
-                    sx={{
+                      fontWeight: 600,
                       fontSize: 14,
-                      fontWeight: 500,
                       display: "-webkit-box",
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: "vertical",
@@ -196,31 +206,51 @@ const [hoverSide, setHoverSide] = useState<"left" | "right" | null>(null);
                     }}
                   >
                     {item.name}
-                  </Box>
+                  </Typography>
 
-                  <Box
-                    sx={{
-                      color: "#ff4d4f",
-                      fontWeight: "bold",
-                      fontSize: 15,
-                      mt: 1,
-                    }}
-                  >
-                    {formatPrice(item.price)}
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+                    <Typography
+                      sx={{
+                        color: "#d70018",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {formatPrice(item.price)}
+                    </Typography>
+                    
+                    <Typography 
+                      variant="body2" 
+                      color={getTotalStock(item) > 0 ? "success.main" : "error"}
+                      fontWeight="500"
+                    >
+                      {getTotalStock(item) > 0 ? `Còn ${getTotalStock(item)}` : "Hết hàng"}
+                    </Typography>
                   </Box>
                 </Box>
 
-                {/* OVERLAY */}
+                {/* HOVER BUTTONS ONLY IN CONTENT AREA */}
                 <Box
                   sx={{
                     position: "absolute",
-                    inset: 0,
-                    background: "rgba(0,0,0,0.5)",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    background: "rgba(208, 208, 208, 0.75)",
                     display: "flex",
+                    flexDirection: "column",
+                    gap: 1,
                     alignItems: "center",
                     justifyContent: "center",
+                    py: 2,
+
                     opacity: hoveredId === item.id ? 1 : 0,
-                    transition: "0.3s",
+                    transform:
+                      hoveredId === item.id
+                        ? "translateY(0)"
+                        : "translateY(20px)",
+                    transition: "0.25s ease",
+                    pointerEvents:
+                      hoveredId === item.id ? "auto" : "none",
                   }}
                 >
                   <Box
@@ -230,21 +260,46 @@ const [hoverSide, setHoverSide] = useState<"left" | "right" | null>(null);
                     sx={{
                       background: "#ff0000",
                       color: "#fff",
-                      px: 3,
-                      py: 1,
+                      px: 2,
+                      py: 0.8,
                       borderRadius: 2,
-                      fontWeight: "bold",
+                      width: 140,
+                      textAlign: "center",
+                      fontWeight: 600,
+                      cursor: "pointer",
                     }}
                   >
                     Mua ngay
                   </Box>
+
+                  <Box
+                    onClick={() => {
+                      if (getTotalStock(item) > 0) {
+                         handleAddToCart(item.id);
+                      }
+                    }}
+                    sx={{
+                      background: getTotalStock(item) === 0 ? "#ccc" : "#1976d2",
+                      color: "#fff",
+                      px: 2,
+                      py: 0.8,
+                      borderRadius: 2,
+                      width: 140,
+                      textAlign: "center",
+                      fontWeight: 600,
+                      cursor: getTotalStock(item) === 0 ? "not-allowed" : "pointer",
+                      opacity: loadingId === item.id ? 0.6 : 1,
+                    }}
+                  >
+                    {loadingId === item.id
+                      ? "Đang thêm..."
+                      : (getTotalStock(item) === 0 ? "Hết hàng" : "Thêm vào giỏ")}
+                  </Box>
                 </Box>
-              </Card>
-            </Box>
+              </CardContent>
+            </Card>
           ))}
         </Box>
-      </Box>
-    </Box>
       </Box>
 
       {/* NOTIFICATION */}

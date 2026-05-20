@@ -44,6 +44,7 @@ interface Product {
   brand: string | { _id: string; name: string };
   category: string | { _id: string; name: string };
   price?: number;
+  countInStock?: number;
   variants: any[];
   images: string[];
   rating: number;
@@ -78,13 +79,20 @@ const ProductList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const categoryFromUrl = searchParams.get("category");
+  const categoryFromUrl = searchParams.get("category") || "";
   const searchFromUrl = searchParams.get("search") || "";
 
+  // Đồng bộ state từ URL: khi URL đổi (kể cả khi xoá param), state reset theo.
   useEffect(() => {
     setSearch(searchFromUrl);
-    if (categoryFromUrl) setSelectedCategory(categoryFromUrl);
+    setSelectedCategory(categoryFromUrl);
+    setPage(1);
   }, [searchFromUrl, categoryFromUrl]);
+
+  // Reset page về 1 mỗi khi đổi filter / sắp xếp / brand để tránh trang trống.
+  useEffect(() => {
+    setPage(1);
+  }, [selectedBrand, sortType]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -176,6 +184,16 @@ const ProductList = () => {
       return Math.max(...product.variants.map((v) => v.price));
     }
     return product.price || 0;
+  };
+
+  const getTotalStock = (product: Product) => {
+    if (!product.variants || product.variants.length === 0) {
+      return product.countInStock || 0;
+    }
+    return product.variants.reduce(
+      (total, variant) => total + (variant.stock || variant.countInStock || 0),
+      0
+    );
   };
 
   const filteredProducts = useMemo(() => {
@@ -442,7 +460,7 @@ const ProductList = () => {
           ) : (
             <Grid container spacing={2}>
               {displayedProducts.map((product) => (
-                <Grid item xs={12} sm={6} md={3} lg={3} key={product._id} sx={{ display: "flex" }}>
+                <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3 }} key={product._id} sx={{ display: "flex" }}>
                   <Card
                     sx={{
                       width: "280px", // Chốt chết chiều rộng
@@ -555,7 +573,7 @@ const ProductList = () => {
                       </Box>
 
                       <Box sx={{ mt: "auto" }}>
-                        <Box sx={{ height: 24, mb: 1 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 24, mb: 1 }}>
                           {product.variants && product.variants.length > 0 ? (
                             <Typography
                               variant="body2"
@@ -563,7 +581,16 @@ const ProductList = () => {
                             >
                               {product.variants.length} phiên bản
                             </Typography>
-                          ) : null}
+                          ) : (
+                            <Box />
+                          )}
+                          <Typography 
+                            variant="body2" 
+                            color={getTotalStock(product) > 0 ? "success.main" : "error"}
+                            fontWeight="500"
+                          >
+                            {getTotalStock(product) > 0 ? `Còn ${getTotalStock(product)} sp` : "Hết hàng"}
+                          </Typography>
                         </Box>
 
                         <Typography
@@ -598,6 +625,7 @@ const ProductList = () => {
                             variant="contained"
                             startIcon={<ShoppingCartIcon />}
                             onClick={() => handleAddToCart(product)}
+                            disabled={getTotalStock(product) === 0}
                             sx={{
                               textTransform: "none",
                               flex: 1,

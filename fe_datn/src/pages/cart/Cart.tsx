@@ -19,10 +19,11 @@ import {
   Container,
   Chip,
   Tooltip,
+  Checkbox,
 } from "@mui/material";
 
 import { Plus, Minus, Trash2, ArrowLeft, ShoppingBag } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
 import {
   getCartApi,
   updateCartItemApi,
@@ -33,6 +34,7 @@ import type { CartItem } from "../../services/cartService";
 
 const Cart = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState({
     open: false,
@@ -62,6 +64,20 @@ const Cart = () => {
     fetchCart();
   }, []);
 
+  const getItemUnitPrice = (item: CartItem) =>
+    item.variant?.price ?? item.product?.price ?? 0;
+
+  const getItemImage = (item: CartItem) => {
+    const img =
+      item.variant?.images?.[0] ||
+      item.product?.images?.[0] ||
+      "";
+    if (!img) return "https://placehold.co/200x200?text=No+Image";
+    if (img.startsWith("http")) return img;
+    if (img.startsWith("uploads/")) return `http://localhost:3000/${img}`;
+    return `http://localhost:3000/uploads/products/${img}`;
+  };
+
   const updateQuantity = async (cartItemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
 
@@ -73,7 +89,7 @@ const Cart = () => {
             ? {
                 ...item,
                 quantity: newQuantity,
-                totalPrice: (item.variant?.price || item.product.price) * newQuantity,
+                totalPrice: getItemUnitPrice(item) * newQuantity,
               }
             : item,
         ),
@@ -130,15 +146,34 @@ const Cart = () => {
   };
 
   const getTotalPrice = () => {
-    return cart.reduce((total, item) => total + item.totalPrice, 0);
+    return cart
+      .filter((item) => selectedItems.includes(item._id))
+      .reduce((total, item) => total + (item.totalPrice || 0), 0);
   };
 
   const getTotalItems = () => {
-    return cart.reduce((total, item) => total + item.quantity, 0);
+    return cart
+      .filter((item) => selectedItems.includes(item._id))
+      .reduce((total, item) => total + item.quantity, 0);
   };
 
-  const formatPrice = (price: number) => {
-    return price.toLocaleString("vi-VN") + "₫";
+  const handleToggleSelect = (id: string) => {
+    setSelectedItems((prev) =>
+      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedItems(cart.map((item) => item._id));
+    } else {
+      setSelectedItems([]);
+    }
+  };
+
+  const formatPrice = (price?: number) => {
+    const n = Number(price) || 0;
+    return n.toLocaleString("vi-VN") + "₫";
   };
 
   const premiumFont = { fontFamily: "'Inter', system-ui, sans-serif" };
@@ -206,6 +241,17 @@ const Cart = () => {
         <Grid container spacing={5}>
           {/* Main Content: 2 Columns balanced */}
           <Grid size={{ xs: 12, md: 8 }}>
+            <Box sx={{ mb: 2, display: "flex", alignItems: "center", ml: 1 }}>
+              <Checkbox
+                checked={selectedItems.length === cart.length && cart.length > 0}
+                indeterminate={
+                  selectedItems.length > 0 && selectedItems.length < cart.length
+                }
+                onChange={(e) => handleSelectAll(e.target.checked)}
+                sx={{ color: '#d70018', '&.Mui-checked': { color: '#d70018' }, '&.MuiCheckbox-indeterminate': { color: '#d70018' } }}
+              />
+              <Typography fontWeight="700" sx={{ ...premiumFont, color: '#1a1a1a' }}>Chọn tất cả ({cart.length} sản phẩm)</Typography>
+            </Box>
             <Stack spacing={3}>
               {cart.map((item) => (
                 <Card 
@@ -213,6 +259,7 @@ const Cart = () => {
                   elevation={0}
                   sx={{ 
                     p: 4, 
+                    position: 'relative',
                     borderRadius: 6, 
                     border: '1px solid #f0f0f0',
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -224,16 +271,26 @@ const Cart = () => {
                   }}
                 >
                   <Grid container spacing={3} alignItems="center">
-                    <Grid size={{ xs: 12, sm: 3 }}>
-                      <Box sx={{ bgcolor: '#fff', borderRadius: 4, p: 1, display: 'flex', justifyContent: 'center' }}>
+                    <Grid size="auto" sx={{ display: { xs: 'none', sm: 'block' }, pl: 2 }}>
+                      <Checkbox
+                        checked={selectedItems.includes(item._id)}
+                        onChange={() => handleToggleSelect(item._id)}
+                        sx={{ color: '#d70018', '&.Mui-checked': { color: '#d70018' } }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 3 }} sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Box sx={{ display: { xs: 'block', sm: 'none' }, mr: 1 }}>
+                         <Checkbox
+                          checked={selectedItems.includes(item._id)}
+                          onChange={() => handleToggleSelect(item._id)}
+                          sx={{ color: '#d70018', '&.Mui-checked': { color: '#d70018' }, p: 0 }}
+                        />
+                      </Box>
+                      <Box sx={{ bgcolor: '#fff', borderRadius: 4, p: 1, display: 'flex', justifyContent: 'center', flexGrow: 1 }}>
                         <CardMedia
                           component="img"
-                          image={
-                            item.variant?.images?.[0] ||
-                            item.product.images?.[0] ||
-                            ""
-                          }
-                          alt={item.product.name}
+                          image={getItemImage(item)}
+                          alt={item.product?.name || "Sản phẩm"}
                           sx={{
                             width: "auto",
                             maxWidth: '100%',
@@ -244,9 +301,11 @@ const Cart = () => {
                       </Box>
                     </Grid>
 
-                    <Grid size={{ xs: 12, md: 5 }}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                       <Typography variant="body1" fontWeight="700" sx={{ ...premiumFont, color: '#1a1a1a', lineHeight: 1.3, mb: 0.5, fontSize: '1rem' }}>
-                        {item.product.name}
+                        <Link component={RouterLink} to={`/product/${item.product?._id}`} sx={{ textDecoration: 'none', color: 'inherit', '&:hover': { color: '#d70018' } }}>
+                          {item.product?.name || "Sản phẩm"}
+                        </Link>
                       </Typography>
                       {item.variant?.name && (
                         <Chip 
@@ -257,7 +316,7 @@ const Cart = () => {
                         />
                       )}
                       <Typography variant="body2" fontWeight="600" color="text.secondary" sx={{ ...premiumFont }}>
-                        {formatPrice(item.variant?.price || item.product.price)}
+                        {formatPrice(getItemUnitPrice(item))}
                       </Typography>
                     </Grid>
 
@@ -390,7 +449,17 @@ const Cart = () => {
                   variant="contained"
                   size="large"
                   fullWidth
-                  onClick={() => navigate("/checkout")}
+                  onClick={() => {
+                    if (selectedItems.length === 0) {
+                      setNotification({
+                        open: true,
+                        message: "Vui lòng chọn sản phẩm để thanh toán",
+                        severity: "warning",
+                      });
+                      return;
+                    }
+                    navigate("/checkout", { state: { selectedItems } });
+                  }}
                   sx={{ 
                     mt: 3, 
                     py: 2.8, 

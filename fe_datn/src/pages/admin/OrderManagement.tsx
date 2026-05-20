@@ -56,10 +56,9 @@ import {
   Schedule,
   DoneAll,
   Receipt,
-  Delete,
-  FileDownload,
 } from '@mui/icons-material';
 import api from '../../services/api';
+import { isOnlinePaymentMethod } from '../../services/orderService';
 
 interface OrderItem {
   product_id: string;
@@ -98,6 +97,12 @@ const OrderManagement: React.FC = () => {
   const theme = useTheme();
   const [orders, setOrders] = useState<Order[]>([]);
   const [totalOrders, setTotalOrders] = useState(0);
+  const [orderSummary, setOrderSummary] = useState({
+    expectedRevenue: 0,
+    pendingCount: 0,
+    deliveredCount: 0,
+    cancelledCount: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -107,8 +112,7 @@ const OrderManagement: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
   const [openStatusDialog, setOpenStatusDialog] = useState(false);
-  const [newStatus, setNewStatus] = useState('');
-  const [newPaymentStatus, setNewPaymentStatus] = useState('');
+  const [statusUpdating, setStatusUpdating] = useState(false);
   const [notification, setNotification] = useState({
     open: false,
     message: '',
@@ -150,6 +154,26 @@ const OrderManagement: React.FC = () => {
       setOrders(Array.isArray(ordersData) ? ordersData : []);
       
       setTotalOrders(response.data.pagination?.total || (Array.isArray(ordersData) ? ordersData.length : 0));
+
+      const summary = response.data.summary;
+      if (summary) {
+        setOrderSummary({
+          expectedRevenue: summary.expectedRevenue ?? 0,
+          pendingCount: summary.pendingCount ?? 0,
+          deliveredCount: summary.deliveredCount ?? 0,
+          cancelledCount: summary.cancelledCount ?? 0,
+        });
+      } else {
+        const list = Array.isArray(ordersData) ? ordersData : [];
+        setOrderSummary({
+          expectedRevenue: list
+            .filter((o: Order) => o.order_status !== 'cancelled')
+            .reduce((acc: number, o: Order) => acc + (o.total || 0), 0),
+          pendingCount: list.filter((o: Order) => o.order_status === 'pending').length,
+          deliveredCount: list.filter((o: Order) => o.order_status === 'delivered').length,
+          cancelledCount: list.filter((o: Order) => o.order_status === 'cancelled').length,
+        });
+      }
     } catch (error: any) {
       console.error('Error fetching orders:', error);
       const message = error.response?.data?.message || 'Không thể tải dữ liệu đơn hàng';
@@ -178,58 +202,60 @@ const OrderManagement: React.FC = () => {
 
   const handleChangeStatus = (order: Order) => {
     setSelectedOrder(order);
-    setNewStatus(order.order_status);
-    setNewPaymentStatus(order.payment_status);
     setOpenStatusDialog(true);
-    setAnchorEl(null); // Chỉ đóng menu, giữ nguyên selectedOrder
+    setAnchorEl(null);
   };
 
-  const handleSaveStatus = async (e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    
-    try {
-      const orderId = selectedOrder?._id || (selectedOrder as any)?.id;
-      console.log("Đang gọi API cập nhật...", orderId, newStatus, newPaymentStatus);
-      console.log("Toàn bộ thông tin order:", selectedOrder);
-      
-      if (orderId) {
-        const response = await api.put(`/orders/${orderId}`, { 
-          order_status: newStatus,
-          payment_status: newPaymentStatus
-        });
-        console.log("Response từ server:", response.data);
-        showNotification('Cập nhật đơn hàng thành công', 'success');
-      } else {
-        console.error("Không tìm thấy ID của đơn hàng:", selectedOrder);
-        showNotification('Lỗi dữ liệu: Đơn hàng không có mã ID', 'error');
-      }
-      setOpenStatusDialog(false);
-      fetchOrders();
-    } catch (error: any) {
-      console.error('Error updating order:', error);
-      const message = error.response?.data?.message || 'Không thể cập nhật đơn hàng';
-      showNotification(message, 'error');
+  const ORDER_FLOW = ['pending', 'confirmed', 'processing', 'shipping', 'delivered'] as const;
+
+  const getAllowedNextStatuses = (current: string): string[] => {
+    switch (current) {
+      case 'pending': return ['confirmed'];
+      case 'confirmed': return ['processing'];
+      case 'processing': return ['shipping'];
+      case 'shipping': return ['delivered'];
+      default: return [];
     }
   };
 
-  const handleDeleteOrder = async (orderId: string) => {
+  const canAdminCancel = (status: string) =>
+    ['pending', 'confirmed', 'processing', 'shipping'].includes(status);
+
+  const handleStatusAction = async (nextStatus: string) => {
+    const orderId = selectedOrder?._id || (selectedOrder as any)?.id;
     if (!orderId) {
-      showNotification('Không tìm thấy mã đơn hàng để xóa', 'error');
+      showNotification('Lỗi dữ liệu: Đơn hàng không có mã ID', 'error');
       return;
     }
-    if (window.confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) {
+
+    if (nextStatus === 'cancelled') {
+      if (!window.confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) return;
       try {
-        await api.delete(`/orders/${orderId}`);
-        showNotification('Xóa đơn hàng thành công', 'success');
+        setStatusUpdating(true);
+        await api.patch(`/orders/${orderId}/cancel`);
+        showNotification('Hủy đơn hàng thành công', 'success');
+        setOpenStatusDialog(false);
         fetchOrders();
       } catch (error: any) {
-        showNotification(error.response?.data?.message || 'Lỗi khi xóa đơn hàng', 'error');
+        showNotification(error.response?.data?.message || 'Không thể hủy đơn hàng', 'error');
+      } finally {
+        setStatusUpdating(false);
       }
+      return;
     }
-    handleMenuClose();
+
+    try {
+      setStatusUpdating(true);
+      await api.put(`/orders/${orderId}`, { order_status: nextStatus });
+      showNotification('Cập nhật đơn hàng thành công', 'success');
+      const updated = (await api.get(`/orders/${orderId}`)).data.order;
+      setSelectedOrder(updated);
+      fetchOrders();
+    } catch (error: any) {
+      showNotification(error.response?.data?.message || 'Không thể cập nhật đơn hàng', 'error');
+    } finally {
+      setStatusUpdating(false);
+    }
   };
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -285,6 +311,13 @@ const OrderManagement: React.FC = () => {
     }
   };
 
+  const getPaymentDisplayForOrder = (order: Order) => {
+    if (isOnlinePaymentMethod(order.payment_method)) {
+      return order.payment_status === 'paid' ? 'Đã hoàn thành' : 'Chờ thanh toán';
+    }
+    return getPaymentStatusText(order.payment_status);
+  };
+
   const getPaymentMethodText = (method: string) => {
     switch (method) {
       case 'cod': return 'COD';
@@ -302,13 +335,6 @@ const OrderManagement: React.FC = () => {
     { value: 'shipping', label: 'Đang giao hàng' },
     { value: 'delivered', label: 'Đã giao hàng' },
     { value: 'cancelled', label: 'Đã hủy' },
-  ];
-
-  const paymentStatusOptions = [
-    { value: 'pending', label: 'Chờ thanh toán' },
-    { value: 'paid', label: 'Đã thanh toán' },
-    { value: 'failed', label: 'Thanh toán thất bại' },
-    { value: 'refunded', label: 'Đã hoàn tiền' },
   ];
 
   const formatPrice = (price: number) => {
@@ -332,9 +358,15 @@ const OrderManagement: React.FC = () => {
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {[
           { label: 'Tổng số đơn', value: totalOrders, icon: <ShoppingBag />, color: '#3f51b5' },
-          { label: 'Doanh thu dự kiến', value: formatPrice(orders.reduce((acc, curr) => acc + curr.total, 0)), icon: <AttachMoney />, color: '#4caf50' },
-          { label: 'Chờ xử lý', value: orders.filter(o => o.order_status === 'pending').length, icon: <Schedule />, color: '#ff9800' },
-          { label: 'Đã hoàn thành', value: orders.filter(o => o.order_status === 'delivered').length, icon: <CheckCircle />, color: '#2e7d32' }
+          {
+            label: 'Doanh thu dự kiến',
+            value: formatPrice(orderSummary.expectedRevenue),
+            sub: 'Tổng đơn chưa hủy (theo bộ lọc)',
+            icon: <AttachMoney />,
+            color: '#4caf50',
+          },
+          { label: 'Chờ xử lý', value: orderSummary.pendingCount, icon: <Schedule />, color: '#ff9800' },
+          { label: 'Đã hoàn thành', value: orderSummary.deliveredCount, icon: <CheckCircle />, color: '#2e7d32' },
         ].map((stat, idx) => (
           <Grid size={{ xs: 12, sm: 6, md: 3 }} key={idx}>
             <Paper sx={{ 
@@ -356,6 +388,11 @@ const OrderManagement: React.FC = () => {
                 <Typography variant="h6" sx={{ fontWeight: 700 }}>
                   {stat.value}
                 </Typography>
+                {'sub' in stat && stat.sub && (
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    {stat.sub}
+                  </Typography>
+                )}
               </Box>
             </Paper>
           </Grid>
@@ -499,8 +536,8 @@ const OrderManagement: React.FC = () => {
                         sx={{ fontSize: '0.7rem', height: 20 }}
                       />
                       <Chip
-                        label={getPaymentStatusText(order.payment_status)}
-                        color={getPaymentStatusColor(order.payment_status)}
+                        label={getPaymentDisplayForOrder(order)}
+                        color={order.payment_status === 'paid' ? 'success' : 'warning'}
                         size="small"
                         sx={{ fontSize: '0.7rem', height: 20 }}
                       />
@@ -582,13 +619,6 @@ const OrderManagement: React.FC = () => {
         </MenuItem>
         <MenuItem onClick={() => selectedOrder && handleChangeStatus(selectedOrder)}>
           <LocalShipping sx={{ mr: 1.5, fontSize: 20, color: 'text.secondary' }} /> Cập nhật trạng thái
-        </MenuItem>
-        <Divider sx={{ my: 0.5 }} />
-        <MenuItem 
-          onClick={() => selectedOrder && handleDeleteOrder(selectedOrder._id || (selectedOrder as any).id)}
-          sx={{ color: 'error.main' }}
-        >
-          <Delete sx={{ mr: 1.5, fontSize: 20 }} /> Xóa đơn hàng
         </MenuItem>
       </Menu>
 
@@ -687,8 +717,8 @@ const OrderManagement: React.FC = () => {
                   <Box>
                     <Typography variant="caption" color="text.secondary">Trạng thái thanh toán</Typography>
                     <Chip 
-                      label={getPaymentStatusText(selectedOrder.payment_status)} 
-                      color={getPaymentStatusColor(selectedOrder.payment_status)}
+                      label={getPaymentDisplayForOrder(selectedOrder)} 
+                      color={selectedOrder.payment_status === 'paid' ? 'success' : 'warning'}
                       size="small"
                       sx={{ display: 'flex', mt: 0.5, width: 'fit-content' }}
                     />
@@ -764,61 +794,118 @@ const OrderManagement: React.FC = () => {
       <Dialog 
         open={openStatusDialog} 
         onClose={() => setOpenStatusDialog(false)} 
-        maxWidth="xs" 
+        maxWidth="sm" 
         fullWidth
         PaperProps={{ sx: { borderRadius: 3 } }}
       >
-        <DialogTitle sx={{ fontWeight: 700 }}>Cập nhật đơn hàng</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700 }}>Cập nhật trạng thái đơn hàng</DialogTitle>
         <DialogContent>
-          <Box sx={{ py: 1 }}>
-            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-              Thay đổi trạng thái vận đơn và thanh toán cho mã đơn #{selectedOrder?._id ? selectedOrder._id.substring(selectedOrder._id.length - 8).toUpperCase() : ''}
-            </Typography>
-            
-            <FormControl fullWidth sx={{ mt: 2 }}>
-              <InputLabel>Trạng thái đơn hàng</InputLabel>
-              <Select
-                value={newStatus}
-                onChange={(e) => setNewStatus(e.target.value)}
-                label="Trạng thái đơn hàng"
-                sx={{ borderRadius: 2 }}
-              >
-                {statusOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+          {selectedOrder && (
+            <Box sx={{ py: 1 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+                Mã đơn #{selectedOrder._id.substring(selectedOrder._id.length - 8).toUpperCase()}
+              </Typography>
 
-            <FormControl fullWidth sx={{ mt: 3 }}>
-              <InputLabel>Trạng thái thanh toán</InputLabel>
-              <Select
-                value={newPaymentStatus}
-                onChange={(e) => setNewPaymentStatus(e.target.value)}
-                label="Trạng thái thanh toán"
-                sx={{ borderRadius: 2 }}
-              >
-                {paymentStatusOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
+              <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
+                Tiến trình đơn hàng
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 3 }}>
+                {ORDER_FLOW.map((status) => {
+                  const currentIdx = ORDER_FLOW.indexOf(selectedOrder.order_status as typeof ORDER_FLOW[number]);
+                  const statusIdx = ORDER_FLOW.indexOf(status);
+                  const isCurrent = selectedOrder.order_status === status;
+                  const isPast = currentIdx > statusIdx;
+                  const isNext = getAllowedNextStatuses(selectedOrder.order_status).includes(status);
+                  const isCancelled = selectedOrder.order_status === 'cancelled';
+
+                  return (
+                    <Button
+                      key={status}
+                      variant={isCurrent ? 'contained' : 'outlined'}
+                      color={isCurrent ? 'primary' : isPast ? 'inherit' : 'primary'}
+                      disabled={
+                        statusUpdating ||
+                        isCancelled ||
+                        selectedOrder.order_status === 'delivered' ||
+                        isPast ||
+                        isCurrent ||
+                        !isNext
+                      }
+                      onClick={() => isNext && handleStatusAction(status)}
+                      sx={{
+                        justifyContent: 'flex-start',
+                        textTransform: 'none',
+                        fontWeight: isCurrent ? 700 : 500,
+                        opacity: isPast || isCurrent ? 1 : isNext ? 1 : 0.45,
+                        ...(isPast && {
+                          bgcolor: alpha(theme.palette.success.main, 0.08),
+                          borderColor: alpha(theme.palette.success.main, 0.3),
+                          color: 'success.dark',
+                        }),
+                      }}
+                      startIcon={
+                        isPast ? <CheckCircle fontSize="small" /> :
+                        isCurrent ? <Schedule fontSize="small" /> : undefined
+                      }
+                    >
+                      {getStatusText(status)}
+                      {isCurrent && ' (hiện tại)'}
+                    </Button>
+                  );
+                })}
+              </Box>
+
+              {selectedOrder.order_status !== 'cancelled' &&
+                selectedOrder.order_status !== 'delivered' &&
+                canAdminCancel(selectedOrder.order_status) && (
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  color="error"
+                  disabled={statusUpdating}
+                  onClick={() => handleStatusAction('cancelled')}
+                  startIcon={<Cancel />}
+                  sx={{ textTransform: 'none', fontWeight: 600, mb: 2 }}
+                >
+                  Hủy đơn hàng
+                </Button>
+              )}
+
+              {selectedOrder.order_status === 'cancelled' && (
+                <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                  Đơn hàng đã bị hủy
+                </Alert>
+              )}
+
+              <Divider sx={{ my: 2 }} />
+
+              <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+                Trạng thái thanh toán
+              </Typography>
+              {isOnlinePaymentMethod(selectedOrder.payment_method) ? (
+                <Chip
+                  label={selectedOrder.payment_status === 'paid' ? 'Đã hoàn thành' : 'Chờ thanh toán'}
+                  color={selectedOrder.payment_status === 'paid' ? 'success' : 'warning'}
+                  sx={{ fontWeight: 600 }}
+                />
+              ) : (
+                <Box>
+                  <Chip
+                    label={getPaymentStatusText(selectedOrder.payment_status)}
+                    color={getPaymentStatusColor(selectedOrder.payment_status)}
+                    sx={{ fontWeight: 600, mb: 1 }}
+                  />
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    COD: trạng thái thanh toán cập nhật khi giao hàng thành công
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          )}
         </DialogContent>
         <DialogActions sx={{ p: 2.5 }}>
           <Button type="button" onClick={() => setOpenStatusDialog(false)} sx={{ textTransform: 'none' }}>
-            Hủy
-          </Button>
-          <Button 
-            type="button"
-            onClick={handleSaveStatus} 
-            variant="contained"
-            sx={{ borderRadius: 2, textTransform: 'none', px: 3 }}
-          >
-            Lưu thay đổi
+            Đóng
           </Button>
         </DialogActions>
       </Dialog>

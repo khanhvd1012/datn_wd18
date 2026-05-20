@@ -88,6 +88,11 @@ const NewsPage = () => {
                       item.images[0] || "https://via.placeholder.com/400x240"
                     }
                     alt={item.title}
+                    sx={{
+                      objectFit: "contain",
+                      backgroundColor: "#111",
+                      p: 1,
+                    }}
                   />
                 </Link>
                 <CardContent

@@ -18,15 +18,53 @@ export interface CartItem {
   totalPrice: number;
 }
 
+const normalizeProduct = (raw: unknown, fallbackPrice = 0) => {
+  if (!raw || typeof raw === "string") {
+    return {
+      _id: typeof raw === "string" ? raw : "",
+      name: "Sản phẩm không khả dụng",
+      images: [] as string[],
+      price: fallbackPrice,
+    };
+  }
+  const p = raw as Record<string, unknown>;
+  return {
+    _id: String(p._id ?? p.id ?? ""),
+    name: String(p.name ?? "Sản phẩm"),
+    images: Array.isArray(p.images) ? (p.images as string[]) : [],
+    price: Number(p.price ?? fallbackPrice) || 0,
+  };
+};
+
+const normalizeVariant = (raw: unknown) => {
+  if (!raw || typeof raw === "string") return undefined;
+  const v = raw as Record<string, unknown>;
+  return {
+    _id: String(v._id ?? v.id ?? ""),
+    name: String(v.name ?? ""),
+    price: Number(v.price ?? 0) || 0,
+    images: Array.isArray(v.images) ? (v.images as string[]) : [],
+  };
+};
+
 export const getCartApi = async (): Promise<CartItem[]> => {
   const res = await api.get("/cart");
-  const items = res.data.cart.items || [];
-  return items.map((it: any) => ({
-    ...it,
-    product: it.product_id,
-    variant: it.variant_id,
-    totalPrice: (it.price || 0) * (it.quantity || 0)
-  }));
+  const items = res.data?.cart?.items ?? [];
+  return items.map((it: Record<string, unknown>) => {
+    const linePrice = Number(it.price ?? 0) || 0;
+    const quantity = Number(it.quantity ?? 1) || 1;
+    const product = normalizeProduct(it.product_id ?? it.product, linePrice);
+    const variant = normalizeVariant(it.variant_id ?? it.variant);
+    const unitPrice = variant?.price || product.price || linePrice;
+
+    return {
+      _id: String(it._id ?? ""),
+      product,
+      variant,
+      quantity,
+      totalPrice: unitPrice * quantity,
+    };
+  });
 };
 
 export const addToCartApi = async (data: {

@@ -72,24 +72,32 @@ const Login = () => {
         ...res.user,
         token: res.accessToken,
       };
-
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", res.accessToken);
-
       alert("Đăng nhập thành công!");
-
-      // ✅ chuyển về trang chủ + reload
-      window.location.href = "/";
-
-    } catch (error: any) {
-      alert(error.response?.data?.message || "Không kết nối được server!");
+      if (user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
+    } catch (error: unknown) {
+      const message =
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        (error as { response?: { data?: { message?: string } } }).response?.data
+          ?.message
+          ? (error as { response?: { data?: { message?: string } } }).response!
+              .data!.message!
+          : "Không kết nối được server!";
+      alert(message);
     }
   };
 
   return (
     <Box
       sx={{
-        mt: 3,
+        mt:3,
         py: 6,
         background: "linear-gradient(135deg, #0f2027, #203a43, #2c5364)",
         minHeight: "100vh",
@@ -194,8 +202,7 @@ const Login = () => {
             <Divider sx={{ my: 3 }}>Hoặc</Divider>
 
             <Typography variant="body2">
-              Bạn{" "}
-              <Link href="/forgot-password">Quên mật khẩu?</Link>, Chưa có tài khoản?{" "}
+              Bạn <Link href="/forgot-password" style={{}} >Quên mật khẩu?</Link>, Chưa có tài khoản?{" "}
               <Link href="/register" underline="hover" sx={{ fontWeight: "bold" }}>
                 Đăng ký ngay
               </Link>

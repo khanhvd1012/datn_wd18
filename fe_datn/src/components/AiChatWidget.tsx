@@ -53,12 +53,24 @@ export default function AiChatWidget() {
       };
 
       setMessages((prev) => [...prev, aiMessage]);
-    } catch (error) {
+    } catch (error: unknown) {
+      let errorText = "Lỗi kết nối đến AI server.";
+      if (typeof error === "object" && error !== null && "response" in error) {
+        const axiosError = error as {
+          response?: { data?: { error?: string; message?: string } };
+          message?: string;
+        };
+        errorText =
+          axiosError.response?.data?.error ||
+          axiosError.response?.data?.message ||
+          axiosError.message ||
+          errorText;
+      }
       setMessages((prev) => [
         ...prev,
         {
           role: "ai",
-          text: "Lỗi kết nối đến AI server.",
+          text: errorText,
         },
       ]);
     } finally {

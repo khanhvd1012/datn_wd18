@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getOrderByIdApi } from "../services/orderService";
+import { getOrderByIdApi, cancelOrderApi, isOnlinePaymentMethod } from "../services/orderService";
 import type { Order } from "../services/orderService";
 import { createReviewApi } from "../services/reviewService";
 import {
@@ -54,6 +54,7 @@ const OrderDetail = () => {
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [notification, setNotification] = useState({ open: false, message: "", severity: "success" as "success" | "error" });
 
   useEffect(() => {
@@ -114,17 +115,37 @@ const OrderDetail = () => {
     switch (status) {
       case "pending": return 0;
       case "confirmed": return 1;
-      case "processing": return 1;
-      case "shipping": return 2;
-      case "delivered": return 3;
+      case "processing": return 2;
+      case "shipping": return 3;
+      case "delivered": return 4;
       case "cancelled": return -1;
       default: return 0;
     }
   };
 
+  const canCustomerCancel = ["pending", "confirmed", "processing"].includes(order.order_status);
+
+  const handleCancelOrder = async () => {
+    if (!id || !window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này?")) return;
+    setCancelling(true);
+    try {
+      const updated = await cancelOrderApi(id);
+      setOrder(updated);
+      setNotification({ open: true, message: "Đã hủy đơn hàng thành công", severity: "success" });
+    } catch (error: any) {
+      setNotification({
+        open: true,
+        message: error.response?.data?.message || "Không thể hủy đơn hàng",
+        severity: "error",
+      });
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   const statusInfo = getStatusInfo(order.order_status);
   const activeStep = getStepIndex(order.order_status);
-  const steps = ['Chờ xác nhận', 'Đang xử lý', 'Đang giao hàng', 'Đã giao hàng'];
+  const steps = ['Chờ xác nhận', 'Đã xác nhận', 'Đang xử lý', 'Đang giao hàng', 'Đã giao hàng'];
 
   return (
     <Box sx={{ bgcolor: "#F8FAFC", minHeight: "100vh", pb: 10, textAlign: 'left' }}>
@@ -157,6 +178,18 @@ const OrderDetail = () => {
               color={statusInfo.color as any} 
               sx={{ ml: 'auto', fontWeight: 600, borderRadius: 1.5, px: 1 }} 
             />
+            {canCustomerCancel && (
+              <Button
+                variant="outlined"
+                color="error"
+                size="small"
+                disabled={cancelling}
+                onClick={handleCancelOrder}
+                sx={{ ml: 1, textTransform: 'none', fontWeight: 600 }}
+              >
+                {cancelling ? 'Đang hủy...' : 'Hủy đơn'}
+              </Button>
+            )}
           </Box>
         </Container>
       </Box>
@@ -338,7 +371,11 @@ const OrderDetail = () => {
                     {order.payment_method === 'cod' ? 'Thanh toán khi nhận hàng (COD)' : order.payment_method === 'vnpay' ? 'Thanh toán qua VNPAY' : 'Chuyển khoản / Khác'}
                   </Typography>
                   <Chip 
-                    label={order.payment_status === 'paid' ? 'Đã thu tiền' : 'Chưa thu tiền'} 
+                    label={
+                      isOnlinePaymentMethod(order.payment_method)
+                        ? (order.payment_status === 'paid' ? 'Đã hoàn thành' : 'Chờ thanh toán')
+                        : (order.payment_status === 'paid' ? 'Đã thu tiền' : 'Chưa thu tiền')
+                    } 
                     size="small"
                     color={order.payment_status === 'paid' ? 'success' : 'warning'}
                     variant="filled"

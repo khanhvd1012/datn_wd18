@@ -19,8 +19,8 @@ app.use("/uploads", express.static("public/uploads"));
 // ===================== ROUTES =====================
 app.use("/api", router);
 
-// ✅ USE AI ROUTE (THIS IS THE ONLY /api/chat NOW)
-app.use("/api",handleChat );
+// AI chat endpoint
+app.post("/api/chat", handleChat);
 
 // ===================== ROOT ROUTE =====================
 app.get("/", (req, res) => {

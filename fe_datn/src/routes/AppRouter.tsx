@@ -34,11 +34,6 @@ import NewsDetail from "../pages/news/NewsDetail.tsx";
 
 import About from "../pages/about/About.tsx";
 import Contact from "../pages/contact/Contact.tsx";
-import PrivacyPolicy from "../pages/policies/PrivacyPolicy";
-import ReturnPolicy from "../pages/policies/ReturnPolicy";
-import ShippingPolicy from "../pages/policies/ShippingPolicy";
-import PurchaseGuide from "../pages/policies/PurchaseGuide";
-import TermsOfService from "../pages/policies/TermsOfService";
 
 /* ADMIN */
 import Users from "../pages/admin/Users";
@@ -63,8 +58,6 @@ import ModernAdminLayout from "../layouts/ModernAdminLayout";
 import NotFound from "../pages/NotFound";
 import PrivateRoute from "./PrivateRoute";
 import AdminRoute from "./AdminRoute";
-import ForgotPassword from "../pages/auth/ForgotPassword.tsx";
-
 
 const AppRouter = () => {
   return (
@@ -79,20 +72,13 @@ const AppRouter = () => {
         <Route path="product/:id" element={<ProductDetail />} />
         <Route path="news" element={<News />} />
         <Route path="news/:id" element={<NewsDetail />} />
-
-        {/* NEW PAGES */}
         <Route path="about" element={<About />} />
         <Route path="contact" element={<Contact />} />
-        <Route path="privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="return-policy" element={<ReturnPolicy />} />
-        <Route path="shipping-policy" element={<ShippingPolicy />} />
-        <Route path="purchase-guide" element={<PurchaseGuide />} />
-        <Route path="terms-of-service" element={<TermsOfService />} />
 
         {/* AUTH */}
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
-        <Route path="forgot-password" element={<ForgotPassword />} />
+
         {/* NEED LOGIN */}
 
         <Route

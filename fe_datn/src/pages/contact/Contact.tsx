@@ -105,7 +105,7 @@ const Contact = () => {
               text: "support@shop.com"
             }
           ].map((item, index) => (
-            <Grid xs={12} md={4} key={index}>
+            <Grid size={{ xs: 12, md: 4 }} key={index}>
               <Paper
                 sx={{
                   p: 5,
@@ -134,7 +134,7 @@ const Contact = () => {
       {/* FORM */}
       <Container sx={{ py: 10 }}>
         <Grid container spacing={5}>
-          <Grid xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 6, borderRadius: 4 }}>
               <Typography variant="h5" fontWeight="bold" mb={4}>
                 Gửi tin nhắn
@@ -233,7 +233,7 @@ const Contact = () => {
           </Grid>
 
           {/* MAP */}
-          <Grid xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ borderRadius: 4, overflow: "hidden", height: "100%", width:"770px" }}>
               <iframe
                 title="map"

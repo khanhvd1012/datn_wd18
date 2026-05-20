@@ -20,7 +20,7 @@ export const getCart = async (req, res) => {
             deletedAt: null
         })
         .populate("product_id", "name price images") // Populate thông tin sản phẩm
-        .populate("variant_id", "name price"); // Populate thông tin variant nếu có
+        .populate("variant_id", "name price images"); // Cần images để hiển thị đúng ảnh biến thể trên giỏ hàng
 
         res.status(200).json({
             message: "Lấy giỏ hàng thành công",

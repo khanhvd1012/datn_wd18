@@ -101,6 +101,10 @@ const orderSchema = new mongoose.Schema({
     notes: {
         type: String,
         default: ""
+    },
+    stock_deducted: {
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true, versionKey: false });
 

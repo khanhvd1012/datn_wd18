@@ -98,10 +98,9 @@ export const handleVNPayCallback = async (req, res) => {
             const responseCode = vnp_Params.vnp_ResponseCode;
 
             if (responseCode === "00") {
-                // Thanh toán thành công
+                // Thanh toán thành công — chỉ cập nhật thanh toán, đơn vẫn chờ xác nhận
                 await Order.findByIdAndUpdate(orderId, {
-                    payment_status: "paid",
-                    order_status: "confirmed"
+                    payment_status: "paid"
                 });
 
                 res.redirect(`${process.env.FRONTEND_URL || "http://localhost:5173"}/payment/success?orderId=${orderId}`);
@@ -144,10 +143,8 @@ export const processMockPayment = async (req, res) => {
             return res.status(400).json({ message: "Đơn hàng đã được thanh toán" });
         }
 
-        // Simulate successful payment
         await Order.findByIdAndUpdate(orderId, {
-            payment_status: "paid",
-            order_status: "confirmed"
+            payment_status: "paid"
         });
 
         res.status(200).json({
@@ -182,8 +179,7 @@ export const updatePaymentStatus = async (req, res) => {
         // Chỉ cho phép cập nhật từ pending sang paid (cho bank transfer)
         if (order.payment_method === "bank" && payment_status === "paid") {
             await Order.findByIdAndUpdate(orderId, {
-                payment_status: "paid",
-                order_status: "confirmed"
+                payment_status: "paid"
             });
 
             return res.status(200).json({

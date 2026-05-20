@@ -98,6 +98,7 @@ interface Product {
   images: string[];
   rating: number;
   reviews: number;
+  countInStock?: number;
   is_active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -109,6 +110,8 @@ interface ProductFormData {
   brand: string;
   category: string;
   price: number;
+  original_price: number;
+  countInStock: number;
   slug: string;
   images: string[];
   is_active: boolean;
@@ -206,6 +209,8 @@ const ProductVariantManagement: React.FC = () => {
     brand: "",
     category: "",
     price: 0,
+    original_price: 0,
+    countInStock: 0,
     slug: "",
     images: [],
     is_active: true,
@@ -284,7 +289,7 @@ const ProductVariantManagement: React.FC = () => {
           "items",
         );
         console.log("🎯 Brands set:", brandsRes.data?.length || 0, "items");
-      } catch (error) {
+      } catch (error: any) {
         console.error("❌ Error fetching categories and brands:", error);
         console.error(
           "❌ Error details:",
@@ -401,6 +406,8 @@ const ProductVariantManagement: React.FC = () => {
             ? freshProduct.category
             : freshProduct.category?.name || "",
         price: freshProduct.price || 0,
+        original_price: freshProduct.original_price || 0,
+        countInStock: freshProduct.countInStock || 0,
         slug: freshProduct.slug || generateSlug(freshProduct.name),
         images: freshProduct.images || [],
         is_active:
@@ -423,6 +430,8 @@ const ProductVariantManagement: React.FC = () => {
             ? product.category
             : product.category?.name || "",
         price: product.price || 0,
+        original_price: product.original_price || 0,
+        countInStock: product.countInStock || 0,
         slug: product.slug || generateSlug(product.name),
         images: product.images || [],
         is_active:
@@ -487,6 +496,8 @@ const ProductVariantManagement: React.FC = () => {
       brand: "",
       category: "",
       price: 0,
+      original_price: 0,
+      countInStock: 0,
       slug: "",
       images: [],
       is_active: true,
@@ -719,6 +730,13 @@ const ProductVariantManagement: React.FC = () => {
     setVariantImageFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleRemoveVariantImage = (index: number) => {
+    setVariantFormData((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
@@ -778,6 +796,8 @@ const ProductVariantManagement: React.FC = () => {
       formData.append("brand", dataToSend.brand);
       formData.append("category", dataToSend.category);
       formData.append("price", String(dataToSend.price));
+      formData.append("original_price", String(dataToSend.original_price));
+      formData.append("countInStock", String(dataToSend.countInStock));
       formData.append("slug", dataToSend.slug);
       formData.append("is_active", String(dataToSend.is_active));
 
@@ -842,7 +862,7 @@ const ProductVariantManagement: React.FC = () => {
       sku: variantFormData.sku,
       price: variantFormData.price,
       original_price: variantFormData.original_price,
-      stock: variantFormData.countInStock,
+      countInStock: variantFormData.countInStock,
       color: variantFormData.color,
       size: variantFormData.size,
       storage: variantFormData.storage,
@@ -944,7 +964,7 @@ const ProductVariantManagement: React.FC = () => {
           sku: variant.sku,
           price: variant.price,
           original_price: variant.original_price,
-          stock: variant.countInStock,
+          countInStock: variant.countInStock,
           color: variant.color,
           size: variant.size,
           storage: variant.storage,
@@ -1028,7 +1048,10 @@ const ProductVariantManagement: React.FC = () => {
   };
 
   const getTotalStock = (product: Product) => {
-    return (product.variants || []).reduce(
+    if (!product.variants || product.variants.length === 0) {
+      return product.countInStock || 0;
+    }
+    return product.variants.reduce(
       (total, variant) => total + variant.countInStock,
       0,
     );
@@ -1066,7 +1089,7 @@ const ProductVariantManagement: React.FC = () => {
     const productCategoryId =
       typeof product.category === "string"
         ? product.category
-        : product.category?._id || product.category?.id || "";
+        : product.category?._id || "";
     const productCategoryName =
       typeof product.category === "string"
         ? product.category
@@ -1074,7 +1097,7 @@ const ProductVariantManagement: React.FC = () => {
     const productBrandId =
       typeof product.brand === "string"
         ? product.brand
-        : product.brand?._id || product.brand?.id || "";
+        : product.brand?._id || "";
     const productBrandName =
       typeof product.brand === "string"
         ? product.brand
@@ -1100,11 +1123,7 @@ const ProductVariantManagement: React.FC = () => {
       (selectedBrandName &&
         productBrandName.toLowerCase() === selectedBrandName);
 
-    const productIsActive =
-      product.is_active === true ||
-      product.is_active === "active" ||
-      product.is_active === "true" ||
-      product.is_active === "1";
+    const productIsActive = !!product.is_active;
 
     const matchesStatus =
       !statusFilter ||
@@ -1740,19 +1759,47 @@ const ProductVariantManagement: React.FC = () => {
               }
               helperText="Đường dẫn URL thân thiện cho SEO"
             />
-            <TextField
-              fullWidth
-              label="Giá cơ bản"
-              type="number"
-              value={productFormData.price}
-              onChange={(e) =>
-                setProductFormData({
-                  ...productFormData,
-                  price: Number(e.target.value),
-                })
-              }
-              helperText="Giá mặc định cho sản phẩm"
-            />
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                fullWidth
+                label="Giá cơ bản"
+                type="number"
+                value={productFormData.price}
+                onChange={(e) =>
+                  setProductFormData({
+                    ...productFormData,
+                    price: Number(e.target.value),
+                  })
+                }
+                helperText="Giá mặc định"
+              />
+              <TextField
+                fullWidth
+                label="Giá gốc"
+                type="number"
+                value={productFormData.original_price}
+                onChange={(e) =>
+                  setProductFormData({
+                    ...productFormData,
+                    original_price: Number(e.target.value),
+                  })
+                }
+                helperText="Giá ban đầu"
+              />
+              <TextField
+                fullWidth
+                label="Số lượng kho"
+                type="number"
+                value={productFormData.countInStock}
+                onChange={(e) =>
+                  setProductFormData({
+                    ...productFormData,
+                    countInStock: Number(e.target.value),
+                  })
+                }
+                helperText="Số lượng sản phẩm"
+              />
+            </Box>
             <FormControl fullWidth>
               <InputLabel>Thương hiệu</InputLabel>
               <Select
@@ -1820,10 +1867,11 @@ const ProductVariantManagement: React.FC = () => {
                 multiple
                 type="file"
                 onChange={(e) => {
-                  if (e.target.files) {
+                  const files = e.target.files;
+                  if (files) {
                     setProductImageFiles((prev) => [
                       ...prev,
-                      ...Array.from(e.target.files),
+                      ...Array.from(files),
                     ]);
                   }
                 }}
@@ -2063,10 +2111,11 @@ const ProductVariantManagement: React.FC = () => {
                 multiple
                 type="file"
                 onChange={(e) => {
-                  if (e.target.files) {
+                  const files = e.target.files;
+                  if (files) {
                     setVariantImageFiles((prev) => [
                       ...prev,
-                      ...Array.from(e.target.files),
+                      ...Array.from(files),
                     ]);
                   }
                 }}
