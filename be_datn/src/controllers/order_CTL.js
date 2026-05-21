@@ -203,9 +203,15 @@ export const createOrder = async (req, res) => {
             await Voucher.findByIdAndUpdate(appliedVoucher._id, { $inc: { used_count: 1 } });
         }
 
-        // Kho chỉ trừ khi admin xác nhận đơn (order_status -> confirmed)
+        // 11. Trừ kho luôn khi người dùng đặt hàng thành công
+        try {
+            await deductOrderStock(order);
+        } catch (stockErr) {
+            console.error("Lỗi khi trừ kho trong quá trình tạo đơn:", stockErr);
+            // Dù lỗi trừ kho, đơn hàng đã được tạo thành công
+        }
 
-        // 11. Populate để trả về thông tin đầy đủ
+        // 12. Populate để trả về thông tin đầy đủ
         const populatedOrder = await Order.findById(order._id)
             .populate("user_id", "username email")
             .populate("order_items.product_id", "name images");
