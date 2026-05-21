@@ -49,6 +49,8 @@ export const addToCart = async (req, res) => {
 
         // 2. Lấy giá từ variant nếu có, nếu không thì lấy giá từ product
         let price = product.price;
+        let stock = product.countInStock || 0;
+
         if (variant_id) {
             const variant = await Variant.findOne({ 
                 _id: variant_id, 
@@ -58,13 +60,8 @@ export const addToCart = async (req, res) => {
             if (!variant) {
                 return res.status(404).json({ message: "Biến thể không tồn tại hoặc không khả dụng" });
             }
-            // Kiểm tra tồn kho
-            if (variant.stock < quantity) {
-                return res.status(400).json({ 
-                    message: `Chỉ còn ${variant.stock} sản phẩm trong kho` 
-                });
-            }
             price = variant.price;
+            stock = variant.stock;
         }
 
         // 2. Tìm hoặc tạo giỏ hàng
@@ -82,9 +79,16 @@ export const addToCart = async (req, res) => {
             deletedAt: null
         });
 
+        const newQuantity = existingItem ? existingItem.quantity + quantity : quantity;
+        if (newQuantity > stock) {
+            return res.status(400).json({ 
+                message: `Chỉ còn ${stock} sản phẩm trong kho. Trong giỏ hàng đã có ${existingItem ? existingItem.quantity : 0} sản phẩm.` 
+            });
+        }
+
         if (existingItem) {
             // Nếu đã có -> Update số lượng
-            existingItem.quantity += quantity;
+            existingItem.quantity = newQuantity;
             existingItem.price = price; // Cập nhật lại giá mới nhất nếu muốn
             await existingItem.save();
         } else {
@@ -126,6 +130,22 @@ export const updateCartItem = async (req, res) => {
         const cart = await Cart.findOne({ user_id: req.user._id });
         if (!cart || item.cart_id.toString() !== cart._id.toString()) {
             return res.status(403).json({ message: "Không có quyền cập nhật item này" });
+        }
+
+        // Kiểm tra tồn kho
+        let stock = 0;
+        if (item.variant_id) {
+            const variant = await Variant.findById(item.variant_id);
+            if (variant) stock = variant.stock;
+        } else {
+            const product = await Product.findById(item.product_id);
+            if (product) stock = product.countInStock || 0;
+        }
+
+        if (quantity > stock) {
+            return res.status(400).json({ 
+                message: `Chỉ còn ${stock} sản phẩm trong kho` 
+            });
         }
 
         item.quantity = quantity;

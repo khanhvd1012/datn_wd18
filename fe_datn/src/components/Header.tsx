@@ -73,6 +73,15 @@ const Header = () => {
 
   useEffect(() => {
     if (user) loadCart();
+
+    const handleCartUpdate = () => {
+      if (user) loadCart();
+    };
+
+    window.addEventListener("cartUpdated", handleCartUpdate);
+    return () => {
+      window.removeEventListener("cartUpdated", handleCartUpdate);
+    };
   }, [user]);
 
   // ================= SEARCH =================
@@ -259,7 +268,7 @@ const Header = () => {
           )}
 
           <IconButton component={Link} to="/cart">
-            <Badge badgeContent={cartCount} color="error">
+            <Badge badgeContent={cartCount} color="error" showZero>
               <ShoppingCartIcon sx={{color:"#f1bd7e"}} />
             </Badge>
           </IconButton>

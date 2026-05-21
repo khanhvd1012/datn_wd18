@@ -95,11 +95,11 @@ const Cart = () => {
         ),
       );
       window.dispatchEvent(new Event("cartUpdated"));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating quantity:", error);
       setNotification({
         open: true,
-        message: "Không thể cập nhật số lượng",
+        message: error.response?.data?.message || "Không thể cập nhật số lượng",
         severity: "error",
       });
     }

@@ -132,10 +132,10 @@ const ProductDetail = () => {
         message: "Đã thêm vào giỏ hàng",
         severity: "success",
       });
-    } catch (error) {
+    } catch (error: any) {
       setNotification({
         open: true,
-        message: "Lỗi khi thêm vào giỏ hàng",
+        message: error.response?.data?.message || "Lỗi khi thêm vào giỏ hàng",
         severity: "error",
       });
     }
