@@ -56,7 +56,7 @@ const FeaturedProducts = () => {
   }, []);
 
   const formatPrice = (price: number) =>
-    price.toLocaleString("vi-VN") + " đ";
+    (price || 0).toLocaleString("vi-VN") + " đ";
 
   const getTotalStock = (product: FeaturedProduct) => {
     if (!product.variants || product.variants.length === 0) {

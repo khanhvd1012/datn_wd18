@@ -4,9 +4,9 @@ import { findProducts } from "./productSearch.js";
 
 dotenv.config();
 
-const groq = new Groq({
+const groq = process.env.GROQ_API_KEY ? new Groq({
   apiKey: process.env.GROQ_API_KEY,
-});
+}) : null;
 
 export const handleChat = async (req, res) => {
   try {
@@ -30,6 +30,10 @@ export const handleChat = async (req, res) => {
       : "Không có sản phẩm phù hợp.";
 
     //  STEP 3: AI response
+    if (!groq) {
+      return res.status(500).json({ error: "AI service is not configured (missing GROQ_API_KEY)" });
+    }
+    
     const response = await groq.chat.completions.create({
       model: "llama-3.1-8b-instant",
       messages: [
