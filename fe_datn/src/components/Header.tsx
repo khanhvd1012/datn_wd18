@@ -227,7 +227,9 @@ const Header = () => {
             <Button component={Link} to="/contact" sx={navStyle} >
               LIÊN HỆ
             </Button>
-
+           <Button component={Link} to="/news" sx={navStyle} >
+              TIN TỨC
+            </Button>
             {!user && (
               <Button component={Link} to="/login" sx={navStyle}>
                 ĐĂNG NHẬP
