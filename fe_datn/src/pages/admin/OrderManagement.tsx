@@ -235,6 +235,20 @@ const OrderManagement: React.FC = () => {
       setOpenCancelDialog(true);
       return;
     }
+    try {
+      setStatusUpdating(true);
+      await api.put(`/orders/${orderId}`, { order_status: nextStatus });
+      showNotification('Cập nhật đơn hàng thành công', 'success');
+      const updated = (await api.get(`/orders/${orderId}`)).data.order;
+      setSelectedOrder(updated);
+      fetchOrders();
+    } catch (error: any) {
+      showNotification(error.response?.data?.message || 'Không thể cập nhật đơn hàng', 'error');
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
+
   const handleConfirmCancel = async () => {
     const orderId = selectedOrder?._id || (selectedOrder as any)?.id;
     if (!orderId) return;
@@ -251,20 +265,6 @@ const OrderManagement: React.FC = () => {
       fetchOrders();
     } catch (error: any) {
       showNotification(error.response?.data?.message || 'Không thể hủy đơn hàng', 'error');
-    } finally {
-      setStatusUpdating(false);
-    }
-  };
-
-    try {
-      setStatusUpdating(true);
-      await api.put(`/orders/${orderId}`, { order_status: nextStatus });
-      showNotification('Cập nhật đơn hàng thành công', 'success');
-      const updated = (await api.get(`/orders/${orderId}`)).data.order;
-      setSelectedOrder(updated);
-      fetchOrders();
-    } catch (error: any) {
-      showNotification(error.response?.data?.message || 'Không thể cập nhật đơn hàng', 'error');
     } finally {
       setStatusUpdating(false);
     }
