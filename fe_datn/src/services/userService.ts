@@ -2,7 +2,7 @@ import api from "./api";
 
 export const getAllUsersApi = async () => {
   const res = await api.get('/users');
-  return res.data;
+  return res.data.data || res.data;
 };
 
 export const updateUserRoleApi = async (id: string, role: string) => {

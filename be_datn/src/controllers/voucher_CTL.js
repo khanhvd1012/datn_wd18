@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import voucher_MD from '../models/voucher_MD.js';
 
-// Lấy tất cả vouchers
+// Lấy tất cả vouchers (Admin)
 export const getAllVouchers = async (req, res) => {
     try {
         const { page = 1, limit = 10, status, code } = req.query;
@@ -33,6 +33,34 @@ export const getAllVouchers = async (req, res) => {
         });
     } catch (error) {
         console.error('Lỗi khi lấy danh sách voucher:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi máy chủ nội bộ',
+            error: error.message
+        });
+    }
+};
+
+// Lấy danh sách vouchers hợp lệ cho người dùng (Public)
+export const getPublicVouchers = async (req, res) => {
+    try {
+        const now = new Date();
+        const vouchers = await voucher_MD.find({
+            status: 'active',
+            start_date: { $lte: now },
+            end_date: { $gte: now }
+        })
+        .sort({ createdAt: -1 });
+
+        // Lọc các voucher còn lượt sử dụng
+        const validVouchers = vouchers.filter(v => v.usage_limit === 0 || v.used_count < v.usage_limit);
+
+        res.status(200).json({
+            success: true,
+            data: validVouchers
+        });
+    } catch (error) {
+        console.error('Lỗi khi lấy danh sách voucher public:', error);
         res.status(500).json({
             success: false,
             message: 'Lỗi máy chủ nội bộ',

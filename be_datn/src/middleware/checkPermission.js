@@ -9,7 +9,7 @@ export const checkPermission = async (req, res, next) => {
         // Check Authorization header
         const token = req.headers.authorization?.split(" ")[1];
 
-        if (!token) {
+        if (!token || token === 'null' || token === 'undefined') {
             return res.status(401).json({ message: "Bạn chưa đăng nhập" });
         }
 

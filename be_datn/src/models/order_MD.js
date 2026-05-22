@@ -105,6 +105,10 @@ const orderSchema = new mongoose.Schema({
     stock_deducted: {
         type: Boolean,
         default: false
+    },
+    cancel_reason: {
+        type: String,
+        default: ""
     }
 }, { timestamps: true, versionKey: false });
 

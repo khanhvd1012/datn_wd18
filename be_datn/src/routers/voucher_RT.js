@@ -16,6 +16,10 @@ const voucherRouter = Router();
 // Public: khách hàng kiểm tra mã giảm giá tại trang thanh toán
 voucherRouter.get("/check/:code", getVoucherByCode);
 
+// Public: khách hàng lấy danh sách mã giảm giá hợp lệ
+import { getPublicVouchers } from "../controllers/voucher_CTL.js";
+voucherRouter.get("/public", getPublicVouchers);
+
 // Protected admin routes
 voucherRouter.get("/", checkPermission, getAllVouchers);
 voucherRouter.get("/code/:code", checkPermission, getVoucherByCode);

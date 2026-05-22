@@ -631,9 +631,7 @@ const ProductList = () => {
                               flex: 1,
                             }}
                           >
-                            {product.variants && product.variants.length > 0
-                              ? "Chọn"
-                              : "Mua"}
+                            Chọn
                           </Button>
                         </CardActions>
                       </Box>

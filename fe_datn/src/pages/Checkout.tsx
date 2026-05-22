@@ -23,6 +23,7 @@ import {
   Chip,
   Badge,
   IconButton,
+  Dialog,
 } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getCartApi, clearCartApi } from "../services/cartService";
@@ -40,7 +41,6 @@ import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 const Checkout: React.FC = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [isBuyNowMode, setIsBuyNowMode] = useState(false);
   const [notif, setNotif] = useState<{
     open: boolean;
     message: string;
@@ -53,6 +53,11 @@ const Checkout: React.FC = () => {
   const [couponLoading, setCouponLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [couponError, setCouponError] = useState("");
+  
+  // Voucher selection modal state
+  const [voucherModalOpen, setVoucherModalOpen] = useState(false);
+  const [vouchersList, setVouchersList] = useState<any[]>([]);
+  const [loadingVouchers, setLoadingVouchers] = useState(false);
 
   const [formData, setFormData] = useState({
     customerName: "",
@@ -61,6 +66,8 @@ const Checkout: React.FC = () => {
     address: "",
     paymentMethod: "COD",
   });
+  
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -72,17 +79,11 @@ const Checkout: React.FC = () => {
   const premiumFont = { fontFamily: "'Inter', system-ui, sans-serif" };
 
   useEffect(() => {
-    const state = location.state as { buyNowItem?: CartItem; selectedItems?: string[] } | null;
-    if (state?.buyNowItem) {
-      setCart([state.buyNowItem]);
-      setIsBuyNowMode(true);
-    } else {
-      if (state?.selectedItems) {
-        setSelectedItems(state.selectedItems);
-      }
-      fetchCart(state?.selectedItems || []);
-      setIsBuyNowMode(false);
+    const state = location.state as { selectedItems?: string[] } | null;
+    if (state?.selectedItems) {
+      setSelectedItems(state.selectedItems);
     }
+    fetchCart(state?.selectedItems || []);
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     if (user) {
       setFormData(prev => ({
@@ -143,6 +144,36 @@ const Checkout: React.FC = () => {
     }
   };
 
+  const fetchVouchersList = async () => {
+    setLoadingVouchers(true);
+    try {
+      const res = await fetch("http://localhost:3000/api/vouchers/public");
+      const data = await res.json();
+      if (res.ok) {
+        setVouchersList(data.data || []);
+      }
+    } catch {
+      setNotif({ open: true, message: "Không thể lấy danh sách voucher", severity: "error" });
+    } finally {
+      setLoadingVouchers(false);
+    }
+  };
+
+  const handleOpenVoucherModal = () => {
+    setVoucherModalOpen(true);
+    fetchVouchersList();
+  };
+
+  const handleSelectVoucher = (code: string) => {
+    setCouponInput(code);
+    setVoucherModalOpen(false);
+    // Tự động áp dụng sau khi chọn
+    setTimeout(() => {
+      const applyBtn = document.getElementById("apply-coupon-btn");
+      if (applyBtn) applyBtn.click();
+    }, 100);
+  };
+
   const calcCouponDiscount = (subtotal: number) => {
     if (!appliedCoupon) return 0;
     if (appliedCoupon.discount_type === "percentage") {
@@ -163,6 +194,15 @@ const Checkout: React.FC = () => {
       return;
     }
 
+    if (formData.paymentMethod === "COD") {
+      setConfirmDialogOpen(true);
+      return;
+    }
+
+    await executeOrder();
+  };
+
+  const executeOrder = async () => {
     setLoading(true);
     try {
       const orderData = {
@@ -175,13 +215,11 @@ const Checkout: React.FC = () => {
         payment_method: formData.paymentMethod.toLowerCase(),
         coupon_code: appliedCoupon ? appliedCoupon.code : undefined,
         notes: "",
-        selectedCartItemIds: !isBuyNowMode ? selectedItems : undefined
+        selectedCartItemIds: selectedItems
       };
 
       const order = await createOrderApi(orderData);
-      if (!isBuyNowMode) {
-        window.dispatchEvent(new Event("cartUpdated"));
-      }
+      window.dispatchEvent(new Event("cartUpdated"));
       
       setNotif({
         open: true,
@@ -479,9 +517,19 @@ const Checkout: React.FC = () => {
 
               {/* ── Coupon Input ── */}
               <Box sx={{ mb: 3 }}>
-                <Typography variant="body2" fontWeight="700" sx={{ ...premiumFont, mb: 1.5, color: '#1a1a1a' }}>
-                  🎫 Mã giảm giá
-                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                  <Typography variant="body2" fontWeight="700" sx={{ ...premiumFont, color: '#1a1a1a' }}>
+                    🎫 Mã giảm giá
+                  </Typography>
+                  <Button 
+                    size="small" 
+                    variant="text" 
+                    onClick={handleOpenVoucherModal}
+                    sx={{ textTransform: 'none', fontWeight: 'bold', color: '#1976d2' }}
+                  >
+                    Chọn Voucher
+                  </Button>
+                </Box>
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   <TextField
                     size="small"
@@ -505,6 +553,7 @@ const Checkout: React.FC = () => {
                     }}
                   />
                   <Button
+                    id="apply-coupon-btn"
                     variant="outlined"
                     onClick={handleApplyCoupon}
                     disabled={couponLoading || !couponInput.trim()}
@@ -594,6 +643,112 @@ const Checkout: React.FC = () => {
           </Paper>
         </Grid>
       </Grid>
+
+      {/* Dialog xác nhận đặt hàng COD */}
+      <Dialog
+        open={confirmDialogOpen}
+        onClose={() => setConfirmDialogOpen(false)}
+        PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
+      >
+        <Typography variant="h6" fontWeight="bold" sx={{ p: 2, pb: 1 }}>
+          Xác nhận đặt hàng
+        </Typography>
+        <Typography variant="body1" sx={{ p: 2, pt: 0, color: 'text.secondary' }}>
+          Bạn có chắc chắn muốn đặt đơn hàng này với hình thức thanh toán khi nhận hàng (COD) không?
+        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, p: 2, pt: 1 }}>
+          <Button onClick={() => setConfirmDialogOpen(false)} sx={{ fontWeight: 'bold' }}>
+            Hủy
+          </Button>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={() => {
+              setConfirmDialogOpen(false);
+              executeOrder();
+            }}
+            sx={{ fontWeight: 'bold', borderRadius: 2 }}
+          >
+            Xác nhận đặt hàng
+          </Button>
+        </Box>
+      </Dialog>
+
+      {/* Modal chọn Voucher */}
+      <Dialog
+        open={voucherModalOpen}
+        onClose={() => setVoucherModalOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
+      >
+        <Typography variant="h6" fontWeight="bold" sx={{ p: 2, pb: 1, borderBottom: '1px solid #eee' }}>
+          Chọn mã giảm giá
+        </Typography>
+        <Box sx={{ p: 2, maxHeight: '60vh', overflowY: 'auto' }}>
+          {loadingVouchers ? (
+            <Box display="flex" justifyContent="center" p={3}>
+              <CircularProgress size={30} />
+            </Box>
+          ) : vouchersList.length === 0 ? (
+            <Typography textAlign="center" color="text.secondary" p={3}>
+              Hiện không có mã giảm giá nào.
+            </Typography>
+          ) : (
+            <Stack spacing={2}>
+              {vouchersList.map(v => {
+                const isEligible = total >= (v.min_order_amount || 0);
+                return (
+                  <Paper 
+                    key={v._id} 
+                    elevation={0} 
+                    sx={{ 
+                      display: 'flex', 
+                      p: 2, 
+                      border: '1px solid',
+                      borderColor: isEligible ? '#d70018' : '#e0e0e0',
+                      borderRadius: 2,
+                      opacity: isEligible ? 1 : 0.6,
+                      cursor: isEligible ? 'pointer' : 'default',
+                      '&:hover': {
+                        bgcolor: isEligible ? 'rgba(215,0,24,0.02)' : 'transparent'
+                      }
+                    }}
+                    onClick={() => isEligible && handleSelectVoucher(v.code)}
+                  >
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Typography fontWeight="bold" color={isEligible ? '#d70018' : 'text.secondary'}>
+                        {v.code} - {v.name}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        Giảm {v.discount_type === 'percentage' ? `${v.discount_value}%` : `${v.discount_value.toLocaleString('vi-VN')}₫`}
+                        {v.max_discount_amount > 0 && ` (tối đa ${v.max_discount_amount.toLocaleString('vi-VN')}₫)`}
+                      </Typography>
+                      <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 0.5 }}>
+                        Đơn tối thiểu {v.min_order_amount?.toLocaleString('vi-VN')}₫
+                      </Typography>
+                    </Box>
+                    <Box display="flex" alignItems="center">
+                      <Button 
+                        variant="contained" 
+                        size="small" 
+                        disabled={!isEligible}
+                        sx={{ borderRadius: 2, textTransform: 'none' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectVoucher(v.code);
+                        }}
+                      >
+                        Dùng
+                      </Button>
+                    </Box>
+                  </Paper>
+                );
+              })}
+            </Stack>
+          )}
+        </Box>
+      </Dialog>
 
       <Snackbar
         open={notif.open}

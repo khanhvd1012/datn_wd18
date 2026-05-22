@@ -54,7 +54,7 @@ import {
   Category,
   BrandingWatermark,
 } from '@mui/icons-material';
-import axios from 'axios';
+import api from '../../services/api';
 
 interface Product {
   id: string;
@@ -107,6 +107,9 @@ const ProductManagement: React.FC = () => {
     images: [],
   });
 
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+
   useEffect(() => {
     fetchProducts();
   }, [page, rowsPerPage, searchTerm, categoryFilter]);
@@ -122,7 +125,7 @@ const ProductManagement: React.FC = () => {
       if (searchTerm) params.append('search', searchTerm);
       if (categoryFilter) params.append('category', categoryFilter);
 
-      const response = await axios.get(`http://localhost:5000/api/products?${params}`);
+      const response = await api.get(`/products?${params}`);
       setProducts(response.data);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -173,24 +176,31 @@ const ProductManagement: React.FC = () => {
     handleMenuClose();
   };
 
-  const handleDeleteProduct = async (product: Product) => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa sản phẩm "${product.name}"?`)) {
+  const handleDeleteProduct = (product: Product) => {
+    setProductToDelete(product);
+    setDeleteConfirmOpen(true);
+    handleMenuClose();
+  };
+
+  const confirmDelete = async () => {
+    if (productToDelete) {
       try {
-        await axios.delete(`http://localhost:5000/api/products/${product.id}`);
+        await api.delete(`/products/${productToDelete._id || productToDelete.id}`);
         fetchProducts();
       } catch (error) {
         console.error('Error deleting product:', error);
       }
     }
-    handleMenuClose();
+    setDeleteConfirmOpen(false);
+    setProductToDelete(null);
   };
 
   const handleSaveProduct = async () => {
     try {
       if (dialogMode === 'create') {
-        await axios.post('http://localhost:5000/api/products', formData);
+        await api.post('/products', formData);
       } else {
-        await axios.put(`http://localhost:5000/api/products/${selectedProduct?.id}`, formData);
+        await api.put(`/products/${selectedProduct?._id || selectedProduct?.id}`, formData);
       }
       setOpenDialog(false);
       fetchProducts();
@@ -518,7 +528,12 @@ const ProductManagement: React.FC = () => {
         <MenuItem onClick={() => selectedProduct && handleDeleteProduct(selectedProduct)}>
           <Delete sx={{ mr: 1 }} /> Xóa
         </MenuItem>
-        <MenuItem>
+        <MenuItem onClick={() => {
+          if (selectedProduct) {
+            window.open(`/product/${selectedProduct._id || selectedProduct.id}`, '_blank');
+          }
+          handleMenuClose();
+        }}>
           <Visibility sx={{ mr: 1 }} /> Xem chi tiết
         </MenuItem>
       </Menu>
@@ -608,6 +623,20 @@ const ProductManagement: React.FC = () => {
           <Button onClick={handleSaveProduct} variant="contained">
             {dialogMode === 'create' ? 'Thêm' : 'Lưu'}
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
+        <DialogTitle>Xác nhận xóa</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Bạn có chắc chắn muốn xóa sản phẩm "{productToDelete?.name}"? Hành động này không thể hoàn tác.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirmOpen(false)}>Hủy</Button>
+          <Button onClick={confirmDelete} color="error" variant="contained">Xóa</Button>
         </DialogActions>
       </Dialog>
     </Box>

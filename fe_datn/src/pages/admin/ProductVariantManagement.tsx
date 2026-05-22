@@ -1012,6 +1012,7 @@ const ProductVariantManagement: React.FC = () => {
   };
 
   const handleDeleteProduct = async (product: Product) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa sản phẩm "${product.name}"? Hành động này không thể hoàn tác.`)) return;
     try {
       await api.delete(`/products/${product._id}`);
       showNotification("Xóa sản phẩm thành công", "success");
@@ -1025,6 +1026,7 @@ const ProductVariantManagement: React.FC = () => {
   };
 
   const handleDeleteVariant = async (variant: Variant, product: Product) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa biến thể "${variant.name}" của sản phẩm "${product.name}"?`)) return;
     try {
       await api.delete(`/variants/${variant._id}`);
       setProducts(
@@ -1667,7 +1669,12 @@ const ProductVariantManagement: React.FC = () => {
         >
           <AddCircle sx={{ mr: 1 }} /> Thêm biến thể
         </MenuItem>
-        <MenuItem>
+        <MenuItem onClick={() => {
+          if (selectedProduct) {
+            window.open(`/product/${selectedProduct._id}`, '_blank');
+          }
+          handleMenuClose();
+        }}>
           <Visibility sx={{ mr: 1 }} /> Xem chi tiết
         </MenuItem>
         <MenuItem
@@ -1698,7 +1705,12 @@ const ProductVariantManagement: React.FC = () => {
         >
           <Edit sx={{ mr: 1 }} /> Chỉnh sửa biến thể
         </MenuItem>
-        <MenuItem>
+        <MenuItem onClick={() => {
+          if (selectedProduct) {
+            window.open(`/product/${selectedProduct._id}`, '_blank');
+          }
+          handleMenuClose();
+        }}>
           <Visibility sx={{ mr: 1 }} /> Xem chi tiết
         </MenuItem>
         <MenuItem

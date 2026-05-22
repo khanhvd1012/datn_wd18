@@ -112,6 +112,8 @@ const OrderManagement: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
   const [openStatusDialog, setOpenStatusDialog] = useState(false);
+  const [openCancelDialog, setOpenCancelDialog] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [notification, setNotification] = useState({
     open: false,
@@ -229,20 +231,30 @@ const OrderManagement: React.FC = () => {
     }
 
     if (nextStatus === 'cancelled') {
-      if (!window.confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) return;
-      try {
-        setStatusUpdating(true);
-        await api.patch(`/orders/${orderId}/cancel`);
-        showNotification('Hủy đơn hàng thành công', 'success');
-        setOpenStatusDialog(false);
-        fetchOrders();
-      } catch (error: any) {
-        showNotification(error.response?.data?.message || 'Không thể hủy đơn hàng', 'error');
-      } finally {
-        setStatusUpdating(false);
-      }
+      setCancelReason('');
+      setOpenCancelDialog(true);
       return;
     }
+  const handleConfirmCancel = async () => {
+    const orderId = selectedOrder?._id || (selectedOrder as any)?.id;
+    if (!orderId) return;
+    if (!cancelReason.trim()) {
+      showNotification('Vui lòng nhập lý do hủy đơn', 'error');
+      return;
+    }
+    try {
+      setStatusUpdating(true);
+      await api.patch(`/orders/${orderId}/cancel`, { cancel_reason: cancelReason });
+      showNotification('Hủy đơn hàng thành công', 'success');
+      setOpenCancelDialog(false);
+      setOpenStatusDialog(false);
+      fetchOrders();
+    } catch (error: any) {
+      showNotification(error.response?.data?.message || 'Không thể hủy đơn hàng', 'error');
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
 
     try {
       setStatusUpdating(true);
@@ -906,6 +918,50 @@ const OrderManagement: React.FC = () => {
         <DialogActions sx={{ p: 2.5 }}>
           <Button type="button" onClick={() => setOpenStatusDialog(false)} sx={{ textTransform: 'none' }}>
             Đóng
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Admin Cancel Reason Dialog */}
+      <Dialog 
+        open={openCancelDialog} 
+        onClose={() => setOpenCancelDialog(false)} 
+        fullWidth 
+        maxWidth="sm"
+        PaperProps={{ sx: { borderRadius: 3 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, pb: 1, color: "error.main" }}>Lý do hủy đơn hàng</DialogTitle>
+        <DialogContent>
+          <Box display="flex" flexDirection="column" gap={2} mt={1}>
+            <Typography variant="body2" color="text.secondary" mb={1}>
+              Vui lòng nhập lý do hủy đơn hàng để lưu lại lịch sử.
+            </Typography>
+            <TextField
+              label="Lý do hủy"
+              multiline
+              rows={3}
+              fullWidth
+              variant="outlined"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="VD: Khách yêu cầu hủy, Hết hàng, Sai thông tin..."
+              InputProps={{ sx: { borderRadius: 2 } }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button onClick={() => setOpenCancelDialog(false)} sx={{ textTransform: 'none', fontWeight: 600 }}>
+            Quay lại
+          </Button>
+          <Button 
+            variant="contained" 
+            color="error"
+            onClick={handleConfirmCancel} 
+            disabled={statusUpdating || !cancelReason.trim()}
+            disableElevation
+            sx={{ borderRadius: 2, px: 3, textTransform: "none", fontWeight: 600 }}
+          >
+            {statusUpdating ? 'Đang xử lý...' : 'Xác nhận hủy'}
           </Button>
         </DialogActions>
       </Dialog>

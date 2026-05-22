@@ -164,25 +164,32 @@ const ProductDetail = () => {
   const handleBuyNow = async () => {
     if (!product) return;
     
-    const buyNowItem = {
-      _id: "buynow-" + (product._id || product.id || Date.now()),
-      product: {
-        _id: product._id || product.id || "",
-        name: product.name,
-        images: selectedVariant?.images || product.images || [product.img],
-        price: selectedVariant?.price || product.price,
-      },
-      variant: selectedVariant ? {
-        _id: selectedVariant._id,
-        name: selectedVariant.name,
-        images: selectedVariant.images,
-        price: selectedVariant.price,
-      } : undefined,
-      quantity: quantity,
-      totalPrice: (selectedVariant?.price || product.price) * quantity,
-    };
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (!user || !user.token) {
+        setNotification({ open: true, message: "Vui lòng đăng nhập để mua hàng", severity: "warning" });
+        return;
+    }
     
-    navigate("/checkout", { state: { buyNowItem } });
+    try {
+        const res = await addToCartApi({
+            product_id: (product._id || product.id) as string,
+            variant_id: selectedVariant ? selectedVariant._id : undefined,
+            quantity: quantity
+        });
+        
+        if (res.cartItemId) {
+            navigate("/checkout", { state: { selectedItems: [res.cartItemId] } });
+        } else {
+            // Fallback nếu API không trả về cartItemId
+            navigate("/cart");
+        }
+    } catch (err: any) {
+        setNotification({ 
+            open: true, 
+            message: err.response?.data?.message || "Không thể thực hiện Mua ngay", 
+            severity: "error" 
+        });
+    }
   };
 
   return (

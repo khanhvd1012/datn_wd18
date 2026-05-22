@@ -104,9 +104,10 @@ export const addToCart = async (req, res) => {
             await Cart.findByIdAndUpdate(cart._id, {
                 $push: { cart_items: newItem._id }
             });
+            existingItem = newItem;
         }
 
-        res.status(200).json({ message: "Thêm vào giỏ hàng thành công" });
+        res.status(200).json({ message: "Thêm vào giỏ hàng thành công", cartItemId: existingItem._id });
 
     } catch (error) {
         console.error(error);

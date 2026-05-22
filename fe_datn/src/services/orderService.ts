@@ -72,16 +72,18 @@ export const updateOrderStatusApi = async (
   orderId: string,
   orderStatus: string,
   paymentStatus?: string,
+  cancelReason?: string,
 ): Promise<Order> => {
   const response = await api.put(`/orders/${orderId}`, {
     order_status: orderStatus,
     ...(paymentStatus ? { payment_status: paymentStatus } : {}),
+    ...(cancelReason ? { cancel_reason: cancelReason } : {}),
   });
   return response.data.order;
 };
 
-export const cancelOrderApi = async (orderId: string): Promise<Order> => {
-  const response = await api.patch(`/orders/${orderId}/cancel`);
+export const cancelOrderApi = async (orderId: string, cancelReason?: string): Promise<Order> => {
+  const response = await api.patch(`/orders/${orderId}/cancel`, { cancel_reason: cancelReason });
   return response.data.order;
 };
 

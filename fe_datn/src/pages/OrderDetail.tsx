@@ -55,6 +55,8 @@ const OrderDetail = () => {
   const [reviewComment, setReviewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [notification, setNotification] = useState({ open: false, message: "", severity: "success" as "success" | "error" });
 
   useEffect(() => {
@@ -125,13 +127,24 @@ const OrderDetail = () => {
 
   const canCustomerCancel = ["pending", "confirmed", "processing"].includes(order.order_status);
 
+  const handleOpenCancelDialog = () => {
+    if (!id) return;
+    setCancelReason("");
+    setCancelDialogOpen(true);
+  };
+
   const handleCancelOrder = async () => {
-    if (!id || !window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này?")) return;
+    if (!id) return;
+    if (!cancelReason.trim()) {
+      setNotification({ open: true, message: "Vui lòng nhập lý do hủy đơn", severity: "error" });
+      return;
+    }
     setCancelling(true);
     try {
-      const updated = await cancelOrderApi(id);
+      const updated = await cancelOrderApi(id, cancelReason);
       setOrder(updated);
       setNotification({ open: true, message: "Đã hủy đơn hàng thành công", severity: "success" });
+      setCancelDialogOpen(false);
     } catch (error: any) {
       setNotification({
         open: true,
@@ -184,7 +197,7 @@ const OrderDetail = () => {
                 color="error"
                 size="small"
                 disabled={cancelling}
-                onClick={handleCancelOrder}
+                onClick={handleOpenCancelDialog}
                 sx={{ ml: 1, textTransform: 'none', fontWeight: 600 }}
               >
                 {cancelling ? 'Đang hủy...' : 'Hủy đơn'}
@@ -446,6 +459,50 @@ const OrderDetail = () => {
             sx={{ borderRadius: 2, px: 3, textTransform: "none", fontWeight: 600 }}
           >
             {submitting ? 'Đang gửi...' : 'Gửi đánh giá'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Cancel Reason Dialog */}
+      <Dialog 
+        open={cancelDialogOpen} 
+        onClose={() => setCancelDialogOpen(false)} 
+        fullWidth 
+        maxWidth="sm"
+        PaperProps={{ sx: { borderRadius: 3 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, pb: 1, color: "error.main" }}>Lý do hủy đơn hàng</DialogTitle>
+        <DialogContent>
+          <Box display="flex" flexDirection="column" gap={2} mt={1}>
+            <Typography variant="body2" color="text.secondary" mb={1}>
+              Vui lòng cho chúng tôi biết lý do bạn muốn hủy đơn hàng này.
+            </Typography>
+            <TextField
+              label="Lý do hủy"
+              multiline
+              rows={3}
+              fullWidth
+              variant="outlined"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="VD: Thay đổi ý định, Đặt nhầm sản phẩm..."
+              InputProps={{ sx: { borderRadius: 2 } }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button onClick={() => setCancelDialogOpen(false)} sx={{ textTransform: 'none', fontWeight: 600 }}>
+            Không hủy nữa
+          </Button>
+          <Button 
+            variant="contained" 
+            color="error"
+            onClick={handleCancelOrder} 
+            disabled={cancelling || !cancelReason.trim()}
+            disableElevation
+            sx={{ borderRadius: 2, px: 3, textTransform: "none", fontWeight: 600 }}
+          >
+            {cancelling ? 'Đang xử lý...' : 'Xác nhận hủy'}
           </Button>
         </DialogActions>
       </Dialog>

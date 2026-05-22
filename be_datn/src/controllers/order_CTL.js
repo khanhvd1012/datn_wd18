@@ -377,7 +377,7 @@ export const getAllOrders = async (req, res) => {
 export const updateOrder = async (req, res) => {
     try {
         const { id } = req.params;
-        const { order_status, payment_status, shipping_info, notes } = req.body;
+        const { order_status, payment_status, shipping_info, notes, cancel_reason } = req.body;
         const isAdmin = req.user.role === ROLES.ADMIN;
 
         const order = await Order.findById(id);
@@ -411,6 +411,7 @@ export const updateOrder = async (req, res) => {
 
             if (order_status === "cancelled") {
                 await restoreOrderStock(order);
+                if (cancel_reason !== undefined) updateData.cancel_reason = cancel_reason;
             }
 
             updateData.order_status = order_status;
@@ -457,6 +458,7 @@ export const updateOrder = async (req, res) => {
 export const cancelOrder = async (req, res) => {
     try {
         const { id } = req.params;
+        const { cancel_reason } = req.body;
         const user = req.user;
         const isAdmin = user.role === ROLES.ADMIN;
 
@@ -494,7 +496,7 @@ export const cancelOrder = async (req, res) => {
 
         const updatedOrder = await Order.findByIdAndUpdate(
             id,
-            { $set: { order_status: "cancelled" } },
+            { $set: { order_status: "cancelled", cancel_reason: cancel_reason || "Khách hàng hủy" } },
             { new: true, runValidators: true }
         ).populate("user_id", "username email");
 
