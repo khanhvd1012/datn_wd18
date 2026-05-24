@@ -12,7 +12,7 @@ import {
   Stack,
   Snackbar,
   Alert,
-  InputAdornment
+  InputAdornment,
 } from "@mui/material";
 
 import LocationOnIcon from "@mui/icons-material/LocationOn";
@@ -29,13 +29,13 @@ const Contact = () => {
     email: "",
     phone: "",
     address: "",
-    message: ""
+    message: "",
   });
 
   const handleChange = (e: any) => {
     setForm({
       ...form,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -52,7 +52,7 @@ const Contact = () => {
         email: "",
         phone: "",
         address: "",
-        message: ""
+        message: "",
       });
     } catch (error) {
       console.log(error);
@@ -60,83 +60,130 @@ const Contact = () => {
   };
 
   return (
-    <Box sx={{ background: "#f6f8fb" }}>
-      {/* BANNER */}
+    <Box
+      sx={{
+        background: "#f8fafc",
+        minHeight: "100vh",
+      }}
+    >
+      {/* HERO */}
       <Box
         sx={{
-          height: 360,
+          minHeight: 340,
           backgroundImage:
-            "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(https://images.unsplash.com/photo-1521790797524-b2497295b8a0)",
+            "linear-gradient(rgba(15,23,42,.72),rgba(15,23,42,.72)),url(https://images.unsplash.com/photo-1521790797524-b2497295b8a0)",
           backgroundSize: "cover",
           backgroundPosition: "center",
           display: "flex",
           alignItems: "center",
-          justifyContent: "center"
+          justifyContent: "center",
+          px: 2,
+          textAlign: "center",
         }}
       >
-        <Box textAlign="center">
-          <Typography variant="h2" fontWeight="bold" color="white">
+        <Box>
+          <Typography
+            variant="h2"
+            sx={{
+              fontWeight: 800,
+              color: "#fff",
+              fontSize: { xs: 36, md: 56 },
+              mb: 2,
+              letterSpacing: "-1px",
+            }}
+          >
             Liên hệ với chúng tôi
           </Typography>
 
-          <Typography color="white" mt={2}>
-            Chúng tôi luôn sẵn sàng hỗ trợ bạn
+          <Typography
+            sx={{
+              color: "rgba(255,255,255,.85)",
+              fontSize: 17,
+            }}
+          >
+            Chúng tôi luôn sẵn sàng hỗ trợ bạn mọi lúc
           </Typography>
         </Box>
       </Box>
 
-      {/* CONTACT CARDS */}
-      <Container maxWidth="lg" sx={{ mt: -8 }}>
-        <Grid container spacing={4} justifyContent="center">
+      {/* CONTACT INFO */}
+      <Container maxWidth="lg" sx={{ mt: { xs: -4, md: -8 } }}>
+        <Grid container spacing={3}>
           {[
             {
-              icon: <LocationOnIcon sx={{ fontSize: 45, color: "#ff5722" }} />,
+              icon: <LocationOnIcon sx={{ fontSize: 40, color: "#2563eb" }} />,
               title: "Địa chỉ",
-              text: "13 Trịnh Văn Bô, Hà Nội"
+              text: "13 Trịnh Văn Bô, Hà Nội",
             },
             {
-              icon: <PhoneIcon sx={{ fontSize: 45, color: "#1976d2" }} />,
+              icon: <PhoneIcon sx={{ fontSize: 40, color: "#10b981" }} />,
               title: "Hotline",
-              text: "0987 654 321"
+              text: "0987 654 321",
             },
             {
-              icon: <EmailIcon sx={{ fontSize: 45, color: "#4caf50" }} />,
+              icon: <EmailIcon sx={{ fontSize: 40, color: "#f97316" }} />,
               title: "Email",
-              text: "support@shop.com"
-            }
+              text: "support@shop.com",
+            },
           ].map((item, index) => (
             <Grid size={{ xs: 12, md: 4 }} key={index}>
               <Paper
+                elevation={0}
                 sx={{
-                  p: 5,
-                  borderRadius: 4,
+                  p: 4,
+                  borderRadius: "24px",
                   textAlign: "center",
-                  transition: "0.3s",
-                  ":hover": {
-                    transform: "translateY(-10px)",
-                    boxShadow: 10
-                  }
+                  border: "1px solid #e2e8f0",
+                  background: "#fff",
+                  transition: ".3s",
+                  height: "100%",
+                  boxShadow: "0 10px 30px rgba(15,23,42,.04)",
+
+                  "&:hover": {
+                    transform: "translateY(-6px)",
+                    boxShadow: "0 16px 40px rgba(15,23,42,.08)",
+                  },
                 }}
               >
-                {item.icon}
+                <Box mb={2}>{item.icon}</Box>
 
-                <Typography fontWeight="bold" mt={2}>
+                <Typography
+                  fontWeight={700}
+                  fontSize={20}
+                  color="#0f172a"
+                  mb={1}
+                >
                   {item.title}
                 </Typography>
 
-                <Typography>{item.text}</Typography>
+                <Typography color="#64748b">{item.text}</Typography>
               </Paper>
             </Grid>
           ))}
         </Grid>
       </Container>
 
-      {/* FORM */}
-      <Container sx={{ py: 10 }}>
-        <Grid container spacing={5}>
+      {/* FORM + MAP */}
+      <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
+        <Grid container spacing={4} alignItems="stretch">
+          {/* FORM */}
           <Grid size={{ xs: 12, md: 6 }}>
-            <Paper sx={{ p: 6, borderRadius: 4 }}>
-              <Typography variant="h5" fontWeight="bold" mb={4}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: { xs: 3, md: 5 },
+                borderRadius: "28px",
+                border: "1px solid #e2e8f0",
+                height: "100%",
+                boxShadow: "0 10px 40px rgba(15,23,42,.04)",
+              }}
+            >
+              <Typography
+                variant="h4"
+                fontWeight={800}
+                color="#0f172a"
+                mb={4}
+              >
                 Gửi tin nhắn
               </Typography>
 
@@ -148,12 +195,13 @@ const Contact = () => {
                     value={form.username}
                     onChange={handleChange}
                     fullWidth
+                    sx={textFieldStyle}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <PersonIcon />
+                          <PersonIcon sx={{ color: "#94a3b8" }} />
                         </InputAdornment>
-                      )
+                      ),
                     }}
                   />
 
@@ -163,12 +211,13 @@ const Contact = () => {
                     value={form.email}
                     onChange={handleChange}
                     fullWidth
+                    sx={textFieldStyle}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <EmailIcon />
+                          <EmailIcon sx={{ color: "#94a3b8" }} />
                         </InputAdornment>
-                      )
+                      ),
                     }}
                   />
 
@@ -178,12 +227,13 @@ const Contact = () => {
                     value={form.phone}
                     onChange={handleChange}
                     fullWidth
+                    sx={textFieldStyle}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <PhoneIcon />
+                          <PhoneIcon sx={{ color: "#94a3b8" }} />
                         </InputAdornment>
-                      )
+                      ),
                     }}
                   />
 
@@ -193,12 +243,13 @@ const Contact = () => {
                     value={form.address}
                     onChange={handleChange}
                     fullWidth
+                    sx={textFieldStyle}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <LocationOnIcon />
+                          <LocationOnIcon sx={{ color: "#94a3b8" }} />
                         </InputAdornment>
-                      )
+                      ),
                     }}
                   />
 
@@ -208,14 +259,18 @@ const Contact = () => {
                     value={form.message}
                     onChange={handleChange}
                     multiline
-                    rows={4}
+                    rows={5}
                     fullWidth
+                    sx={textFieldStyle}
                     InputProps={{
                       startAdornment: (
-                        <InputAdornment position="start">
-                          <MessageIcon />
+                        <InputAdornment
+                          position="start"
+                          sx={{ alignSelf: "flex-start", mt: 1.5 }}
+                        >
+                          <MessageIcon sx={{ color: "#94a3b8" }} />
                         </InputAdornment>
-                      )
+                      ),
                     }}
                   />
 
@@ -223,7 +278,21 @@ const Contact = () => {
                     type="submit"
                     variant="contained"
                     size="large"
-                    sx={{ height: 50, fontWeight: "bold" }}
+                    sx={{
+                      height: 56,
+                      borderRadius: "16px",
+                      textTransform: "none",
+                      fontWeight: 700,
+                      fontSize: 16,
+                      background:
+                        "linear-gradient(135deg,#2563eb,#3b82f6)",
+                      boxShadow: "0 10px 25px rgba(37,99,235,.25)",
+
+                      "&:hover": {
+                        background:
+                          "linear-gradient(135deg,#1d4ed8,#2563eb)",
+                      },
+                    }}
                   >
                     Gửi liên hệ
                   </Button>
@@ -234,13 +303,26 @@ const Contact = () => {
 
           {/* MAP */}
           <Grid size={{ xs: 12, md: 6 }}>
-            <Paper sx={{ borderRadius: 4, overflow: "hidden", height: "100%", width:"770px" }}>
+            <Paper
+              elevation={0}
+              sx={{
+                borderRadius: "28px",
+                overflow: "hidden",
+                border: "1px solid #e2e8f0",
+                height: { xs: 400, md: "100%" },
+                minHeight: 500,
+                boxShadow: "0 10px 40px rgba(15,23,42,.04)",
+              }}
+            >
               <iframe
                 title="map"
                 src="https://maps.google.com/maps?q=13%20Tr%E1%BB%8Bnh%20V%C4%83n%20B%C3%B4%20H%C3%A0%20N%E1%BB%99i&t=&z=15&ie=UTF8&iwloc=&output=embed"
                 width="100%"
                 height="100%"
-                style={{ border: 0 }}
+                style={{
+                  border: 0,
+                }}
+                loading="lazy"
               />
             </Paper>
           </Grid>
@@ -252,11 +334,42 @@ const Contact = () => {
         open={open}
         autoHideDuration={3000}
         onClose={() => setOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        <Alert severity="success">Gửi liên hệ thành công</Alert>
+        <Alert
+          severity="success"
+          variant="filled"
+          sx={{
+            borderRadius: 3,
+            fontWeight: 600,
+          }}
+        >
+          Gửi liên hệ thành công
+        </Alert>
       </Snackbar>
     </Box>
   );
 };
 
 export default Contact;
+
+// ================= STYLE =================
+const textFieldStyle = {
+  "& .MuiOutlinedInput-root": {
+    borderRadius: "16px",
+    background: "#fff",
+
+    "& fieldset": {
+      borderColor: "#e2e8f0",
+    },
+
+    "&:hover fieldset": {
+      borderColor: "#94a3b8",
+    },
+
+    "&.Mui-focused fieldset": {
+      borderColor: "#2563eb",
+      borderWidth: "2px",
+    },
+  },
+};

@@ -46,121 +46,199 @@ const NewsPage = () => {
   );
 
   return (
-    <Box sx={{ background: "#ffffff", minHeight: "100vh", py: 6 }}>
+    <Box
+      sx={{
+        background: "#f8fafc",
+        minHeight: "100vh",
+        py: { xs: 4, md: 6 },
+      }}
+    >
       <Container maxWidth="lg">
         {/* Breadcrumb */}
-        <Breadcrumbs sx={{ color: "#999", mb: 3 }}>
-          <MuiLink component={Link} to="/" sx={{ color: "#999" }}>
+        <Breadcrumbs sx={{ mb: 4 }}>
+          <MuiLink
+            component={Link}
+            to="/"
+            underline="hover"
+            sx={{
+              color: "#64748b",
+              fontWeight: 500,
+              fontSize: 14,
+            }}
+          >
             Trang chủ
           </MuiLink>
-          <Typography color="#aaa">Tin tức</Typography>
+
+          <Typography
+            sx={{
+              color: "#0f172a",
+              fontWeight: 700,
+              fontSize: 14,
+            }}
+          >
+            Tin tức
+          </Typography>
         </Breadcrumbs>
 
-        {/* Hero Header */}
+        {/* Hero */}
         <Box
           sx={{
-            mb: 4,
-            p: 4,
-            borderRadius: 4,
-            background: "linear-gradient(135deg, #ffffff, #ffffff)",
+            mb: 5,
+            borderRadius: "28px",
+            p: { xs: 3, md: 5 },
+            background:
+              "linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%)",
+            border: "1px solid #e2e8f0",
+            boxShadow: "0 10px 40px rgba(15,23,42,0.04)",
           }}
         >
           <Typography
             variant="h3"
-            sx={{ color: "#aaa", fontWeight: 800, mb: 1 }}
+            sx={{
+              fontWeight: 800,
+              color: "#0f172a",
+              mb: 1.5,
+              fontSize: { xs: 28, md: 42 },
+              letterSpacing: "-1px",
+            }}
           >
             Tin tức công nghệ
           </Typography>
-          <Typography sx={{ color: "#aaa", maxWidth: 600 }}>
-            Cập nhật những xu hướng mới nhất về công nghệ, lập trình, AI và
-            sản phẩm số.
+
+          <Typography
+            sx={{
+              color: "#64748b",
+              maxWidth: 700,
+              lineHeight: 1.8,
+              fontSize: 16,
+            }}
+          >
+            Cập nhật xu hướng mới nhất về công nghệ, AI, lập trình và
+            các sản phẩm số hiện đại.
           </Typography>
         </Box>
 
-        {/* Grid */}
-        <Grid container spacing={3}>
+        {/* NEWS LIST */}
+        <Stack spacing={3}>
           {displayedNews.map((item, index) => (
-            <Grid item xs={12} md={6} lg={4} key={item._id}>
-              <Fade in timeout={300 + index * 100}>
-                <Card
+            <Fade in timeout={300 + index * 100} key={item._id}>
+              <Card
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", md: "row" },
+                  overflow: "hidden",
+                  borderRadius: "26px",
+                  background: "#fff",
+                  border: "1px solid #e2e8f0",
+                  boxShadow: "0 8px 30px rgba(15,23,42,0.04)",
+                  transition: "all .3s ease",
+                  "&:hover": {
+                    transform: "translateY(-4px)",
+                    boxShadow: "0 16px 40px rgba(15,23,42,0.08)",
+                  },
+                }}
+              >
+                {/* IMAGE LEFT */}
+                <Box
+                  component={Link}
+                  to={`/news/${item._id}`}
                   sx={{
-                    height: "100%",
-                    backgroundColor: "#ffffff",
-                    borderRadius: 4,
-                    border: "1px solid #222",
+                    width: { xs: "100%", md: 340 },
+                    minWidth: { md: 340 },
                     overflow: "hidden",
-                    transition: "0.3s",
-                    display: "flex",
-                    flexDirection: "column",
-                    "&:hover": {
-                      transform: "translateY(-6px)",
-                      borderColor: "#ff6a00",
-                      boxShadow: "0 10px 30px rgba(0,0,0,0.4)",
-                    },
                   }}
                 >
-                  <Link to={`/news/${item._id}`}>
-                    <CardMedia
-                      component="img"
-                      height="200"
-                      image={
-                        item.images[0] ||
-                        "https://via.placeholder.com/400x240"
-                      }
-                      alt={item.title}
-                      sx={{
-                        objectFit: "cover",
-                      }}
-                    />
-                  </Link>
-
-                  <CardContent
+                  <CardMedia
+                    component="img"
+                    image={
+                      item.images[0] ||
+                      "https://via.placeholder.com/400x240"
+                    }
+                    alt={item.title}
                     sx={{
-                      flexGrow: 1,
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 1,
+                      width: "100%",
+                      height: { xs: 240, md: "100%" },
+                      objectFit: "cover",
+                      transition: "0.5s",
+                      "&:hover": {
+                        transform: "scale(1.05)",
+                      },
                     }}
-                  >
-                    {/* Tag */}
-                    <Stack direction="row" spacing={1}>
+                  />
+                </Box>
+
+                {/* CONTENT RIGHT */}
+                <CardContent
+                  sx={{
+                    flex: 1,
+                    p: { xs: 3, md: 4 },
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Box>
+                    {/* TOP */}
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      alignItems="center"
+                      sx={{ mb: 2 }}
+                    >
                       <Chip
                         label="Công nghệ"
                         size="small"
                         sx={{
-                          background: "#ff6a00",
-                          color: "#8e8b8b",
-                          fontSize: 12,
+                          bgcolor: "#eff6ff",
+                          color: "#2563eb",
+                          fontWeight: 700,
+                          borderRadius: "8px",
                         }}
                       />
+
+                      <Typography
+                        sx={{
+                          fontSize: 13,
+                          color: "#94a3b8",
+                        }}
+                      >
+                        📅{" "}
+                        {new Date(item.createdAt).toLocaleDateString(
+                          "vi-VN"
+                        )}
+                      </Typography>
                     </Stack>
 
-                    {/* Title */}
+                    {/* TITLE */}
                     <Typography
                       component={Link}
                       to={`/news/${item._id}`}
                       sx={{
-                        color: "#c3bebe",
-                        fontWeight: 700,
-                        fontSize: 18,
                         textDecoration: "none",
+                        color: "#0f172a",
+                        fontWeight: 800,
+                        fontSize: { xs: 22, md: 28 },
                         lineHeight: 1.4,
-                        "&:hover": { color: "#ff6a00" },
+                        mb: 2,
                         display: "-webkit-box",
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: "vertical",
                         overflow: "hidden",
+                        transition: ".2s",
+                        "&:hover": {
+                          color: "#2563eb",
+                        },
                       }}
                     >
                       {item.title}
                     </Typography>
 
-                    {/* Excerpt */}
+                    {/* EXCERPT */}
                     <Typography
                       sx={{
-                        color: "#aaa",
-                        fontSize: 14,
-                        lineHeight: 1.6,
+                        color: "#64748b",
+                        lineHeight: 1.9,
+                        fontSize: 15,
                         display: "-webkit-box",
                         WebkitLineClamp: 3,
                         WebkitBoxOrient: "vertical",
@@ -169,47 +247,75 @@ const NewsPage = () => {
                     >
                       {item.excerpt}
                     </Typography>
+                  </Box>
 
-                    {/* Footer */}
-                    <Box
+                  {/* FOOTER */}
+                  <Box
+                    sx={{
+                      mt: 3,
+                      pt: 2,
+                      borderTop: "1px solid #f1f5f9",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <Typography
                       sx={{
-                        mt: "auto",
-                        pt: 2,
-                        borderTop: "1px solid #222",
-                        display: "flex",
-                        justifyContent: "space-between",
+                        fontSize: 14,
+                        color: "#475569",
+                        fontWeight: 600,
                       }}
                     >
-                      <Typography sx={{ color: "#777", fontSize: 12 }}>
-                        ✍ {item.author}
-                      </Typography>
-                      <Typography sx={{ color: "#777", fontSize: 12 }}>
-                        📅{" "}
-                        {new Date(item.createdAt).toLocaleDateString("vi-VN")}
-                      </Typography>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Fade>
-            </Grid>
-          ))}
-        </Grid>
+                      ✍ {item.author}
+                    </Typography>
 
-        {/* Pagination */}
+                    <Typography
+                      component={Link}
+                      to={`/news/${item._id}`}
+                      sx={{
+                        textDecoration: "none",
+                        color: "#2563eb",
+                        fontWeight: 700,
+                        fontSize: 14,
+                        "&:hover": {
+                          textDecoration: "underline",
+                        },
+                      }}
+                    >
+                      Xem chi tiết →
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Fade>
+          ))}
+        </Stack>
+
+        {/* PAGINATION */}
         {totalPages > 1 && (
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              mt: 6,
+            }}
+          >
             <Pagination
               count={totalPages}
               page={page}
               onChange={(_, value) => setPage(value)}
+              shape="rounded"
               sx={{
                 "& .MuiPaginationItem-root": {
-                  color: "#9a9898",
-                  borderColor: "#333",
+                  borderRadius: "12px",
+                  fontWeight: 600,
+                  color: "#475569",
                 },
+
                 "& .Mui-selected": {
-                  backgroundColor: "#ff6a00 !important",
-                  color: "#767373",
+                  backgroundColor: "#2563eb !important",
+                  color: "#fff",
                 },
               }}
             />

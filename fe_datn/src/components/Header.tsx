@@ -117,7 +117,7 @@ const Header = () => {
   };
 
   return (
-    <AppBar position="static" sx={{ background: "#fff" }}>
+    <AppBar position="fixed" sx={{ background: "#fff" }}>
 
       <Toolbar sx={{ justifyContent: "space-between" }}>
 

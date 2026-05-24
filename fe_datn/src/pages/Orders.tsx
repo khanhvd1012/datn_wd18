@@ -238,30 +238,30 @@ console.log(selectedItems);
                 {/* HEADER ORDER */}
               <Box display="flex" gap={1}>
 
-  <Chip
-    icon={status.icon}
-    label={status.label}
-    color={status.color as any}
-  />
+          <Chip
+            icon={status.icon}
+            label={status.label}
+            color={status.color as any}
+          />
 
-  {order.return_status && (() => {
+          {order.return_status && (() => {
 
-    const returnStatus =
-      getReturnStatusInfo(order.return_status);
+            const returnStatus =
+              getReturnStatusInfo(order.return_status);
 
-    if (!returnStatus) return null;
+            if (!returnStatus) return null;
 
-    return (
-      <Chip
-        label={returnStatus.label}
-        color={returnStatus.color as any}
-        variant="outlined"
-      />
-    );
+            return (
+              <Chip
+                label={returnStatus.label}
+                color={returnStatus.color as any}
+                variant="outlined"
+              />
+            );
 
-  })()}
+          })()}
 
-</Box>
+        </Box>
 
                 {/* BODY */}
                 <Box mt={2} display="flex" justifyContent="space-between">
@@ -284,9 +284,9 @@ console.log(selectedItems);
 
                 <Box display="flex" justifyContent="flex-end" gap={2}>
 
-                  {/* ⭐ RETURN BUTTON */}
+                  {/*  RETURN BUTTON */}
                   {order.order_status === "delivered"
-  && !order.return_requested && (
+                && !order.return_requested && (
                     <Button
                       color="error"
                       variant="outlined"

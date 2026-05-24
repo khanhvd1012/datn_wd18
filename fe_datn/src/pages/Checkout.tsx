@@ -66,6 +66,7 @@ const Checkout: React.FC = () => {
     address: "",
     paymentMethod: "COD",
   });
+  const [phoneError, setPhoneError] = useState("");
   
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
@@ -77,7 +78,17 @@ const Checkout: React.FC = () => {
   };
 
   const premiumFont = { fontFamily: "'Inter', system-ui, sans-serif" };
+const validatePhoneVN = (phone: string) => {
+  // bỏ khoảng trắng
+  const cleanPhone = phone.replace(/\s/g, "");
 
+  // số điện thoại VN:
+  // bắt đầu bằng 0
+  // tổng 10 số
+  const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+
+  return phoneRegex.test(cleanPhone);
+};
   useEffect(() => {
     const state = location.state as { selectedItems?: string[] } | null;
     if (state?.selectedItems) {
@@ -116,10 +127,26 @@ const Checkout: React.FC = () => {
     }
   };
 
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const { name, value } = e.target;
+
+  setFormData((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+
+  // validate realtime số điện thoại
+  if (name === "phone") {
+    if (!value.trim()) {
+      setPhoneError("Vui lòng nhập số điện thoại");
+    } else if (!validatePhoneVN(value)) {
+      setPhoneError("Số điện thoại không hợp lệ");
+    } else {
+      setPhoneError("");
+    }
+  }
+};
 
   const handleApplyCoupon = async () => {
     if (!couponInput.trim()) return;
@@ -193,6 +220,14 @@ const Checkout: React.FC = () => {
       setNotif({ open: true, message: "Vui lòng nhập đầy đủ thông tin giao hàng", severity: "warning" });
       return;
     }
+    if (!validatePhoneVN(formData.phone)) {
+  setNotif({
+    open: true,
+    message: "Số điện thoại không đúng định dạng .",
+    severity: "warning",
+  });
+  return;
+}
 
     if (formData.paymentMethod === "COD") {
       setConfirmDialogOpen(true);
@@ -312,13 +347,20 @@ const Checkout: React.FC = () => {
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
-                    fullWidth
-                    label="Số điện thoại"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
-                  />
+                fullWidth
+                label="Số điện thoại"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                error={!!phoneError}
+                helperText={phoneError}
+                inputProps={{ maxLength: 10 }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 3
+                  }
+                }}
+              />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField

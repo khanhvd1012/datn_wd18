@@ -707,146 +707,298 @@ const getReturnStatusColor = (status: string) => {
           </Tooltip>
         </Box>
       </Paper>
+
+
+{/* Return Management */}
 <Paper
   sx={{
-    p: 3,
     mb: 3,
-    borderRadius: 3,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+    borderRadius: 5,
+    border: '1px solid #eef2f7',
+    backgroundColor: '#fff',
+    overflow: 'hidden',
+    boxShadow: '0 6px 24px rgba(15,23,42,0.04)',
   }}
 >
-
+  {/* Header */}
   <Box
-    display="flex"
-    justifyContent="space-between"
-    alignItems="center"
-    mb={2}
+    sx={{
+      px: 3,
+      py: 2.5,
+      borderBottom: '1px solid #f1f5f9',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      background:
+        'linear-gradient(to right, #ffffff, #fafcff)',
+    }}
   >
+    <Box>
+      <Typography
+        variant="h6"
+        sx={{
+          fontWeight: 700,
+          color: '#0f172a',
+          mb: 0.3,
+        }}
+      >
+        Quản lý hoàn hàng
+      </Typography>
 
-    <Typography
-      variant="h6"
-      fontWeight={700}
-    >
-      Quản lý hoàn hàng
-    </Typography>
+      <Typography
+        variant="body2"
+        sx={{
+          color: '#64748b',
+        }}
+      >
+        Theo dõi và xử lý yêu cầu hoàn trả
+      </Typography>
+    </Box>
 
     <Chip
-      color="warning"
       label={`${returns.length} yêu cầu`}
+      sx={{
+        bgcolor: '#fff7ed',
+        color: '#ea580c',
+        fontWeight: 700,
+        borderRadius: 999,
+        border: '1px solid #fed7aa',
+      }}
     />
-
   </Box>
 
+  {/* Empty */}
   {returns.length === 0 ? (
-
-    <Typography color="text.secondary">
-      Chưa có yêu cầu hoàn hàng
-    </Typography>
-
-  ) : (
-
     <Box
-      display="flex"
-      flexDirection="column"
-      gap={2}
+      sx={{
+        py: 8,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
     >
+      <AssignmentReturn
+        sx={{
+          fontSize: 56,
+          color: '#cbd5e1',
+          mb: 1,
+        }}
+      />
 
-      {returns.map((item) => (
+      <Typography
+        sx={{
+          color: '#64748b',
+          fontWeight: 500,
+        }}
+      >
+        Chưa có yêu cầu hoàn hàng
+      </Typography>
+    </Box>
+  ) : (
+    <Box
+      sx={{
+        maxHeight: 380,
+        overflowY: 'auto',
 
-        <Paper
+        '&::-webkit-scrollbar': {
+          width: 6,
+        },
+
+        '&::-webkit-scrollbar-thumb': {
+          background: '#dbe4ee',
+          borderRadius: 999,
+        },
+
+        '&::-webkit-scrollbar-thumb:hover': {
+          background: '#cbd5e1',
+        },
+      }}
+    >
+      {returns.map((item, index) => (
+        <Box
           key={item._id}
-          variant="outlined"
           sx={{
-            p: 2,
-            borderRadius: 2
+            px: 3,
+            py: 2.2,
+
+            borderBottom:
+              index !== returns.length - 1
+                ? '1px solid #f1f5f9'
+                : 'none',
+
+            transition: 'all .2s ease',
+
+            '&:hover': {
+              backgroundColor: '#fafcff',
+            },
           }}
         >
-
           <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
+            sx={{
+              display: 'flex',
+              justifyContent:
+                'space-between',
+              alignItems: 'flex-start',
+              gap: 2,
+            }}
           >
+            {/* Left */}
+            <Box sx={{ flex: 1 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  mb: 1,
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontWeight: 700,
+                    color: '#0f172a',
+                    fontSize: 15,
+                  }}
+                >
+                  Return #
+                  {item._id
+                    .slice(-6)
+                    .toUpperCase()}
+                </Typography>
 
-            <Box>
+                <Chip
+                  size="small"
+                  label={getReturnStatusText(
+                    item.status
+                  )}
+                  color={
+                    getReturnStatusColor(
+                      item.status
+                    ) as any
+                  }
+                  sx={{
+                    height: 24,
+                    fontWeight: 600,
+                    borderRadius: 999,
+                  }}
+                />
+              </Box>
 
-              <Typography fontWeight={700}>
-                Return #{item._id.slice(-6)}
+              <Typography
+                variant="body2"
+                sx={{
+                  color: '#64748b',
+                  mb: 0.8,
+                }}
+              >
+                Đơn hàng #
+                {typeof item.order_id ===
+                'object'
+                  ? item.order_id?._id?.slice(
+                      -6
+                    )
+                  : item.order_id?.slice(-6)}
               </Typography>
 
               <Typography
                 variant="body2"
-                color="text.secondary"
+                sx={{
+                  color: '#334155',
+                  lineHeight: 1.7,
+                  mb: 1,
+                }}
               >
-                Order:
-#
-{typeof item.order_id === 'object'
-  ? item.order_id?._id?.slice(-6)
-  : item.order_id?.slice(-6)}
+                {item.reason}
               </Typography>
 
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: 13,
+                    color: '#94a3b8',
+                  }}
+                >
+                  Hoàn tiền:
+                </Typography>
+
+                <Typography
+                  sx={{
+                    fontWeight: 700,
+                    color: '#16a34a',
+                    fontSize: 15,
+                  }}
+                >
+                  {formatPrice(
+                    item.refund_amount
+                  )}
+                </Typography>
+              </Box>
             </Box>
 
-            <Chip
-              label={getReturnStatusText(
-                item.status
-              )}
-              color={
-                getReturnStatusColor(
-                  item.status
-                ) as any
-              }
-            />
-
-          </Box>
-
-          <Divider sx={{ my: 2 }} />
-
-          <Typography
-            variant="body2"
-            sx={{ mb: 1 }}
-          >
-            <b>Lý do:</b> {item.reason}
-          </Typography>
-
-          <Typography
-            variant="body2"
-            sx={{ mb: 2 }}
-          >
-            <b>Hoàn tiền:</b>{' '}
-            {formatPrice(
-              item.refund_amount
-            )}
-          </Typography>
-
-          <Box
-            display="flex"
-            gap={2}
-          >
-
-            <Button
-              variant="outlined"
-              startIcon={<Visibility />}
-              onClick={() => {
-                setSelectedReturn(item);
-                setOpenReturnDialog(true);
+            {/* Right */}
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-end',
+                gap: 1.5,
+                minWidth: 120,
               }}
             >
-              Chi tiết
-            </Button>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: '#94a3b8',
+                }}
+              >
+                {new Date(
+                  item.createdAt
+                ).toLocaleDateString(
+                  'vi-VN'
+                )}
+              </Typography>
 
-            {/* {item.status === 'requested' && (
-              
-            )} */}
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<Visibility />}
+                onClick={() => {
+                  setSelectedReturn(item);
+                  setOpenReturnDialog(true);
+                }}
+                sx={{
+                  borderRadius: 999,
+                  textTransform: 'none',
+                  px: 2,
+                  borderColor: '#dbe4ee',
+                  color: '#334155',
+                  fontWeight: 600,
 
+                  '&:hover': {
+                    borderColor: '#94a3b8',
+                    backgroundColor:
+                      '#f8fafc',
+                  },
+                }}
+              >
+                Chi tiết
+              </Button>
+            </Box>
           </Box>
-
-        </Paper>
+        </Box>
       ))}
-
     </Box>
   )}
 </Paper>
+```
+
+
       {/* Orders Table */}
       <Paper sx={{ width: '100%', overflow: 'hidden', borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
         <TableContainer sx={{ maxHeight: 'calc(100vh - 400px)' }}>
