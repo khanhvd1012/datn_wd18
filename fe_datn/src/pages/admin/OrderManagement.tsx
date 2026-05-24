@@ -39,6 +39,8 @@ import {
   Tooltip,
 } from '@mui/material';
 import {
+  AssignmentReturn,
+Replay,
   Search,
   FilterList,
   MoreVert,
@@ -92,7 +94,32 @@ interface Order {
   createdAt: string;
   updatedAt: string;
 }
+interface ReturnRequest {
+  _id: string;
+  order_id: any;
+  user_id: any;
 
+  items: {
+    product_id: any;
+    variant_id: any;
+    quantity: number;
+    price: number;
+  }[];
+
+  reason: string;
+
+  status:
+    | 'requested'
+    | 'approved'
+    | 'rejected'
+    | 'received'
+    | 'refunded'
+    | 'completed';
+
+  refund_amount: number;
+
+  createdAt: string;
+}
 const OrderManagement: React.FC = () => {
   const theme = useTheme();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -120,7 +147,15 @@ const OrderManagement: React.FC = () => {
     message: '',
     severity: 'success' as 'success' | 'error' | 'warning' | 'info',
   });
+const [selectedItems, setSelectedItems] = useState<any[]>([]);
 
+const [returns, setReturns] = useState<ReturnRequest[]>([]);
+const [openReturnDialog, setOpenReturnDialog] = useState(false);
+const [selectedReturn, setSelectedReturn] =
+  useState<ReturnRequest | null>(null);
+
+const [returnUpdating, setReturnUpdating] =
+  useState(false);
   const showNotification = (message: string, severity: 'success' | 'error' | 'warning' | 'info') => {
     setNotification({ open: true, message, severity });
   };
@@ -130,8 +165,9 @@ const OrderManagement: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchOrders();
-  }, [page, rowsPerPage, searchTerm, statusFilter]);
+  fetchOrders();
+  fetchReturns();
+}, [page, rowsPerPage, searchTerm, statusFilter]);
 
   const fetchOrders = async () => {
     try {
@@ -149,13 +185,22 @@ const OrderManagement: React.FC = () => {
       console.log("--- DỮ LIỆU TỪ BACKEND TRẢ VỀ ---");
       console.log(response.data);
       
-      const ordersData = response.data.data || response.data || [];
-      console.log("Dữ liệu đơn hàng đầu tiên (để check _id):", ordersData[0]);
-      
-      // Nếu API trả về mảng trực tiếp thay vì bọc trong .data (ví dụ dùng json-server)
-      setOrders(Array.isArray(ordersData) ? ordersData : []);
-      
-      setTotalOrders(response.data.pagination?.total || (Array.isArray(ordersData) ? ordersData.length : 0));
+      const ordersData = response.data.orders || [];
+
+console.log(
+  "--- DỮ LIỆU ĐƠN HÀNG ---"
+);
+
+console.log(ordersData);
+
+console.log(
+  "Đơn hàng đầu tiên:",
+  ordersData[0]
+);
+
+setOrders(ordersData);
+
+setTotalOrders(ordersData.length);
 
       const summary = response.data.summary;
       if (summary) {
@@ -184,6 +229,26 @@ const OrderManagement: React.FC = () => {
       setLoading(false);
     }
   };
+   const fetchReturns = async () => {
+
+  try {
+
+    const res = await api.get('/returns');
+console.log(res.data);
+    console.log(
+      "RETURN DATA:",
+      res.data
+    );
+
+    setReturns(
+      res.data || []
+    );
+
+  } catch (err) {
+
+    console.error(err);
+  }
+};
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>, order: Order) => {
     setAnchorEl(event.currentTarget);
@@ -269,6 +334,76 @@ const OrderManagement: React.FC = () => {
       setStatusUpdating(false);
     }
   };
+  const handleApproveReturn = async (
+  returnId: string
+) => {
+
+  try {
+
+    setReturnUpdating(true);
+
+    await api.put(
+      `/returns/${returnId}/approve`
+    );
+
+    showNotification(
+      'Duyệt hoàn hàng thành công',
+      'success'
+    );
+
+    fetchReturns();
+    fetchOrders();
+
+    setOpenReturnDialog(false);
+
+  } catch (error: any) {
+
+    showNotification(
+      error.response?.data?.message ||
+      'Lỗi duyệt hoàn hàng',
+      'error'
+    );
+
+  } finally {
+
+    setReturnUpdating(false);
+  }
+};
+
+const handleRejectReturn = async (
+  returnId: string
+) => {
+
+  try {
+
+    setReturnUpdating(true);
+
+    await api.put(
+      `/returns/${returnId}/reject`
+    );
+
+    showNotification(
+      'Đã từ chối yêu cầu hoàn',
+      'success'
+    );
+
+    fetchReturns();
+
+    setOpenReturnDialog(false);
+
+  } catch (error: any) {
+
+    showNotification(
+      error.response?.data?.message ||
+      'Lỗi từ chối hoàn hàng',
+      'error'
+    );
+
+  } finally {
+
+    setReturnUpdating(false);
+  }
+};
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -352,7 +487,59 @@ const OrderManagement: React.FC = () => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   };
+const getReturnStatusText = (status: string) => {
 
+  switch (status) {
+
+    case 'requested':
+      return 'Chờ duyệt';
+
+    case 'approved':
+      return 'Đã duyệt';
+
+    case 'received':
+      return 'Đã nhận hàng';
+
+    case 'refunded':
+      return 'Đã hoàn tiền';
+
+    case 'completed':
+      return 'Hoàn tất';
+
+    case 'rejected':
+      return 'Từ chối';
+
+    default:
+      return status;
+  }
+};
+
+const getReturnStatusColor = (status: string) => {
+
+  switch (status) {
+
+    case 'requested':
+      return 'warning';
+
+    case 'approved':
+      return 'info';
+
+    case 'received':
+      return 'secondary';
+
+    case 'refunded':
+      return 'success';
+
+    case 'completed':
+      return 'success';
+
+    case 'rejected':
+      return 'error';
+
+    default:
+      return 'default';
+  }
+};
   return (
     <Box sx={{ p: 3, backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
@@ -458,7 +645,172 @@ const OrderManagement: React.FC = () => {
           </Tooltip>
         </Box>
       </Paper>
+<Paper
+  sx={{
+    p: 3,
+    mb: 3,
+    borderRadius: 3,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+  }}
+>
 
+  <Box
+    display="flex"
+    justifyContent="space-between"
+    alignItems="center"
+    mb={2}
+  >
+
+    <Typography
+      variant="h6"
+      fontWeight={700}
+    >
+      Quản lý hoàn hàng
+    </Typography>
+
+    <Chip
+      color="warning"
+      label={`${returns.length} yêu cầu`}
+    />
+
+  </Box>
+
+  {returns.length === 0 ? (
+
+    <Typography color="text.secondary">
+      Chưa có yêu cầu hoàn hàng
+    </Typography>
+
+  ) : (
+
+    <Box
+      display="flex"
+      flexDirection="column"
+      gap={2}
+    >
+
+      {returns.map((item) => (
+
+        <Paper
+          key={item._id}
+          variant="outlined"
+          sx={{
+            p: 2,
+            borderRadius: 2
+          }}
+        >
+
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+
+            <Box>
+
+              <Typography fontWeight={700}>
+                Return #{item._id.slice(-6)}
+              </Typography>
+
+              <Typography
+                variant="body2"
+                color="text.secondary"
+              >
+                Order:
+#
+{typeof item.order_id === 'object'
+  ? item.order_id?._id?.slice(-6)
+  : item.order_id?.slice(-6)}
+              </Typography>
+
+            </Box>
+
+            <Chip
+              label={getReturnStatusText(
+                item.status
+              )}
+              color={
+                getReturnStatusColor(
+                  item.status
+                ) as any
+              }
+            />
+
+          </Box>
+
+          <Divider sx={{ my: 2 }} />
+
+          <Typography
+            variant="body2"
+            sx={{ mb: 1 }}
+          >
+            <b>Lý do:</b> {item.reason}
+          </Typography>
+
+          <Typography
+            variant="body2"
+            sx={{ mb: 2 }}
+          >
+            <b>Hoàn tiền:</b>{' '}
+            {formatPrice(
+              item.refund_amount
+            )}
+          </Typography>
+
+          <Box
+            display="flex"
+            gap={2}
+          >
+
+            <Button
+              variant="outlined"
+              startIcon={<Visibility />}
+              onClick={() => {
+                setSelectedReturn(item);
+                setOpenReturnDialog(true);
+              }}
+            >
+              Chi tiết
+            </Button>
+
+            {item.status === 'requested' && (
+              <>
+                <Button
+                  color="success"
+                  variant="contained"
+                  startIcon={<CheckCircle />}
+                  onClick={() =>
+                    handleApproveReturn(
+                      item._id
+                    )
+                  }
+                >
+                  Duyệt hoàn
+                </Button>
+
+                <Button
+                  color="error"
+                  variant="outlined"
+                  startIcon={<Cancel />}
+                  onClick={() =>
+                    handleRejectReturn(
+                      item._id
+                    )
+                  }
+                >
+                  Từ chối
+                </Button>
+              </>
+            )}
+
+          </Box>
+
+        </Paper>
+      ))}
+
+    </Box>
+  )}
+</Paper>
       {/* Orders Table */}
       <Paper sx={{ width: '100%', overflow: 'hidden', borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
         <TableContainer sx={{ maxHeight: 'calc(100vh - 400px)' }}>
@@ -965,7 +1317,125 @@ const OrderManagement: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      
+      <Dialog
+  open={openReturnDialog}
+  onClose={() =>
+    setOpenReturnDialog(false)
+  }
+  fullWidth
+  maxWidth="md"
+>
+
+  <DialogTitle>
+    Chi tiết hoàn hàng
+  </DialogTitle>
+
+  <DialogContent>
+
+    {selectedReturn && (
+
+      <Box mt={2}>
+
+        <Typography mb={2}>
+          <b>Lý do:</b>{' '}
+          {selectedReturn.reason}
+        </Typography>
+
+        <Typography mb={2}>
+          <b>Trạng thái:</b>{' '}
+
+          <Chip
+            label={getReturnStatusText(
+              selectedReturn.status
+            )}
+            color={
+              getReturnStatusColor(
+                selectedReturn.status
+              ) as any
+            }
+          />
+        </Typography>
+
+        <Typography mb={2}>
+          <b>Tiền hoàn:</b>{' '}
+          {formatPrice(
+            selectedReturn.refund_amount
+          )}
+        </Typography>
+
+        <Divider sx={{ my: 2 }} />
+
+        <Typography
+          fontWeight={700}
+          mb={2}
+        >
+          Sản phẩm hoàn
+        </Typography>
+
+        <Box
+          display="flex"
+          flexDirection="column"
+          gap={2}
+        >
+
+          {selectedReturn.items.map(
+            (item, idx) => (
+
+              <Paper
+                key={idx}
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  borderRadius: 2
+                }}
+              >
+
+                <Typography>
+                   Product:
+{
+  typeof item.product_id === 'object'
+    ? item.product_id?._id
+    : item.product_id
+}
+                </Typography>
+
+                <Typography>
+                  Quantity:
+                  {item.quantity}
+                </Typography>
+
+                <Typography>
+                  Refund:
+                  {formatPrice(
+                    item.price *
+                    item.quantity
+                  )}
+                </Typography>
+
+              </Paper>
+            )
+          )}
+
+        </Box>
+
+      </Box>
+    )}
+
+  </DialogContent>
+
+  <DialogActions>
+
+    <Button
+      onClick={() =>
+        setOpenReturnDialog(false)
+      }
+    >
+      Đóng
+    </Button>
+
+  </DialogActions>
+
+</Dialog>
       {/* Notification */}
       <Snackbar
         open={notification.open}

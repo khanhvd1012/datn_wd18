@@ -1,54 +1,44 @@
 import { useEffect, useState } from "react";
+
 import {
   Box,
   Card,
   CardMedia,
-  CardContent,
   Typography,
-  Snackbar,
-  Alert,
+  IconButton,
 } from "@mui/material";
-import { Link, useNavigate } from "react-router-dom";
-import { addToCartApi } from "../services/cartService";
 
-type FeaturedProduct = {
-  id: string;
-  name: string;
-  img: string;
-  price: number;
-  countInStock?: number;
-  variants?: any[];
-};
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+
+import { useNavigate } from "react-router-dom";
 
 const FeaturedProducts = () => {
-  const [products, setProducts] = useState<FeaturedProduct[]>([]);
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [loadingId, setLoadingId] = useState<string | null>(null);
-
   const navigate = useNavigate();
 
-  const [notification, setNotification] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error" | "warning" | "info",
-  });
+  const [products, setProducts] = useState<any[]>([]);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  // hiển thị 3 sản phẩm / lần
+  const [startIndex, setStartIndex] = useState(0);
 
   useEffect(() => {
     fetch("http://localhost:3000/api/products")
       .then((res) => res.json())
       .then((data) => {
-        const list = Array.isArray(data) ? data : data.docs || data.data || [];
+        const list =
+          Array.isArray(data)
+            ? data
+            : data.docs || data.data || [];
 
-        const mappedList: FeaturedProduct[] = list.map((item: any) => ({
+        const mappedList = list.map((item: any) => ({
           id: item._id || item.id,
           name: item.name,
           img:
             item.img ||
             (item.images && item.images[0]) ||
-            "https://via.placeholder.com/200",
+            "/no-image.png",
           price: item.price,
-          countInStock: item.countInStock || 0,
-          variants: item.variants || [],
         }));
 
         setProducts(mappedList);
@@ -56,265 +46,250 @@ const FeaturedProducts = () => {
   }, []);
 
   const formatPrice = (price: number) =>
-    (price || 0).toLocaleString("vi-VN") + " đ";
+    price.toLocaleString("vi-VN") + " đ";
 
-  const getTotalStock = (product: FeaturedProduct) => {
-    if (!product.variants || product.variants.length === 0) {
-      return product.countInStock || 0;
+  // NEXT
+  const handleNext = () => {
+    if (startIndex + 3 < products.length) {
+      setStartIndex(startIndex + 1);
     }
-    return product.variants.reduce(
-      (total, variant) => total + (variant.stock || variant.countInStock || 0),
-      0
-    );
   };
 
-  const handleAddToCart = async (productId: string) => {
-    try {
-      if (!localStorage.getItem("token")) {
-        setNotification({
-          open: true,
-          message: "Vui lòng đăng nhập",
-          severity: "warning",
-        });
-        navigate("/login");
-        return;
-      }
-
-      setLoadingId(productId);
-
-      await addToCartApi({
-        product_id: productId,
-        quantity: 1,
-      });
-
-      window.dispatchEvent(new Event("cartUpdated"));
-
-      setNotification({
-        open: true,
-        message: "Đã thêm vào giỏ hàng!",
-        severity: "success",
-      });
-    } finally {
-      setLoadingId(null);
+  // PREV
+  const handlePrev = () => {
+    if (startIndex > 0) {
+      setStartIndex(startIndex - 1);
     }
   };
 
   return (
-    <Box sx={{ py: 4 }}>
-      <Box sx={{ maxWidth: 1300, mx: "auto", px: 2 }}>
-        {/* HEADER */}
-        <Box sx={{ display: "flex", mb: 3 }}>
-          <Box
-            sx={{
-              background: "#1976d2",
-              color: "#fff",
-              px: 5,
-              py: 1,
-              fontWeight: "bold",
-              fontSize: 18,
-              clipPath: "polygon(0 0, 90% 0, 100% 50%, 90% 100%, 0 100%)",
-            }}
-          >
-            PHỤ KIỆN NỔI BẬT
-          </Box>
-        </Box>
-
-        {/* GRID */}
-        <Box
+    <Box
+      sx={{
+        py: 6,
+        background: "#f5f5f5",
+      }}
+    >
+      <Box
+        sx={{
+          maxWidth: 1300,
+          mx: "auto",
+          px: 2,
+        }}
+      >
+        {/* TITLE */}
+        <Typography
           sx={{
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr",
-              sm: "repeat(2, 1fr)",
-              md: "repeat(4, 1fr)",
-            },
-            gap: 2,
+            fontSize: 30,
+            fontWeight: 700,
+            textAlign: "center",
+            mb: 5,
+            color: "#222",
+            letterSpacing: 1,
           }}
         >
-          {products.slice(0, 8).map((item) => (
-            <Card
-              key={item.id}
-              sx={{
-                width: 280,
-                height: 380,
-                mx: "auto",
-                display: "flex",
-                flexDirection: "column",
-                transition: "0.3s",
-                "&:hover": {
-                  transform: "translateY(-6px)",
-                  boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
-                },
-              }}
-            >
-              {/* IMAGE - CLICK GO DETAIL */}
+          PHỤ KIỆN NỔI BẬT
+        </Typography>
+
+        <Box
+          sx={{
+            position: "relative",
+          }}
+        >
+          {/* BUTTON LEFT */}
+          <IconButton
+            onClick={handlePrev}
+            sx={{
+              position: "absolute",
+              left: -25,
+              top: "50%",
+              transform: "translateY(-50%)",
+              zIndex: 10,
+              width: 50,
+              height: 50,
+              background: "#000",
+
+              color: "#fff",
+
+              "&:hover": {
+                background: "#222",
+              },
+            }}
+          >
+            <ArrowBackIosNewIcon sx={{ fontSize: 18 }} />
+          </IconButton>
+
+          {/* BUTTON RIGHT */}
+          <IconButton
+            onClick={handleNext}
+            sx={{
+              position: "absolute",
+              right: -25,
+              top: "50%",
+              transform: "translateY(-50%)",
+              zIndex: 10,
+              width: 50,
+              height: 50,
+              background: "#555",
+
+              color: "#fff",
+
+              "&:hover": {
+                background: "#434242",
+              },
+            }}
+          >
+            <ArrowForwardIosIcon sx={{ fontSize: 18 }} />
+          </IconButton>
+
+          {/* SLIDER */}
+          <Box
+            sx={{
+              overflow: "hidden",
+            }}
+          >
             <Box
               sx={{
-                height: 200,
                 display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                p: 2,
+                transition: "0.9s ease",
+                transform: `translateX(-${
+                  startIndex * (100 / 3)
+                }%)`,
               }}
             >
-              <Link
-                to={`/product/${item.id}`}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  textDecoration: "none",
-                }}
-              >
-                <CardMedia
-                  component="img"
-                  image={item.img}
-                  alt={item.name}
-                  sx={{
-                    maxHeight: "100%",
-                    maxWidth: "100%",
-                    objectFit: "contain",
-                    cursor: "pointer",
-                  }}
-                />
-              </Link>
-            </Box>
-
-              {/* CONTENT + HOVER AREA ONLY HERE */}
-              <CardContent
-                onMouseEnter={() => setHoveredId(item.id)}
-                onMouseLeave={() => setHoveredId(null)}
-                sx={{
-                  position: "relative",
-                  flexGrow: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Box>
-                  <Typography
-                    sx={{
-                      fontWeight: 600,
-                      fontSize: 14,
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                    }}
-                  >
-                    {item.name}
-                  </Typography>
-
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                    <Typography
-                      sx={{
-                        color: "#d70018",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      {formatPrice(item.price)}
-                    </Typography>
-                    
-                    <Typography 
-                      variant="body2" 
-                      color={getTotalStock(item) > 0 ? "success.main" : "error"}
-                      fontWeight="500"
-                    >
-                      {getTotalStock(item) > 0 ? `Còn ${getTotalStock(item)}` : "Hết hàng"}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                {/* HOVER BUTTONS ONLY IN CONTENT AREA */}
+              {products.map((item) => (
                 <Box
+                  key={item.id}
                   sx={{
-                    position: "absolute",
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    background: "rgba(208, 208, 208, 0.75)",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 1,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    py: 2,
-
-                    opacity: hoveredId === item.id ? 1 : 0,
-                    transform:
-                      hoveredId === item.id
-                        ? "translateY(0)"
-                        : "translateY(20px)",
-                    transition: "0.25s ease",
-                    pointerEvents:
-                      hoveredId === item.id ? "auto" : "none",
+                    width: "33.3333%",
+                    flexShrink: 0,
+                    px: 1.5,
                   }}
                 >
-                  <Box
-                    onClick={() =>
-                      (window.location.href = `/product/${item.id}`)
+                  <Card
+                    onMouseEnter={() =>
+                      setHoveredId(item.id)
+                    }
+                    onMouseLeave={() =>
+                      setHoveredId(null)
                     }
                     sx={{
-                      background: "#ff0000",
-                      color: "#fff",
-                      px: 2,
-                      py: 0.8,
-                      borderRadius: 2,
-                      width: 140,
-                      textAlign: "center",
-                      fontWeight: 600,
+                      borderRadius: 4,
+                      overflow: "hidden",
+                      position: "relative",
                       cursor: "pointer",
-                    }}
-                  >
-                    Mua ngay
-                  </Box>
+                      height: 420,
+                      boxShadow:
+                        "0 6px 20px rgba(0,0,0,0.08)",
 
-                  <Box
-                    onClick={() => {
-                      if (getTotalStock(item) > 0) {
-                         handleAddToCart(item.id);
-                      }
-                    }}
-                    sx={{
-                      background: getTotalStock(item) === 0 ? "#ccc" : "#1976d2",
-                      color: "#fff",
-                      px: 2,
-                      py: 0.8,
-                      borderRadius: 2,
-                      width: 140,
-                      textAlign: "center",
-                      fontWeight: 600,
-                      cursor: getTotalStock(item) === 0 ? "not-allowed" : "pointer",
-                      opacity: loadingId === item.id ? 0.6 : 1,
+                      "&:hover img": {
+                        transform: "scale(1.08)",
+                      },
                     }}
                   >
-                    {loadingId === item.id
-                      ? "Đang thêm..."
-                      : (getTotalStock(item) === 0 ? "Hết hàng" : "Thêm vào giỏ")}
-                  </Box>
+                    {/* IMAGE */}
+                    <Box
+                      sx={{
+                        width: "100%",
+                        height: 420,
+                        overflow: "hidden",
+                        position: "relative",
+                      }}
+                    >
+                      <CardMedia
+                        component="img"
+                        image={item.img}
+                        alt={item.name}
+                        onError={(e: any) => {
+                          e.target.src =
+                            "/no-image.png";
+                        }}
+                        sx={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          transition: "0.5s",
+                        }}
+                      />
+
+                      {/* OVERLAY */}
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          inset: 0,
+                          background:
+                            "linear-gradient(to top, rgba(0,0,0,0.8), transparent)",
+
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "flex-end",
+
+                          p: 3,
+
+                          opacity:
+                            hoveredId === item.id
+                              ? 1
+                              : 0,
+
+                          transition: "0.4s",
+                        }}
+                      >
+                        {/* NAME */}
+                        <Typography
+                          sx={{
+                            color: "#fff",
+                            fontSize: 24,
+                            fontWeight: 600,
+                            mb: 1,
+                          }}
+                        >
+                          {item.name}
+                        </Typography>
+
+                        {/* PRICE */}
+                        <Typography
+                          sx={{
+                            color: "#ffd700",
+                            fontSize: 20,
+                            fontWeight: "bold",
+                            mb: 2,
+                          }}
+                        >
+                          {formatPrice(item.price)}
+                        </Typography>
+
+                        {/* BUTTON */}
+                        <Box
+                          onClick={() =>
+                            navigate(
+                              `/product/${item.id}`,
+                            )
+                          }
+                          sx={{
+                            width: "fit-content",
+                            px: 3,
+                            py: 1.2,
+                            borderRadius: 2,
+                            background: "#fff",
+                            color: "#000",
+                            fontWeight: 700,
+                            transition: "0.3s",
+
+                            "&:hover": {
+                              background: "#ffd700",
+                            },
+                          }}
+                        >
+                          Xem thêm
+                        </Box>
+                      </Box>
+                    </Box>
+                  </Card>
                 </Box>
-              </CardContent>
-            </Card>
-          ))}
+              ))}
+            </Box>
+          </Box>
         </Box>
       </Box>
-
-      {/* NOTIFICATION */}
-      <Snackbar
-        open={notification.open}
-        autoHideDuration={3000}
-        onClose={() =>
-          setNotification((p) => ({ ...p, open: false }))
-        }
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      >
-        <Alert severity={notification.severity}>
-          {notification.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

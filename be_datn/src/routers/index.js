@@ -16,6 +16,7 @@ import orderRouter from "./order_RT.js";
 import paymentRouter from "./payment_RT.js";
 import userRouter from "./user_RT.js";
 import reviewRouter from "./review_RT.js";
+import returnRouter from "./return_RT.js";
 
 const router = Router();
 
@@ -35,5 +36,7 @@ router.use("/orders", orderRouter);
 router.use("/payment", paymentRouter);
 router.use("/users", userRouter);
 router.use("/reviews", reviewRouter);
+//
+router.use("/returns", returnRouter);
 
 export default router;

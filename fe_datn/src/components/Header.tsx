@@ -136,7 +136,7 @@ const Header = () => {
             border: "1px solid #ddd",
             borderRadius: 3,
             px: 2,
-            width: 250,
+            width: 350,
             
           }}>
             <InputBase

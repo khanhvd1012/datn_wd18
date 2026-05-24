@@ -1,0 +1,24 @@
+import express from "express";
+import {
+    createReturnRequest,
+    getAllReturns,
+    approveReturn,
+    rejectReturn
+} from "../controllers/return_CTL.js";
+
+import { checkPermission, checkRole } from "../middleware/checkPermission.js";
+import { ROLES } from "../config/roles.js";
+
+const router = express.Router();
+
+router.use(checkPermission);
+
+// user
+router.post("/", createReturnRequest);
+
+// admin
+router.get("/", checkRole([ROLES.ADMIN]), getAllReturns);
+router.put("/:id/approve", checkRole([ROLES.ADMIN]), approveReturn);
+router.put("/:id/reject", checkRole([ROLES.ADMIN]), rejectReturn);
+
+export default router;
