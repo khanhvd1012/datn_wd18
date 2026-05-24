@@ -117,6 +117,45 @@ console.log(selectedItems);
   }
 };
 
+  const getReturnStatusInfo = (status?: string) => {
+
+  switch (status) {
+
+    case "requested":
+      return {
+        label: "Đang chờ duyệt hoàn",
+        color: "warning"
+      };
+
+    case "approved":
+      return {
+        label: "Đã duyệt hoàn",
+        color: "info"
+      };
+
+    case "received":
+      return {
+        label: "Đã nhận hàng hoàn",
+        color: "secondary"
+      };
+
+    case "refunded":
+      return {
+        label: "Đã hoàn tiền",
+        color: "success"
+      };
+
+    case "rejected":
+      return {
+        label: "Từ chối hoàn hàng",
+        color: "error"
+      };
+
+    default:
+      return null;
+  }
+};
+
   useEffect(() => {
     fetchOrders();
   }, []);
@@ -197,17 +236,32 @@ console.log(selectedItems);
               <Paper key={order._id} sx={{ p: 2, borderRadius: 3 }}>
 
                 {/* HEADER ORDER */}
-                <Box display="flex" justifyContent="space-between">
-                  <Typography>
-                    #{order._id.slice(-6)}
-                  </Typography>
+              <Box display="flex" gap={1}>
 
-                  <Chip
-                    icon={status.icon}
-                    label={status.label}
-                    color={status.color as any}
-                  />
-                </Box>
+  <Chip
+    icon={status.icon}
+    label={status.label}
+    color={status.color as any}
+  />
+
+  {order.return_status && (() => {
+
+    const returnStatus =
+      getReturnStatusInfo(order.return_status);
+
+    if (!returnStatus) return null;
+
+    return (
+      <Chip
+        label={returnStatus.label}
+        color={returnStatus.color as any}
+        variant="outlined"
+      />
+    );
+
+  })()}
+
+</Box>
 
                 {/* BODY */}
                 <Box mt={2} display="flex" justifyContent="space-between">
@@ -231,7 +285,8 @@ console.log(selectedItems);
                 <Box display="flex" justifyContent="flex-end" gap={2}>
 
                   {/* ⭐ RETURN BUTTON */}
-                  {order.order_status === "delivered" && (
+                  {order.order_status === "delivered"
+  && !order.return_requested && (
                     <Button
                       color="error"
                       variant="outlined"
@@ -291,5 +346,6 @@ console.log(selectedItems);
     </Box>
   );
 };
+
 
 export default Orders;

@@ -209,7 +209,158 @@ await order.save();
         });
     }
 };
+//
+export const updateReturnStatus = async (
+    req,
+    res
+) => {
 
+    try {
+
+        const request =
+            await ReturnRequest.findById(
+                req.params.id
+            );
+
+        if (!request) {
+
+            return res.status(404).json({
+                message:
+                    "Không tìm thấy yêu cầu hoàn"
+            });
+        }
+
+        const { status } = req.body;
+
+        const FLOW = [
+            "requested",
+            "approved",
+            "received",
+            "refunded",
+            "completed"
+        ];
+
+        // reject xử lý riêng
+        if (status === "rejected") {
+
+            if (
+                request.status !== "requested"
+            ) {
+
+                return res.status(400).json({
+                    message:
+                        "Chỉ có thể từ chối khi đang chờ duyệt"
+                });
+            }
+
+            request.status = "rejected";
+
+            await request.save();
+
+            const order =
+                await Order.findById(
+                    request.order_id
+                );
+
+            if (order) {
+
+                order.return_status =
+                    "rejected";
+
+                await order.save();
+            }
+
+            return res.json({
+                message:
+                    "Đã từ chối hoàn hàng",
+                request
+            });
+        }
+
+        const currentIndex =
+            FLOW.indexOf(request.status);
+
+        const nextIndex =
+            FLOW.indexOf(status);
+
+        // chỉ cho đi tới 1 bước
+        if (
+            nextIndex !== currentIndex + 1
+        ) {
+
+            return res.status(400).json({
+                message:
+                    "Không thể chuyển trạng thái nhảy cóc"
+            });
+        }
+
+        // nếu tới refunded thì hoàn kho
+        if (
+            status === "refunded"
+        ) {
+
+            for (const item of request.items) {
+
+                if (item.variant_id) {
+
+                    await Variant.findByIdAndUpdate(
+                        item.variant_id,
+                        {
+                            $inc: {
+                                stock:
+                                    item.quantity
+                            }
+                        }
+                    );
+
+                } else {
+
+                    await Products.findByIdAndUpdate(
+                        item.product_id,
+                        {
+                            $inc: {
+                                stock:
+                                    item.quantity
+                            }
+                        }
+                    );
+                }
+            }
+
+            request.refunded_at =
+                new Date();
+        }
+
+        request.status = status;
+
+        await request.save();
+
+        const order =
+            await Order.findById(
+                request.order_id
+            );
+
+        if (order) {
+
+            order.return_status =
+                status;
+
+            await order.save();
+        }
+
+        res.json({
+            message:
+                "Cập nhật trạng thái hoàn hàng thành công",
+            request
+        });
+
+    } catch (err) {
+
+        res.status(500).json({
+            message: err.message
+        });
+    }
+};
 // ADMIN: từ chối
 export const rejectReturn = async (req, res) => {
     const request = await ReturnRequest.findById(req.params.id);

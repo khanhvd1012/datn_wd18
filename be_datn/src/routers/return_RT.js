@@ -1,6 +1,7 @@
 import express from "express";
 import {
     createReturnRequest,
+    updateReturnStatus,
     getAllReturns,
     approveReturn,
     rejectReturn
@@ -20,5 +21,5 @@ router.post("/", createReturnRequest);
 router.get("/", checkRole([ROLES.ADMIN]), getAllReturns);
 router.put("/:id/approve", checkRole([ROLES.ADMIN]), approveReturn);
 router.put("/:id/reject", checkRole([ROLES.ADMIN]), rejectReturn);
-
+router.put(  "/:id/status",   checkRole([ROLES.ADMIN]),  updateReturnStatus );
 export default router;

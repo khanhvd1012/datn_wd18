@@ -274,7 +274,13 @@ console.log(res.data);
   };
 
   const ORDER_FLOW = ['pending', 'confirmed', 'processing', 'shipping', 'delivered'] as const;
-
+const RETURN_FLOW = [
+  'requested',
+  'approved',
+  'received',
+  'refunded',
+  'completed'
+] as const;
   const getAllowedNextStatuses = (current: string): string[] => {
     switch (current) {
       case 'pending': return ['confirmed'];
@@ -287,7 +293,28 @@ console.log(res.data);
 
   const canAdminCancel = (status: string) =>
     ['pending', 'confirmed', 'processing', 'shipping'].includes(status);
+const getAllowedNextReturnStatuses = (
+  current: string
+): string[] => {
 
+  switch (current) {
+
+    case 'requested':
+      return ['approved', 'rejected'];
+
+    case 'approved':
+      return ['received'];
+
+    case 'received':
+      return ['refunded'];
+
+    case 'refunded':
+      return ['completed'];
+
+    default:
+      return [];
+  }
+};
   const handleStatusAction = async (nextStatus: string) => {
     const orderId = selectedOrder?._id || (selectedOrder as any)?.id;
     if (!orderId) {
@@ -313,6 +340,41 @@ console.log(res.data);
       setStatusUpdating(false);
     }
   };
+  const handleUpdateReturnStatus = async (
+  returnId: string,
+  status: string
+) => {
+
+  try {
+
+    setReturnUpdating(true);
+
+    await api.put(
+      `/returns/${returnId}/status`,
+      { status }
+    );
+
+    showNotification(
+      'Cập nhật trạng thái hoàn hàng thành công',
+      'success'
+    );
+
+    fetchReturns();
+    fetchOrders();
+
+  } catch (error: any) {
+
+    showNotification(
+      error.response?.data?.message ||
+      'Không thể cập nhật trạng thái',
+      'error'
+    );
+
+  } finally {
+
+    setReturnUpdating(false);
+  }
+};
 
   const handleConfirmCancel = async () => {
     const orderId = selectedOrder?._id || (selectedOrder as any)?.id;
@@ -773,35 +835,9 @@ const getReturnStatusColor = (status: string) => {
               Chi tiết
             </Button>
 
-            {item.status === 'requested' && (
-              <>
-                <Button
-                  color="success"
-                  variant="contained"
-                  startIcon={<CheckCircle />}
-                  onClick={() =>
-                    handleApproveReturn(
-                      item._id
-                    )
-                  }
-                >
-                  Duyệt hoàn
-                </Button>
-
-                <Button
-                  color="error"
-                  variant="outlined"
-                  startIcon={<Cancel />}
-                  onClick={() =>
-                    handleRejectReturn(
-                      item._id
-                    )
-                  }
-                >
-                  Từ chối
-                </Button>
-              </>
-            )}
+            {/* {item.status === 'requested' && (
+              
+            )} */}
 
           </Box>
 
@@ -1423,17 +1459,119 @@ const getReturnStatusColor = (status: string) => {
 
   </DialogContent>
 
-  <DialogActions>
+  <DialogActions
+  sx={{
+    p: 3,
+    display: 'flex',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 2
+  }}
+>
 
-    <Button
-      onClick={() =>
-        setOpenReturnDialog(false)
-      }
+  {selectedReturn && (
+
+    <Box
+      display="flex"
+      gap={1}
+      flexWrap="wrap"
     >
-      Đóng
-    </Button>
 
-  </DialogActions>
+      {RETURN_FLOW.map((status) => {
+
+        const currentIdx =
+          RETURN_FLOW.indexOf(
+            selectedReturn.status as any
+          );
+
+        const statusIdx =
+          RETURN_FLOW.indexOf(
+            status as any
+          );
+
+        const isCurrent =
+          selectedReturn.status === status;
+
+        const isPast =
+          currentIdx > statusIdx;
+
+        const isNext =
+          getAllowedNextReturnStatuses(
+            selectedReturn.status
+          ).includes(status);
+
+        return (
+
+          <Button
+            key={status}
+
+            variant={
+              isCurrent
+                ? 'contained'
+                : 'outlined'
+            }
+
+            color={
+              isCurrent
+                ? 'primary'
+                : isPast
+                ? 'success'
+                : 'primary'
+            }
+
+            disabled={
+              returnUpdating ||
+              isCurrent ||
+              isPast ||
+              !isNext
+            }
+
+            onClick={() =>
+              isNext &&
+              handleUpdateReturnStatus(
+                selectedReturn._id,
+                status
+              )
+            }
+          >
+            {getReturnStatusText(status)}
+
+            {isCurrent &&
+              ' (hiện tại)'}
+          </Button>
+        );
+      })}
+
+      {selectedReturn.status ===
+        'requested' && (
+
+        <Button
+          color="error"
+          variant="outlined"
+          disabled={returnUpdating}
+          onClick={() =>
+            handleUpdateReturnStatus(
+              selectedReturn._id,
+              'rejected'
+            )
+          }
+        >
+          Từ chối
+        </Button>
+      )}
+
+    </Box>
+  )}
+
+  <Button
+    onClick={() =>
+      setOpenReturnDialog(false)
+    }
+  >
+    Đóng
+  </Button>
+
+</DialogActions>
 
 </Dialog>
       {/* Notification */}
