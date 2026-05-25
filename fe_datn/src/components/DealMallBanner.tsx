@@ -27,50 +27,51 @@ const DealMallBanner = ({ banners }: DealMallBannerProps) => {
   }, [index, banners.length]);
 
   return (
-    <Box
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      sx={{
-        width: "100%",
-        height: "100%",
-        overflow: "hidden",
-        borderRadius: 2,
-        position: "relative",
-        background: "#000",
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          width: `${(banners.length || 1) * 100}%`,
-          transform: `translateX(-${index * 100}%)`,
-          transition: "0.5s",
-        }}
-      >
-        {banners.length > 0 ? (
-          banners.map((item) => (
-            <Box
-              key={item._id}
-              component="img"
-              src={item.image}
-              alt="mall banner"
-              sx={{
-                width: "100%",
-                height: 300,
-                objectFit: "cover",
-              }}
-            />
-          ))
-        ) : (
-          <Box
-            component="img"
-            src="https://via.placeholder.com/400"
-            alt="fallback banner"
-            sx={{ width: "100%", height: 300 }}
-          />
-        )}
-      </Box>
-    </Box>
+    <></>
+    // <Box
+    //   onMouseEnter={() => setHover(true)}
+    //   onMouseLeave={() => setHover(false)}
+    //   sx={{
+    //     width: "100%",
+    //     height: "100%",
+    //     overflow: "hidden",
+    //     borderRadius: 2,
+    //     position: "relative",
+    //     background: "#000",
+    //   }}
+    // >
+    //   <Box
+    //     sx={{
+    //       display: "flex",
+    //       width: `${(banners.length || 1) * 100}%`,
+    //       transform: `translateX(-${index * 100}%)`,
+    //       transition: "0.5s",
+    //     }}
+    //   >
+    //     {banners.length > 0 ? (
+    //       banners.map((item) => (
+    //         <Box
+    //           key={item._id}
+    //           component="img"
+    //           src={item.image}
+    //           alt="mall banner"
+    //           sx={{
+    //             width: "100%",
+    //             height: 300,
+    //             objectFit: "cover",
+    //           }}
+    //         />
+    //       ))
+    //     ) : (
+    //       <Box
+    //         component="img"
+    //         src="https://via.placeholder.com/400"
+    //         alt="fallback banner"
+    //         sx={{ width: "100%", height: 300 }}
+    //       />
+    //     )}
+    //   </Box>
+    // </Box>
   );
 };
 

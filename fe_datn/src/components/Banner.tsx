@@ -113,7 +113,7 @@ const Banner = () => {
                 top: "50%",
                 left: 10,
                 transform: "translateY(-50%)",
-                bgcolor: "rgba(0,0,0,0.4)",
+                bgcolor: "rgba(138, 138, 138, 0.4)",
                 color: "#fff",
                 "&:hover": { bgcolor: "rgba(0,0,0,0.6)" },
               }}
@@ -128,7 +128,7 @@ const Banner = () => {
                 top: "50%",
                 right: 10,
                 transform: "translateY(-50%)",
-                bgcolor: "rgba(0,0,0,0.4)",
+                bgcolor: "rgba(120, 120, 120, 0.4)",
                 color: "#fff",
                 "&:hover": { bgcolor: "rgba(0,0,0,0.6)" },
               }}

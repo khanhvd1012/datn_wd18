@@ -88,7 +88,7 @@ const Deal = () => {
   return (
 
     <Box sx={{ background: "#f5f5f5", py: 5 }}>
-      <Box sx={{ maxWidth: 1200, mx: "auto", px: 2 }}>
+      <Box sx={{ maxWidth: 1300, mx: "auto", px: 2 }}>
         {/* HEADER */}
         <Box
           sx={{

@@ -117,6 +117,10 @@ export const createVariant = async (req, res) => {
         }
 
         const { product, is_default, countInStock, color, size, storage, material, attributes, ...variantData } = req.body;
+        // Nếu SKU rỗng thì bỏ luôn field sku
+if (!variantData.sku || variantData.sku.trim() === '') {
+    delete variantData.sku;
+}
         const parsedAttributes = parseVariantAttributes(attributes);
         if (countInStock !== undefined) {
             variantData.stock = countInStock;
@@ -183,7 +187,10 @@ export const updateVariant = async (req, res) => {
 
         const { id } = req.params;
         const { is_default, countInStock, color, size, storage, material, attributes, ...updateData } = req.body;
-
+// Nếu SKU rỗng thì bỏ field sku
+if (!updateData.sku || updateData.sku.trim() === '') {
+    delete updateData.sku;
+}
         const parsedAttributes = parseVariantAttributes(attributes || updateData.attributes);
         if (countInStock !== undefined) {
             updateData.stock = countInStock;

@@ -58,6 +58,7 @@ import ModernAdminLayout from "../layouts/ModernAdminLayout";
 import NotFound from "../pages/NotFound";
 import PrivateRoute from "./PrivateRoute";
 import AdminRoute from "./AdminRoute";
+import ProductList2 from "../pages/product/ProductList2.tsx";
 
 const AppRouter = () => {
   return (
@@ -69,6 +70,7 @@ const AppRouter = () => {
         {/* PUBLIC */}
         <Route index element={<Home />} />
         <Route path="products" element={<ProductList />} />
+        <Route path="products2" element={<ProductList2 />} />
         <Route path="product/:id" element={<ProductDetail />} />
         <Route path="news" element={<News />} />
         <Route path="news/:id" element={<NewsDetail />} />

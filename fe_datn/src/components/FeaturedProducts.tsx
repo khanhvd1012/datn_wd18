@@ -19,7 +19,7 @@ const FeaturedProducts = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
-  // hiển thị 3 sản phẩm / lần
+  
   const [startIndex, setStartIndex] = useState(0);
 
   useEffect(() => {

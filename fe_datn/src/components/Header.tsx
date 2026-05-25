@@ -196,7 +196,7 @@ const Header = () => {
                       setActiveCategory(cat);
                       loadProducts(cat._id);
                     }}
-                    onClick={() => navigate(`/products?category=${cat._id}`)}
+                    onClick={() => navigate(`/products2?category=${cat._id}`)}
                     sx={{
                       px: 2,
                       py: 1,
