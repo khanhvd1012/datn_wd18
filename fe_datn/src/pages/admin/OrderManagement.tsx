@@ -123,6 +123,7 @@ interface ReturnRequest {
 const OrderManagement: React.FC = () => {
   const theme = useTheme();
   const [orders, setOrders] = useState<Order[]>([]);
+  
   const [totalOrders, setTotalOrders] = useState(0);
   const [orderSummary, setOrderSummary] = useState({
     expectedRevenue: 0,
@@ -133,8 +134,6 @@ const OrderManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
@@ -148,7 +147,9 @@ const OrderManagement: React.FC = () => {
     severity: 'success' as 'success' | 'error' | 'warning' | 'info',
   });
 const [selectedItems, setSelectedItems] = useState<any[]>([]);
-
+const [searchOrderId, setSearchOrderId] = useState("");
+const [searchPhone, setSearchPhone] = useState("");
+const [statusFilter, setStatusFilter] = useState("");
 const [returns, setReturns] = useState<ReturnRequest[]>([]);
 const [openReturnDialog, setOpenReturnDialog] = useState(false);
 const [selectedReturn, setSelectedReturn] =
@@ -156,6 +157,34 @@ const [selectedReturn, setSelectedReturn] =
 
 const [returnUpdating, setReturnUpdating] =
   useState(false);
+  const filteredOrders = orders.filter((order) => {
+
+  const matchOrderId =
+    !searchOrderId ||
+    order._id
+      ?.toLowerCase()
+      .includes(
+        searchOrderId.toLowerCase()
+      );
+
+  const matchPhone =
+    !searchPhone ||
+    order.shipping_info?.phone
+      ?.toLowerCase()
+      .includes(
+        searchPhone.toLowerCase()
+      );
+
+  const matchStatus =
+    !statusFilter ||
+    order.order_status === statusFilter;
+
+  return (
+    matchOrderId &&
+    matchPhone &&
+    matchStatus
+  );
+});
   const showNotification = (message: string, severity: 'success' | 'error' | 'warning' | 'info') => {
     setNotification({ open: true, message, severity });
   };
@@ -164,22 +193,20 @@ const [returnUpdating, setReturnUpdating] =
     setNotification({ ...notification, open: false });
   };
 
-  useEffect(() => {
+   useEffect(() => {
   fetchOrders();
   fetchReturns();
-}, [page, rowsPerPage, searchTerm, statusFilter]);
+}, [page, rowsPerPage]);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
       
       const response = await api.get('/orders/admin/all', {
-        params: {
-          search: searchTerm,
-          status: statusFilter,
-          page: page + 1,
-          limit: rowsPerPage
-        }
+         params: {
+  page: page + 1,
+  limit: rowsPerPage
+}
       });
       
       console.log("--- DỮ LIỆU TỪ BACKEND TRẢ VỀ ---");
@@ -694,55 +721,259 @@ const getReturnStatusColor = (status: string) => {
         ))}
       </Grid>
 
-      {/* Filters & Actions Area */}
-      <Paper sx={{ p: 2, mb: 3, borderRadius: 3, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-          <TextField
-            placeholder="Tìm theo mã đơn, tên hoặc SĐT khách..."
-            size="small"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search sx={{ color: 'text.secondary' }} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ 
-              flex: 1, 
-              minWidth: 300,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: '#f8f9fa'
-              }
-            }}
-          />
-          <FormControl size="small" sx={{ minWidth: 180 }}>
-            <InputLabel>Trạng thái đơn hàng</InputLabel>
-            <Select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              label="Trạng thái đơn hàng"
-              sx={{ borderRadius: 2 }}
-            >
-              <MenuItem value="">Tất cả trạng thái</MenuItem>
-              {statusOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
+      {/* SEARCH & FILTER */}
+<Paper
+  sx={{
+    p: 3,
+    mb: 3,
+    borderRadius: 4,
+    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+  }}
+>
+  <Box
+    sx={{
+      display: 'flex',
+      gap: 2,
+      flexWrap: 'wrap',
+      alignItems: 'center',
+    }}
+  >
+
+    {/* SEARCH ORDER ID */}
+    <TextField
+      label="Tìm mã đơn"
+      placeholder="Nhập mã đơn..."
+      value={searchOrderId}
+      onChange={(e) =>
+        setSearchOrderId(e.target.value)
+      }
+      size="small"
+      sx={{ minWidth: 250 }}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <Search />
+          </InputAdornment>
+        ),
+      }}
+    />
+
+    {/* SEARCH PHONE */}
+    <TextField
+      label="Tìm số điện thoại"
+      placeholder="Nhập số điện thoại..."
+      value={searchPhone}
+      onChange={(e) =>
+        setSearchPhone(e.target.value)
+      }
+      size="small"
+      sx={{ minWidth: 250 }}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <Phone />
+          </InputAdornment>
+        ),
+      }}
+    />
+
+    {/* FILTER STATUS */}
+    <FormControl
+      size="small"
+      sx={{ minWidth: 220 }}
+    >
+      <InputLabel>
+        Trạng thái
+      </InputLabel>
+
+      <Select
+        value={statusFilter}
+        label="Trạng thái"
+        onChange={(e) =>
+          setStatusFilter(
+            e.target.value
+          )
+        }
+      >
+        <MenuItem value="">
+          Tất cả
+        </MenuItem>
+
+        {statusOptions.map((status) => (
+          <MenuItem
+            key={status.value}
+            value={status.value}
+          >
+            {status.label}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+
+    {/* RESET */}
+    <Button
+      variant="outlined"
+      color="error"
+      startIcon={<Replay />}
+      onClick={() => {
+        setSearchOrderId('');
+        setSearchPhone('');
+        setStatusFilter('');
+      }}
+      sx={{
+        height: 40,
+        borderRadius: 2,
+        textTransform: 'none',
+        fontWeight: 600,
+      }}
+    >
+      Reset
+    </Button>
+
+  </Box>
+</Paper>
+
+
+
+
+
+      {/* Orders Table */}
+      <Paper sx={{ width: '100%', overflow: 'hidden', borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+        <TableContainer sx={{ maxHeight: 'calc(100vh - 400px)' }}>
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 700, backgroundColor: '#f1f3f9' }}>Mã đơn hàng</TableCell>
+                <TableCell sx={{ fontWeight: 700, backgroundColor: '#f1f3f9' }}>Khách hàng</TableCell>
+                <TableCell sx={{ fontWeight: 700, backgroundColor: '#f1f3f9' }}>Sản phẩm</TableCell>
+                <TableCell sx={{ fontWeight: 700, backgroundColor: '#f1f3f9' }}>Giá trị</TableCell>
+                <TableCell sx={{ fontWeight: 700, backgroundColor: '#f1f3f9' }}>Thanh toán</TableCell>
+                <TableCell sx={{ fontWeight: 700, backgroundColor: '#f1f3f9' }}>Trạng thái</TableCell>
+                <TableCell sx={{ fontWeight: 700, backgroundColor: '#f1f3f9' }}>Ngày đặt</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 700, backgroundColor: '#f1f3f9' }}>Thao tác</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={8} align="center" sx={{ py: 10 }}>
+                    <Typography color="text.secondary">Đang tải dữ liệu...</Typography>
+                  </TableCell>
+                </TableRow>
+              ) : filteredOrders.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} align="center" sx={{ py: 10 }}>
+                    <Box sx={{ opacity: 0.5 }}>
+                      <ShoppingBag sx={{ fontSize: 64, mb: 1.5 }} />
+                      <Typography>Không có đơn hàng nào phù hợp</Typography>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ) : filteredOrders.map((order) => (
+                <TableRow key={order._id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                  <TableCell>
+                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#1a237e' }}>
+                      #{order._id ? order._id.substring(order._id.length - 8).toUpperCase() : ''}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                      ID: {order._id}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Avatar sx={{ width: 32, height: 32, fontSize: '0.875rem', bgcolor: theme.palette.primary.main }}>
+                        {order.shipping_info.name.charAt(0)}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {order.shipping_info.name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {order.shipping_info.phone}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {order.order_items.slice(0, 2).map((item, i) => (
+                        <Tooltip key={i} title={item.name}>
+                          <Avatar 
+                            variant="rounded" 
+                            src={item.image} 
+                            sx={{ width: 32, height: 32, border: '1px solid #eee' }}
+                          />
+                        </Tooltip>
+                      ))}
+                      {order.order_items.length > 2 && (
+                        <Avatar variant="rounded" sx={{ width: 32, height: 32, fontSize: '0.75rem', bgcolor: '#f0f2f5', color: 'text.secondary' }}>
+                          +{order.order_items.length - 2}
+                        </Avatar>
+                      )}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                      {formatPrice(order.total)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'inline-flex', flexDirection: 'column', gap: 0.5 }}>
+                      <Chip
+                        label={getPaymentMethodText(order.payment_method)}
+                        size="small"
+                        variant="outlined"
+                        sx={{ fontSize: '0.7rem', height: 20 }}
+                      />
+                      <Chip
+                        label={getPaymentDisplayForOrder(order)}
+                        color={order.payment_status === 'paid' ? 'success' : 'warning'}
+                        size="small"
+                        sx={{ fontSize: '0.7rem', height: 20 }}
+                      />
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={getStatusText(order.order_status)}
+                      color={getStatusColor(order.order_status)}
+                      size="small"
+                      sx={{ fontWeight: 600 }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {new Date(order.createdAt).toLocaleDateString('vi-VN')}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {new Date(order.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton
+                      onClick={(e) => handleMenuClick(e, order)}
+                      size="small"
+                      sx={{ '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.1) } }}
+                    >
+                      <MoreVert />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
               ))}
-            </Select>
-          </FormControl>
-          <Tooltip title="Lọc nâng cao">
-            <IconButton sx={{ bgcolor: '#f0f2f5', borderRadius: 2 }}>
-              <FilterList />
-            </IconButton>
-          </Tooltip>
-        </Box>
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={totalOrders}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Dòng mỗi trang"
+        />
       </Paper>
-
-
 {/* Return Management */}
 <Paper
   sx={{
@@ -1030,146 +1261,6 @@ const getReturnStatusColor = (status: string) => {
     </Box>
   )}
 </Paper>
-```
-
-
-      {/* Orders Table */}
-      <Paper sx={{ width: '100%', overflow: 'hidden', borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-        <TableContainer sx={{ maxHeight: 'calc(100vh - 400px)' }}>
-          <Table stickyHeader>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 700, backgroundColor: '#f1f3f9' }}>Mã đơn hàng</TableCell>
-                <TableCell sx={{ fontWeight: 700, backgroundColor: '#f1f3f9' }}>Khách hàng</TableCell>
-                <TableCell sx={{ fontWeight: 700, backgroundColor: '#f1f3f9' }}>Sản phẩm</TableCell>
-                <TableCell sx={{ fontWeight: 700, backgroundColor: '#f1f3f9' }}>Giá trị</TableCell>
-                <TableCell sx={{ fontWeight: 700, backgroundColor: '#f1f3f9' }}>Thanh toán</TableCell>
-                <TableCell sx={{ fontWeight: 700, backgroundColor: '#f1f3f9' }}>Trạng thái</TableCell>
-                <TableCell sx={{ fontWeight: 700, backgroundColor: '#f1f3f9' }}>Ngày đặt</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 700, backgroundColor: '#f1f3f9' }}>Thao tác</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 10 }}>
-                    <Typography color="text.secondary">Đang tải dữ liệu...</Typography>
-                  </TableCell>
-                </TableRow>
-              ) : orders.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 10 }}>
-                    <Box sx={{ opacity: 0.5 }}>
-                      <ShoppingBag sx={{ fontSize: 64, mb: 1.5 }} />
-                      <Typography>Không có đơn hàng nào phù hợp</Typography>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ) : orders.map((order) => (
-                <TableRow key={order._id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                  <TableCell>
-                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#1a237e' }}>
-                      #{order._id ? order._id.substring(order._id.length - 8).toUpperCase() : ''}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                      ID: {order._id}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                      <Avatar sx={{ width: 32, height: 32, fontSize: '0.875rem', bgcolor: theme.palette.primary.main }}>
-                        {order.shipping_info.name.charAt(0)}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {order.shipping_info.name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {order.shipping_info.phone}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {order.order_items.slice(0, 2).map((item, i) => (
-                        <Tooltip key={i} title={item.name}>
-                          <Avatar 
-                            variant="rounded" 
-                            src={item.image} 
-                            sx={{ width: 32, height: 32, border: '1px solid #eee' }}
-                          />
-                        </Tooltip>
-                      ))}
-                      {order.order_items.length > 2 && (
-                        <Avatar variant="rounded" sx={{ width: 32, height: 32, fontSize: '0.75rem', bgcolor: '#f0f2f5', color: 'text.secondary' }}>
-                          +{order.order_items.length - 2}
-                        </Avatar>
-                      )}
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                      {formatPrice(order.total)}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'inline-flex', flexDirection: 'column', gap: 0.5 }}>
-                      <Chip
-                        label={getPaymentMethodText(order.payment_method)}
-                        size="small"
-                        variant="outlined"
-                        sx={{ fontSize: '0.7rem', height: 20 }}
-                      />
-                      <Chip
-                        label={getPaymentDisplayForOrder(order)}
-                        color={order.payment_status === 'paid' ? 'success' : 'warning'}
-                        size="small"
-                        sx={{ fontSize: '0.7rem', height: 20 }}
-                      />
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={getStatusText(order.order_status)}
-                      color={getStatusColor(order.order_status)}
-                      size="small"
-                      sx={{ fontWeight: 600 }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">
-                      {new Date(order.createdAt).toLocaleDateString('vi-VN')}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {new Date(order.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="right">
-                    <IconButton
-                      onClick={(e) => handleMenuClick(e, order)}
-                      size="small"
-                      sx={{ '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.1) } }}
-                    >
-                      <MoreVert />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={totalOrders}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="Dòng mỗi trang"
-        />
-      </Paper>
 
       {/* Action Menu */}
       <Menu
