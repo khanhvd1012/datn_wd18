@@ -145,6 +145,12 @@ console.log(selectedItems);
         color: "success"
       };
 
+    case "completed":
+      return {
+        label: "Hoàn hàng hoàn tất",
+        color: "success"
+      };
+
     case "rejected":
       return {
         label: "Từ chối hoàn hàng",
@@ -191,10 +197,27 @@ console.log(selectedItems);
     }
   };
 
-  const filteredOrders = orders.filter((order) => {
-    if (tabValue === "all") return true;
-    return order.order_status === tabValue;
-  });
+   const filteredOrders = orders.filter((order) => {
+
+  if (tabValue === "all") {
+    return true;
+  }
+
+  // TAB HÀNG HOÀN
+  if (tabValue === "returned") {
+
+    return (
+      order.return_requested ||
+      (
+        order.return_status &&
+        order.return_status !== "none"
+      )
+    );
+  }
+
+  // CÁC TAB ĐƠN HÀNG BÌNH THƯỜNG
+  return order.order_status === tabValue;
+});
 
   return (
     <Box sx={{ bgcolor: "#F8FAFC", minHeight: "100vh", pb: 10, textAlign: 'left' }}>
@@ -223,6 +246,7 @@ console.log(selectedItems);
             <Tab label="Chờ xác nhận" value="pending" />
             <Tab label="Đã giao" value="delivered" />
             <Tab label="Đã hủy" value="cancelled" />
+            <Tab label="Hàng hoàn" value="returned" />
           </Tabs>
         </Paper>
 
@@ -285,8 +309,14 @@ console.log(selectedItems);
                 <Box display="flex" justifyContent="flex-end" gap={2}>
 
                   {/*  RETURN BUTTON */}
-                  {order.order_status === "delivered"
-                && !order.return_requested && (
+                   {order.order_status === "delivered"
+                  && (
+                    !order.return_requested &&
+                    (
+                      !order.return_status ||
+                      order.return_status === "none"
+                    )
+                  ) && (
                     <Button
                       color="error"
                       variant="outlined"
