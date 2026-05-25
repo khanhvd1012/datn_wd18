@@ -44,16 +44,21 @@ const orderSchema = new mongoose.Schema({
     }],
 
     return_status: {
-        type: String,
-        enum: [
-            "none",
-            "requested",
-            "approved",
-            "rejected",
-            "refunded"
-        ],
-        default: "none"
-    },
+
+    type: String,
+
+    enum: [
+        "none",
+        "requested",
+        "approved",
+        "received",
+        "refunded",
+        "completed",
+        "rejected"
+    ],
+
+    default: "none"
+},
 
     shipping_info: {
         name: {
@@ -146,17 +151,17 @@ const orderSchema = new mongoose.Schema({
     default: false
 },
 
-return_status: {
-    type: String,
-    enum: [
-        "none",
-        "requested",
-        "approved",
-        "rejected",
-        "refunded"
-    ],
-    default: "none"
-},
+// return_status: {
+//     type: String,
+//     enum: [
+//         "none",
+//         "requested",
+//         "approved",
+//         "rejected",
+//         "refunded"
+//     ],
+//     default: "none"
+// },
 
     stock_deducted: {
         type: Boolean,

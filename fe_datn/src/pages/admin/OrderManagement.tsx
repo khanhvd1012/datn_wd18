@@ -340,7 +340,7 @@ const getAllowedNextReturnStatuses = (
       setStatusUpdating(false);
     }
   };
-  const handleUpdateReturnStatus = async (
+    const handleUpdateReturnStatus = async (
   returnId: string,
   status: string
 ) => {
@@ -349,18 +349,52 @@ const getAllowedNextReturnStatuses = (
 
     setReturnUpdating(true);
 
-    await api.put(
+    const res = await api.put(
       `/returns/${returnId}/status`,
       { status }
     );
+
+    const updatedReturn =
+      res.data.request;
+
+    // UPDATE RETURNS LIST
+    setReturns(prev =>
+      prev.map(item => {
+
+        if (item._id !== returnId)
+          return item;
+
+        return {
+          ...item,
+          status:
+            updatedReturn.status,
+          refunded_at:
+            updatedReturn.refunded_at
+        };
+      })
+    );
+
+    // UPDATE SELECTED RETURN
+    setSelectedReturn(prev => {
+      prev ? { ...prev } : null
+      if (!prev) return null;
+
+      if (prev._id !== returnId)
+        return prev;
+
+      return {
+        ...prev,
+        status:
+          updatedReturn.status,
+        refunded_at:
+          updatedReturn.refunded_at
+      };
+    });
 
     showNotification(
       'Cập nhật trạng thái hoàn hàng thành công',
       'success'
     );
-
-    fetchReturns();
-    fetchOrders();
 
   } catch (error: any) {
 
@@ -413,8 +447,8 @@ const getAllowedNextReturnStatuses = (
       'success'
     );
 
-    fetchReturns();
-    fetchOrders();
+    // fetchReturns();
+    // fetchOrders();
 
     setOpenReturnDialog(false);
 
@@ -1529,20 +1563,31 @@ const getReturnStatusColor = (status: string) => {
           {selectedReturn.reason}
         </Typography>
 
-        <Typography mb={2}>
-          <b>Trạng thái:</b>{' '}
+         <Box
+  mb={2}
+  display="flex"
+  alignItems="center"
+  gap={1}
+>
 
-          <Chip
-            label={getReturnStatusText(
-              selectedReturn.status
-            )}
-            color={
-              getReturnStatusColor(
-                selectedReturn.status
-              ) as any
-            }
-          />
-        </Typography>
+  <Typography
+    component="span"
+  >
+    <b>Trạng thái:</b>
+  </Typography>
+
+  <Chip
+    label={getReturnStatusText(
+      selectedReturn.status
+    )}
+    color={
+      getReturnStatusColor(
+        selectedReturn.status
+      ) as any
+    }
+  />
+
+</Box>
 
         <Typography mb={2}>
           <b>Tiền hoàn:</b>{' '}
@@ -1632,9 +1677,13 @@ const getReturnStatusColor = (status: string) => {
       {RETURN_FLOW.map((status) => {
 
         const currentIdx =
-          RETURN_FLOW.indexOf(
-            selectedReturn.status as any
-          );
+  RETURN_FLOW.includes(
+    selectedReturn.status as any
+  )
+    ? RETURN_FLOW.indexOf(
+        selectedReturn.status as any
+      )
+    : -1;
 
         const statusIdx =
           RETURN_FLOW.indexOf(

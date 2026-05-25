@@ -50,48 +50,13 @@ export const contactSchema = Joi.object({
 });
 
 export const validateContact = (req, res, next) => {
-    try {
-        // Nếu đã đăng nhập → dùng thông tin từ req.user
-        if (req.user) {
-            req.body.username = req.user.username || "";
-            req.body.email = req.user.email || "";
+  const { username, email, phone, address, message } = req.body;
 
-            const defaultAddress = req.user.shipping_addresses?.find(addr => addr.is_default);
+  if (!username || !email || !phone || !address || !message) {
+    return res.status(400).json({
+      message: "Vui lòng nhập đầy đủ thông tin",
+    });
+  }
 
-            if (defaultAddress) {
-                req.body.phone = defaultAddress.phone || "";
-                req.body.address = defaultAddress.address || "";
-            }
-
-            // Nếu vẫn thiếu, dùng fallback
-            if (!req.body.phone || !req.body.address) {
-                return res.status(400).json({
-                    errors: [
-                        ...(req.body.phone ? [] : [{ field: "phone", message: "Không tìm thấy số điện thoại từ địa chỉ mặc định" }]),
-                        ...(req.body.address ? [] : [{ field: "address", message: "Không tìm thấy địa chỉ mặc định" }]),
-                    ],
-                });
-            }
-        }
-        console.log("user", req.user);
-
-
-        const { error } = contactSchema.validate(req.body, { abortEarly: false });
-
-        if (error) {
-            const errors = error.details.map((detail) => ({
-                field: detail.context.key,
-                message: detail.message,
-            }));
-            return res.status(400).json({ errors });
-        }
-
-        next();
-    } catch (err) {
-        console.error("Lỗi validate contact:", err);
-        return res.status(500).json({
-            message: "Lỗi xác thực dữ liệu liên hệ",
-            error: err.message,
-        });
-    }
+  next();
 };

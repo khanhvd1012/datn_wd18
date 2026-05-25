@@ -23,7 +23,8 @@ import MessageIcon from "@mui/icons-material/Message";
 
 const Contact = () => {
   const [open, setOpen] = useState(false);
-
+const [errorOpen, setErrorOpen] = useState(false);
+const [errorMsg, setErrorMsg] = useState("");
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -54,9 +55,12 @@ const Contact = () => {
         address: "",
         message: "",
       });
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error: any) {
+  setErrorMsg(
+    error?.response?.data?.message || "Gửi liên hệ thất bại"
+  );
+  setErrorOpen(true);
+}
   };
 
   return (
@@ -330,23 +334,16 @@ const Contact = () => {
       </Container>
 
       {/* ALERT */}
-      <Snackbar
-        open={open}
-        autoHideDuration={3000}
-        onClose={() => setOpen(false)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      >
-        <Alert
-          severity="success"
-          variant="filled"
-          sx={{
-            borderRadius: 3,
-            fontWeight: 600,
-          }}
-        >
-          Gửi liên hệ thành công
-        </Alert>
-      </Snackbar>
+       <Snackbar
+  open={errorOpen}
+  autoHideDuration={3000}
+  onClose={() => setErrorOpen(false)}
+  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+>
+  <Alert severity="error" variant="filled">
+    {errorMsg}
+  </Alert>
+</Snackbar>
     </Box>
   );
 };
