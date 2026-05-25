@@ -291,8 +291,8 @@ const RETURN_FLOW = [
     }
   };
 
-  const canAdminCancel = (status: string) =>
-    ['pending', 'confirmed', 'processing', 'shipping'].includes(status);
+   const canAdminCancel = (status: string) =>
+  ['pending', 'confirmed'].includes(status);
 const getAllowedNextReturnStatuses = (
   current: string
 ): string[] => {
