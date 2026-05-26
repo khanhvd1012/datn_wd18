@@ -598,7 +598,7 @@ export const updateOrder = async (req, res) => {
                 });
             }
 
-            if (order_status === "cancelled") {
+             if (order_status === "cancelled") {
 
                 await restoreOrderStock(order);
 
@@ -606,6 +606,17 @@ export const updateOrder = async (req, res) => {
                     cancel_reason ||
                     "Đơn hàng bị hủy";
             }
+
+            // AUTO COMPLETE PAYMENT
+            if (
+                order_status === "delivered" &&
+                order.payment_status === "pending"
+            ) {
+                updateData.payment_status = "paid";
+            }
+
+            updateData.order_status =
+                order_status;
 
             updateData.order_status =
                 order_status;
