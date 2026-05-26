@@ -332,13 +332,13 @@ const Header = () => {
               LIÊN HỆ
             </Button>
 
-            <Button
+            {/* <Button
               component={Link}
               to="/news"
               sx={navStyle}
             >
               TIN TỨC
-            </Button>
+            </Button> */}
 
             {!user && (
               <Button

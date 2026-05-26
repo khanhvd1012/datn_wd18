@@ -4,8 +4,13 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import CartItem from "../models/cartItem_MD.js";
-
-
+import Category from "../models/category_MD.js";
+import Brand from "../models/brand_MD.js";
+const requireObjectId = (value, fieldName) => {
+    if (value && !mongoose.Types.ObjectId.isValid(value)) {
+        throw new Error(`${fieldName} phải là ObjectId hợp lệ`);
+    }
+};
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -111,7 +116,36 @@ export const getAllProducts = async (req, res) => {
         });
     }
 };
+//
+const resolveCategoryId = async (value) => {
+    if (!value) return null;
 
+    // nếu là ObjectId hợp lệ
+    if (mongoose.Types.ObjectId.isValid(value)) {
+        return value;
+    }
+
+    // nếu là name → tìm theo name
+    const cat = await Category.findOne({
+        name: { $regex: value, $options: "i" }
+    });
+
+    return cat ? cat._id : null;
+};
+
+const resolveBrandId = async (value) => {
+    if (!value) return null;
+
+    if (mongoose.Types.ObjectId.isValid(value)) {
+        return value;
+    }
+
+    const brand = await Brand.findOne({
+        name: { $regex: value, $options: "i" }
+    });
+
+    return brand ? brand._id : null;
+};
 // Lấy sản phẩm theo ID
 export const getProductById = async (req, res) => {
     try {
@@ -224,58 +258,29 @@ const deleteImageFile = (imageUrl) => {
 // Tạo sản phẩm mới (Admin)
 export const createProduct = async (req, res) => {
     try {
-        const uploadedImages = req.files?.map(
-            (file) => `/uploads/${file.filename}`
-            ) || [];
         let productData = { ...req.body };
+
+        // convert name → ObjectId nếu cần
+        productData.category = await resolveCategoryId(productData.category);
+        productData.brand = await resolveBrandId(productData.brand);
 
         if (productData.original_price && Number(productData.price) >= Number(productData.original_price)) {
             return res.status(400).json({ message: 'Giá bán phải nhỏ hơn giá gốc' });
         }
 
-        // Xử lý ảnh upload
         const uploadImages = buildImageUrls(req);
-        if (uploadImages && uploadImages.length > 0) {
-            productData.images = uploadImages;
-        } else {
-            productData.images = [];
-        }
-
-        // Kiểm tra slug unique
-        const existingProduct = await Product.findOne({ slug: productData.slug });
-        if (existingProduct) {
-            // Xóa file đã upload nếu có
-            if (req.files) {
-                req.files.forEach(file => {
-                    const filePath = path.join(__dirname, '../../public/uploads', file.filename);
-                    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-                });
-            }
-            return res.status(400).json({ message: 'Slug đã tồn tại' });
-        }
+        productData.images = uploadImages || [];
 
         const product = await Product.create(productData);
-        const images = [
-        ...JSON.parse(req.body.existingImages || "[]"),
-        ...uploadedImages,
-        ];
+
         res.status(201).json({
             message: 'Tạo sản phẩm thành công',
             product
         });
+
     } catch (error) {
-        // Xóa file đã upload nếu có lỗi
-        if (req.files) {
-            req.files.forEach(file => {
-                const filePath = path.join(__dirname, '../../public/uploads', file.filename);
-                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-            });
-        }
-        console.error('Lỗi khi tạo sản phẩm:', error);
-        res.status(500).json({ 
-            message: 'Lỗi máy chủ nội bộ',
-            error: error.message 
-        });
+        console.error(error);
+        res.status(500).json({ message: error.message });
     }
 };
 
@@ -285,37 +290,12 @@ export const updateProduct = async (req, res) => {
         const { id } = req.params;
         let updateData = { ...req.body };
 
-        if (updateData.original_price && Number(updateData.price) >= Number(updateData.original_price)) {
-            return res.status(400).json({ message: 'Giá bán phải nhỏ hơn giá gốc' });
+        if (updateData.category) {
+            updateData.category = await resolveCategoryId(updateData.category);
         }
 
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ message: 'ID sản phẩm không hợp lệ' });
-        }
-
-        const existingProduct = await Product.findById(id);
-        if (!existingProduct) {
-            // Xóa file đã upload nếu có
-            if (req.files) {
-                req.files.forEach(file => {
-                    const filePath = path.join(__dirname, '../../public/uploads', file.filename);
-                    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-                });
-            }
-            return res.status(404).json({ message: 'Sản phẩm không tồn tại' });
-        }
-
-        // Xử lý ảnh upload
-        const oldImages = Array.isArray(existingProduct.images) ? existingProduct.images : [];
-        const newImages = buildImageUrls(req, oldImages);
-        if (newImages !== undefined) {
-            // Delete files that were removed by user
-            oldImages.forEach((oldImg) => {
-                if (!newImages.includes(oldImg)) {
-                    deleteImageFile(oldImg);
-                }
-            });
-            updateData.images = newImages;
+        if (updateData.brand) {
+            updateData.brand = await resolveBrandId(updateData.brand);
         }
 
         const product = await Product.findByIdAndUpdate(
@@ -328,19 +308,10 @@ export const updateProduct = async (req, res) => {
             message: 'Cập nhật sản phẩm thành công',
             product
         });
+
     } catch (error) {
-        // Xóa file đã upload nếu có lỗi
-        if (req.files) {
-            req.files.forEach(file => {
-                const filePath = path.join(__dirname, '../../public/uploads', file.filename);
-                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-            });
-        }
-        console.error('Lỗi khi cập nhật sản phẩm:', error);
-        res.status(500).json({ 
-            message: 'Lỗi máy chủ nội bộ',
-            error: error.message 
-        });
+        console.error(error);
+        res.status(500).json({ message: error.message });
     }
 };
 

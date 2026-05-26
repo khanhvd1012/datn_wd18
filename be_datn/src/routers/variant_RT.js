@@ -21,5 +21,6 @@ variantRouter.get("/", checkPermission, getAllVariants);
 variantRouter.post("/", upload.array("images", 10), checkPermission, createVariant);
 variantRouter.put("/:id", upload.array("images", 10), checkPermission, updateVariant);
 variantRouter.delete("/:id", checkPermission, deleteVariant);
+variantRouter.post("/product/:productId", upload.array("images", 10), checkPermission, createVariant);
 
 export default variantRouter;

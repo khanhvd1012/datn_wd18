@@ -125,7 +125,7 @@ const OrderDetail = () => {
     }
   };
 
-  const canCustomerCancel = ["pending", "confirmed", "processing"].includes(order.order_status);
+  const canCustomerCancel = ["pending", "confirmed"].includes(order.order_status);
 
   const handleOpenCancelDialog = () => {
     if (!id) return;
@@ -237,9 +237,55 @@ const OrderDetail = () => {
                 </Stepper>
               </Paper>
             ) : (
-              <Alert severity="error" sx={{ mb: 4, borderRadius: 2, alignItems: 'center' }}>
-                <Typography fontWeight={600}>Đơn hàng đã bị hủy</Typography>
-              </Alert>
+              <Paper
+  elevation={0}
+  sx={{
+    p: 3,
+    mb: 4,
+    borderRadius: 3,
+    border: `1px solid ${theme.palette.error.light}`,
+    bgcolor: alpha(theme.palette.error.main, 0.04),
+  }}
+>
+  <Alert
+    severity="error"
+    sx={{
+      mb: order.cancel_reason ? 2 : 0,
+      borderRadius: 2,
+      alignItems: "center",
+      fontWeight: 600,
+    }}
+  >
+    <Typography fontWeight={700}>
+      Đơn hàng đã bị hủy
+    </Typography>
+  </Alert>
+
+  {order.cancel_reason && (
+    <Box
+      sx={{
+        mt: 2,
+        p: 2,
+        borderRadius: 2,
+        bgcolor: "#fff",
+        border: `1px dashed ${theme.palette.error.main}`,
+      }}
+    >
+      <Typography
+        variant="subtitle2"
+        fontWeight={700}
+        color="error.main"
+        mb={1}
+      >
+        Lý do hủy :
+      </Typography>
+
+      <Typography variant="body2" color="text.secondary">
+        {order.cancel_reason}
+      </Typography>
+    </Box>
+  )}
+</Paper>
             )}
 
             {/* Sản phẩm */}

@@ -106,7 +106,22 @@ const ProductManagement: React.FC = () => {
     countInStock: 0,
     images: [],
   });
+const [categories, setCategories] = useState<any[]>([]);
+const [brands, setBrands] = useState<any[]>([]);
 
+useEffect(() => {
+  const fetchMeta = async () => {
+    const [catRes, brandRes] = await Promise.all([
+      api.get('/categories'),
+      api.get('/brands')
+    ]);
+
+    setCategories(catRes.data);
+    setBrands(brandRes.data);
+  };
+
+  fetchMeta();
+}, []);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
@@ -162,15 +177,15 @@ const ProductManagement: React.FC = () => {
   const handleEditProduct = (product: Product) => {
     setDialogMode('edit');
     setFormData({
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      original_price: product.original_price,
-      category: product.category,
-      brand: product.brand,
-      countInStock: product.countInStock,
-      images: product.images,
-    });
+  name: product.name,
+  description: product.description,
+  price: product.price,
+  original_price: product.original_price,
+  category: (product.category as any)?._id || "",
+  brand: (product.brand as any)?._id || "",
+  countInStock: product.countInStock,
+  images: product.images,
+});
     setSelectedProduct(product);
     setOpenDialog(true);
     handleMenuClose();
@@ -195,20 +210,52 @@ const ProductManagement: React.FC = () => {
     setProductToDelete(null);
   };
 
-  const handleSaveProduct = async () => {
-    try {
-      if (dialogMode === 'create') {
-        await api.post('/products', formData);
-      } else {
-        await api.put(`/products/${selectedProduct?._id || selectedProduct?.id}`, formData);
-      }
-      setOpenDialog(false);
-      fetchProducts();
-    } catch (error) {
-      console.error('Error saving product:', error);
-    }
-  };
+const handleSaveProduct = async () => {
+  try {
+    const payload = {
+      ...formData,
+      category: formData.category, // phải là _id
+      brand: formData.brand,       // phải là _id
+    };
 
+    if (dialogMode === 'create') {
+      await api.post('/products', payload);
+    } else {
+      await api.put(`/products/${selectedProduct?._id || selectedProduct?.id}`, payload);
+    }
+
+    setOpenDialog(false);
+    fetchProducts();
+  } catch (error) {
+    console.error('Error saving product:', error);
+  }
+};
+const handleSaveVariant = async () => {
+  try {
+    const payload = {
+      product: selectedProduct._id,
+      name: variantForm.name,
+      price: variantForm.price,
+      original_price: variantForm.original_price,
+      stock: variantForm.stock,
+      color: variantForm.color,
+      size: variantForm.size,
+      storage: variantForm.storage,
+      material: variantForm.material,
+      attributes: variantForm.attributes,
+    };
+
+    if (mode === "create") {
+      await api.post("/variants", payload);
+    } else {
+      await api.put(`/variants/${selectedVariant._id}`, payload);
+    }
+
+    fetchVariants(selectedProduct._id);
+  } catch (err) {
+    console.error("Save variant error:", err);
+  }
+};
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
@@ -582,20 +629,32 @@ const ProductManagement: React.FC = () => {
               />
             </Grid>
             <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Danh mục"
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              />
+              <Select
+  value={formData.category}
+  onChange={(e) =>
+    setFormData({ ...formData, category: e.target.value })
+  }
+>
+  {categories.map((c) => (
+    <MenuItem key={c._id} value={c._id}>
+      {c.name}
+    </MenuItem>
+  ))}
+</Select>
             </Grid>
             <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Thương hiệu"
-                value={formData.brand}
-                onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-              />
+             <Select
+  value={formData.brand}
+  onChange={(e) =>
+    setFormData({ ...formData, brand: e.target.value })
+  }
+>
+  {brands.map((b) => (
+    <MenuItem key={b._id} value={b._id}>
+      {b.name}
+    </MenuItem>
+  ))}
+</Select>
             </Grid>
             <Grid item xs={12}>
               <TextField

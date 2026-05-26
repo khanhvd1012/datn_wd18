@@ -108,55 +108,79 @@ export const getVariantById = async (req, res) => {
 // Tạo variant mới
 export const createVariant = async (req, res) => {
     try {
-        // Normalize attributes before validation, because multipart/form-data sends strings
+        // 1. Lấy productId từ params
+        const productId = req.params.productId;
+
+        // 2. Gán vào body để validate
+        req.body.product = productId;
+
+        // 3. normalize attributes
         req.body.attributes = parseVariantAttributes(req.body.attributes);
 
+        // 4. validate
         const { error } = createVariantValidator.validate(req.body);
         if (error) {
             return res.status(400).json({ message: error.details[0].message });
         }
 
-        const { product, is_default, countInStock, color, size, storage, material, attributes, ...variantData } = req.body;
-        // Nếu SKU rỗng thì bỏ luôn field sku
-if (!variantData.sku || variantData.sku.trim() === '') {
-    delete variantData.sku;
-}
+        // 5. CHỈ DESTRUCTURE SAU KHI VALIDATE
+        const {
+            product,
+            is_default,
+            countInStock,
+            color,
+            size,
+            storage,
+            material,
+            attributes,
+            ...variantData
+        } = req.body;
+
+        // 6. SKU rỗng thì xóa
+        if (!variantData.sku || variantData.sku.trim() === '') {
+            delete variantData.sku;
+        }
+
         const parsedAttributes = parseVariantAttributes(attributes);
+
         if (countInStock !== undefined) {
             variantData.stock = countInStock;
         }
+
         variantData.attributes = parsedAttributes;
         variantData.color = color || parsedAttributes?.color || '';
         variantData.size = size || parsedAttributes?.size || '';
         variantData.storage = storage || parsedAttributes?.storage || '';
         variantData.material = material || parsedAttributes?.material || '';
 
+        // 7. images
         const uploadImages = buildVariantImageUrls(req);
         if (uploadImages) {
             variantData.images = uploadImages;
         }
 
-        // Kiểm tra sản phẩm tồn tại
+        // 8. check product tồn tại
         const productExists = await Product.findById(product);
         if (!productExists) {
             return res.status(404).json({ message: "Sản phẩm không tồn tại" });
         }
 
-        // Nếu set làm default, bỏ default của các variant khác
+        // 9. default variant
         if (is_default) {
             await Variant.updateMany(
-                { product: product },
+                { product },
                 { $set: { is_default: false } }
             );
         }
 
+        // 10. create
         const variant = await Variant.create({
             product,
             is_default: is_default || false,
             ...variantData
         });
 
-        // Thêm variant vào danh sách variants của product
+        // 11. push vào product
         await Product.findByIdAndUpdate(product, {
             $push: { variants: variant._id }
         });
@@ -165,7 +189,9 @@ if (!variantData.sku || variantData.sku.trim() === '') {
             message: "Tạo biến thể thành công",
             variant
         });
+
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: error.message });
     }
 };
