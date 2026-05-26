@@ -553,7 +553,7 @@ const handleRejectReturn = async (
     switch (status) {
       case 'pending': return 'Chờ xác nhận';
       case 'confirmed': return 'Đã xác nhận';
-      case 'processing': return 'Đang xử lý';
+      case 'processing': return 'Đã giao cho ship';
       case 'shipping': return 'Đang giao hàng';
       case 'delivered': return 'Đã giao hàng';
       case 'cancelled': return 'Đã hủy';
@@ -601,7 +601,7 @@ const handleRejectReturn = async (
   const statusOptions = [
     { value: 'pending', label: 'Chờ xác nhận' },
     { value: 'confirmed', label: 'Đã xác nhận' },
-    { value: 'processing', label: 'Đang xử lý' },
+    { value: 'processing', label: 'Đã giao cho ship' },
     { value: 'shipping', label: 'Đang giao hàng' },
     { value: 'delivered', label: 'Đã giao hàng' },
     { value: 'cancelled', label: 'Đã hủy' },
