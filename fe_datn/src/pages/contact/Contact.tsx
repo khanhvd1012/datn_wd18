@@ -23,8 +23,11 @@ import MessageIcon from "@mui/icons-material/Message";
 
 const Contact = () => {
   const [open, setOpen] = useState(false);
-const [errorOpen, setErrorOpen] = useState(false);
-const [errorMsg, setErrorMsg] = useState("");
+
+  const [successOpen, setSuccessOpen] = useState(false); // ✅ thêm
+  const [errorOpen, setErrorOpen] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -46,7 +49,7 @@ const [errorMsg, setErrorMsg] = useState("");
     try {
       await createContactApi(form);
 
-      setOpen(true);
+      setSuccessOpen(true); // ✅ success toast
 
       setForm({
         username: "",
@@ -56,11 +59,11 @@ const [errorMsg, setErrorMsg] = useState("");
         message: "",
       });
     } catch (error: any) {
-  setErrorMsg(
-    error?.response?.data?.message || "Gửi liên hệ thất bại"
-  );
-  setErrorOpen(true);
-}
+      setErrorMsg(
+        error?.response?.data?.message || "Gửi liên hệ thất bại"
+      );
+      setErrorOpen(true);
+    }
   };
 
   return (
@@ -151,12 +154,7 @@ const [errorMsg, setErrorMsg] = useState("");
               >
                 <Box mb={2}>{item.icon}</Box>
 
-                <Typography
-                  fontWeight={700}
-                  fontSize={20}
-                  color="#0f172a"
-                  mb={1}
-                >
+                <Typography fontWeight={700} fontSize={20} mb={1}>
                   {item.title}
                 </Typography>
 
@@ -182,12 +180,7 @@ const [errorMsg, setErrorMsg] = useState("");
                 boxShadow: "0 10px 40px rgba(15,23,42,.04)",
               }}
             >
-              <Typography
-                variant="h4"
-                fontWeight={800}
-                color="#0f172a"
-                mb={4}
-              >
+              <Typography variant="h4" fontWeight={800} mb={4}>
                 Gửi tin nhắn
               </Typography>
 
@@ -285,17 +278,9 @@ const [errorMsg, setErrorMsg] = useState("");
                     sx={{
                       height: 56,
                       borderRadius: "16px",
-                      textTransform: "none",
                       fontWeight: 700,
-                      fontSize: 16,
                       background:
                         "linear-gradient(135deg,#2563eb,#3b82f6)",
-                      boxShadow: "0 10px 25px rgba(37,99,235,.25)",
-
-                      "&:hover": {
-                        background:
-                          "linear-gradient(135deg,#1d4ed8,#2563eb)",
-                      },
                     }}
                   >
                     Gửi liên hệ
@@ -315,7 +300,6 @@ const [errorMsg, setErrorMsg] = useState("");
                 border: "1px solid #e2e8f0",
                 height: { xs: 400, md: "100%" },
                 minHeight: 500,
-                boxShadow: "0 10px 40px rgba(15,23,42,.04)",
               }}
             >
               <iframe
@@ -323,9 +307,7 @@ const [errorMsg, setErrorMsg] = useState("");
                 src="https://maps.google.com/maps?q=13%20Tr%E1%BB%8Bnh%20V%C4%83n%20B%C3%B4%20H%C3%A0%20N%E1%BB%99i&t=&z=15&ie=UTF8&iwloc=&output=embed"
                 width="100%"
                 height="100%"
-                style={{
-                  border: 0,
-                }}
+                style={{ border: 0 }}
                 loading="lazy"
               />
             </Paper>
@@ -333,17 +315,29 @@ const [errorMsg, setErrorMsg] = useState("");
         </Grid>
       </Container>
 
-      {/* ALERT */}
-       <Snackbar
-  open={errorOpen}
-  autoHideDuration={3000}
-  onClose={() => setErrorOpen(false)}
-  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
->
-  <Alert severity="error" variant="filled">
-    {errorMsg}
-  </Alert>
-</Snackbar>
+      {/* SUCCESS SNACKBAR */}
+      <Snackbar
+        open={successOpen}
+        autoHideDuration={3000}
+        onClose={() => setSuccessOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert severity="success" variant="filled">
+          Gửi liên hệ thành công!
+        </Alert>
+      </Snackbar>
+
+      {/* ERROR SNACKBAR */}
+      <Snackbar
+        open={errorOpen}
+        autoHideDuration={3000}
+        onClose={() => setErrorOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert severity="error" variant="filled">
+          {errorMsg}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
@@ -355,15 +349,8 @@ const textFieldStyle = {
   "& .MuiOutlinedInput-root": {
     borderRadius: "16px",
     background: "#fff",
-
-    "& fieldset": {
-      borderColor: "#e2e8f0",
-    },
-
-    "&:hover fieldset": {
-      borderColor: "#94a3b8",
-    },
-
+    "& fieldset": { borderColor: "#e2e8f0" },
+    "&:hover fieldset": { borderColor: "#94a3b8" },
     "&.Mui-focused fieldset": {
       borderColor: "#2563eb",
       borderWidth: "2px",
