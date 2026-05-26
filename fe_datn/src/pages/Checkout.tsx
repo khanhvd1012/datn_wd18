@@ -89,6 +89,14 @@ const validatePhoneVN = (phone: string) => {
 
   return phoneRegex.test(cleanPhone);
 };
+const validateEmail = (email: string) => {
+  const emailRegex =
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  return emailRegex.test(email);
+};
+
+const [emailError, setEmailError] = useState("");
   useEffect(() => {
     const state = location.state as { selectedItems?: string[] } | null;
     if (state?.selectedItems) {
@@ -128,7 +136,7 @@ const validatePhoneVN = (phone: string) => {
   };
 
   
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   const { name, value } = e.target;
 
   setFormData((prev) => ({
@@ -144,6 +152,17 @@ const validatePhoneVN = (phone: string) => {
       setPhoneError("Số điện thoại không hợp lệ");
     } else {
       setPhoneError("");
+    }
+  }
+
+  // validate realtime email
+  if (name === "email") {
+    if (!value.trim()) {
+      setEmailError("Vui lòng nhập email");
+    } else if (!validateEmail(value)) {
+      setEmailError("Email không đúng định dạng");
+    } else {
+      setEmailError("");
     }
   }
 };
@@ -228,6 +247,14 @@ const validatePhoneVN = (phone: string) => {
   });
   return;
 }
+        if (!validateEmail(formData.email)) {
+          setNotif({
+            open: true,
+            message: "Email không đúng định dạng",
+            severity: "warning",
+          });
+          return;
+        }
 
     if (formData.paymentMethod === "COD") {
       setConfirmDialogOpen(true);
@@ -363,15 +390,21 @@ const validatePhoneVN = (phone: string) => {
               />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    fullWidth
-                    label="Địa chỉ Email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
-                  />
+                   <TextField
+                  fullWidth
+                  label="Địa chỉ Email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  error={!!emailError}
+                  helperText={emailError}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 3
+                    }
+                  }}
+                />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <TextField

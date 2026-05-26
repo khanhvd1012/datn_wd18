@@ -8,7 +8,7 @@ import Voucher from "../models/voucher_MD.js";
 import { createOrderValidator } from "../validators/order_VLD.js";
 import { ROLES } from "../config/roles.js";
 import { deductOrderStock, restoreOrderStock } from "../utils/orderStockUtils.js";
-
+import { sendOrderMail } from "../utils/sendOrderMail.js";
 const ONLINE_PAYMENT_METHODS = ["vnpay", "momo", "bank"];
 
 const ALLOWED_TRANSITIONS = {
@@ -341,6 +341,7 @@ export const createOrder = async (req, res) => {
 
         // 8. Create order
         const order = await Order.create({
+            
             user_id: userId,
             order_items: orderItems,
             shipping_info,
@@ -354,6 +355,16 @@ export const createOrder = async (req, res) => {
             coupon_code: coupon_code || null,
             notes: notes || ""
         });
+        // Gửi email xác nhận đơn hàng
+            await sendOrderMail({
+    to: shipping_info.email,
+    order: {
+        _id: order._id,
+        order_items: order.order_items,
+        total: order.total,
+        shipping_info: order.shipping_info
+    }
+});
 
         // 9. Soft delete cart item
         const itemIdsToDelete = cartItems.map(

@@ -185,7 +185,7 @@ console.log(selectedItems);
       case "confirmed":
         return { label: "Đã xác nhận", color: "success", icon: <CheckCircleOutline fontSize="small" /> };
       case "processing":
-        return { label: "Đang xử lý", color: "info", icon: <Inventory2Outlined fontSize="small" /> };
+        return { label: "Đã giao cho ship", color: "info", icon: <Inventory2Outlined fontSize="small" /> };
       case "shipping":
         return { label: "Đang giao", color: "secondary", icon: <LocalShippingOutlined fontSize="small" /> };
       case "delivered":

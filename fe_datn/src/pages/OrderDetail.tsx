@@ -105,7 +105,7 @@ const OrderDetail = () => {
     switch (status) {
       case "pending": return { label: "Chờ xác nhận", color: "warning" };
       case "confirmed": return { label: "Đã xác nhận", color: "success" };
-      case "processing": return { label: "Đang xử lý", color: "info" };
+      case "processing": return { label: "Đã giao cho ship", color: "info" };
       case "shipping": return { label: "Đang giao", color: "secondary" };
       case "delivered": return { label: "Đã giao hàng", color: "success" };
       case "cancelled": return { label: "Đã hủy", color: "error" };
@@ -158,7 +158,7 @@ const OrderDetail = () => {
 
   const statusInfo = getStatusInfo(order.order_status);
   const activeStep = getStepIndex(order.order_status);
-  const steps = ['Chờ xác nhận', 'Đã xác nhận', 'Đang xử lý', 'Đang giao hàng', 'Đã giao hàng'];
+  const steps = ['Chờ xác nhận', 'Đã xác nhận', 'Đã giao cho ship', 'Đang giao hàng', 'Đã giao hàng'];
 
   return (
     <Box sx={{ bgcolor: "#F8FAFC", minHeight: "100vh", pb: 10, textAlign: 'left' }}>
