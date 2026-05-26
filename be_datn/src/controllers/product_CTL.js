@@ -224,6 +224,9 @@ const deleteImageFile = (imageUrl) => {
 // Tạo sản phẩm mới (Admin)
 export const createProduct = async (req, res) => {
     try {
+        const uploadedImages = req.files?.map(
+            (file) => `/uploads/${file.filename}`
+            ) || [];
         let productData = { ...req.body };
 
         if (productData.original_price && Number(productData.price) >= Number(productData.original_price)) {
@@ -252,7 +255,10 @@ export const createProduct = async (req, res) => {
         }
 
         const product = await Product.create(productData);
-
+        const images = [
+        ...JSON.parse(req.body.existingImages || "[]"),
+        ...uploadedImages,
+        ];
         res.status(201).json({
             message: 'Tạo sản phẩm thành công',
             product

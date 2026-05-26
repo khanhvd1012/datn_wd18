@@ -276,7 +276,29 @@ const OrderDetail = () => {
                       </Box>
                       
                       <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                        <Typography variant="subtitle1" fontWeight={600}>{itemName}</Typography>
+
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight={600}
+                        sx={{
+                          cursor: 'pointer',
+                          '&:hover': {
+                            color: 'primary.main'
+                          }
+                        }}
+                        onClick={() => {
+                          const productId =
+                            productInfo?._id ||
+                            item.product_id?._id ||
+                            item.product_id;
+
+                          if (productId) {
+                            navigate(`/product/${productId}`);
+                          }
+                        }}
+                      >
+                        {itemName}
+                      </Typography>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1, flexWrap: 'wrap', gap: 2 }}>
                           <Stack direction="row" spacing={3}>
                             <Box>

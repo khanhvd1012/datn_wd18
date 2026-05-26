@@ -77,7 +77,7 @@ interface Variant {
   price: number;
   original_price: number;
   countInStock: number;
-  sold: number;
+  sold?: number;
   color?: string;
   size?: string;
   storage?: string;
@@ -167,6 +167,7 @@ function TabPanel(props: TabPanelProps) {
 const ProductVariantManagement: React.FC = () => {
   const theme = useTheme();
   const [products, setProducts] = useState<Product[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
@@ -266,42 +267,29 @@ const ProductVariantManagement: React.FC = () => {
 
   // Fetch categories and brands for dropdowns
   useEffect(() => {
-    const fetchCategoriesAndBrands = async () => {
-      try {
-        console.log("🔄 Starting to fetch categories and brands...");
+  fetchOrders();
 
-        const [categoriesRes, brandsRes] = await Promise.all([
-          api.get("/categories"),
-          api.get("/brands"),
-        ]);
+  const fetchCategoriesAndBrands = async () => {
+    try {
+      console.log("🔄 Starting to fetch categories and brands...");
 
-        console.log("✅ Categories API response:", categoriesRes);
-        console.log("✅ Brands API response:", brandsRes);
-        console.log("📊 Categories data:", categoriesRes.data);
-        console.log("📊 Brands data:", brandsRes.data);
+      const [categoriesRes, brandsRes] = await Promise.all([
+        api.get("/categories"),
+        api.get("/brands"),
+      ]);
 
-        setCategories(categoriesRes.data || []);
-        setBrands(brandsRes.data || []);
+      setCategories(categoriesRes.data || []);
+      setBrands(brandsRes.data || []);
+    } catch (error: any) {
+      console.error("❌ Error fetching categories and brands:", error);
 
-        console.log(
-          "🎯 Categories set:",
-          categoriesRes.data?.length || 0,
-          "items",
-        );
-        console.log("🎯 Brands set:", brandsRes.data?.length || 0, "items");
-      } catch (error: any) {
-        console.error("❌ Error fetching categories and brands:", error);
-        console.error(
-          "❌ Error details:",
-          error.response?.data || error.message,
-        );
-        setCategories([]);
-        setBrands([]);
-      }
-    };
+      setCategories([]);
+      setBrands([]);
+    }
+  };
 
-    fetchCategoriesAndBrands();
-  }, []); // Empty dependency array - only run once
+  fetchCategoriesAndBrands();
+}, []);
 
   // Helper functions to get brand and category names
   const getBrandName = (brand: string | { _id: string; name: string }) => {
@@ -364,7 +352,28 @@ const ProductVariantManagement: React.FC = () => {
       setLoading(false);
     }
   };
+  const fetchOrders = async () => {
+  try {
+    const response = await api.get("/orders");
 
+    console.log("ORDERS RESPONSE:", response.data);
+
+    const ordersData = response.data.orders || [];
+
+    console.log("ORDERS DATA:", ordersData);
+
+    setOrders(ordersData);
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+  }
+};
+useEffect(() => {
+  fetchOrders();
+}, []);
+
+useEffect(() => {
+  console.log("ORDERS STATE:", orders);
+}, [orders]);
   const handleMenuClick = (
     event: React.MouseEvent<HTMLElement>,
     product: Product,
@@ -393,6 +402,7 @@ const ProductVariantManagement: React.FC = () => {
     try {
       const response = await api.get(`/products/${product._id}`);
       const freshProduct = response.data || product;
+      setProductImageFiles([]);
       setSelectedProduct(freshProduct);
       setProductFormData({
         name: freshProduct.name,
@@ -446,8 +456,8 @@ const ProductVariantManagement: React.FC = () => {
   };
 
   const handleEditVariant = async (variant: Variant, product: Product) => {
-    setVariantImageFiles([]);
-    console.log("🔧 Editing variant - raw data:", variant);
+    setVariantImageFiles([])
+        console.log("🔧 Editing variant - raw data:", variant);
     try {
       const response = await api.get(`/variants/${variant._id}`);
       const freshVariant = response.data.variant || variant;
@@ -504,11 +514,13 @@ const ProductVariantManagement: React.FC = () => {
     });
     setProductImageFiles([]);
     setDialogMode("create");
+    setProductImageFiles([]);
     setOpenProductDialog(true);
   };
 
   const handleCreateVariant = (product: Product) => {
     console.log("🔨 handleCreateVariant called with product:", product);
+    setVariantImageFiles([]);
     setSelectedProduct(product);
     setProductForVariantCreate(product);
     setSelectedVariant(null);
@@ -552,8 +564,8 @@ const ProductVariantManagement: React.FC = () => {
     setOpenBulkVariantDialog(true);
   };
 
-  const handleRemoveProductImage = (index: number) => {
-    setProductFormData((prev) => ({
+const handleRemoveProductImage = (index: number) => {   
+   setProductFormData((prev) => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index),
     }));
@@ -754,192 +766,167 @@ const ProductVariantManagement: React.FC = () => {
       setExpandedProduct(isExpanded ? productId : false);
     };
 
-  const handleSaveProduct = async () => {
-    try {
-      // Validate required fields
-      if (!productFormData.name.trim()) {
-        showNotification("Vui lòng nhập tên sản phẩm", "error");
-        return;
-      }
+   const handleSaveProduct = async () => {
+  try {
+    const formData = new FormData();
 
-      if (!productFormData.price || productFormData.price <= 0) {
-        showNotification("Vui lòng nhập giá sản phẩm lớn hơn 0", "error");
-        return;
-      }
+    formData.append("name", productFormData.name);
+    formData.append("description", productFormData.description);
+    formData.append("slug", productFormData.slug);
 
-      if (!productFormData.slug.trim()) {
-        showNotification("Vui lòng nhập slug", "error");
-        return;
-      }
+    formData.append("price", String(productFormData.price));
+    formData.append(
+      "original_price",
+      String(productFormData.original_price)
+    );
 
-      // Convert brand and category names to IDs for API
-      const selectedBrand = brands.find(
-        (b) => b.name === productFormData.brand,
-      );
-      const selectedCategory = categories.find(
-        (c) => c.name === productFormData.category,
-      );
+    formData.append(
+      "countInStock",
+      String(productFormData.countInStock)
+    );
 
-      const dataToSend = {
-        ...productFormData,
-        brand: selectedBrand?._id || productFormData.brand,
-        category: selectedCategory?._id || productFormData.category,
-      };
+    formData.append("brand", productFormData.brand);
+    formData.append("category", productFormData.category);
 
-      console.log("📤 Sending data to API:", dataToSend);
+    formData.append(
+      "is_active",
+      String(productFormData.is_active)
+    );
 
-      const formData = new FormData();
+    // ảnh cũ
+    formData.append(
+      "existingImages",
+      JSON.stringify(productFormData.images)
+    );
 
-      // Append text fields
-      formData.append("name", dataToSend.name);
-      formData.append("description", dataToSend.description);
-      formData.append("brand", dataToSend.brand);
-      formData.append("category", dataToSend.category);
-      formData.append("price", String(dataToSend.price));
-      formData.append("original_price", String(dataToSend.original_price));
-      formData.append("countInStock", String(dataToSend.countInStock));
-      formData.append("slug", dataToSend.slug);
-      formData.append("is_active", String(dataToSend.is_active));
-
-      // Append current existing image URLs so backend can keep or delete
-      formData.append(
-        "existingImages",
-        JSON.stringify(productFormData.images || []),
-      );
-      // Append new file uploads
-      productImageFiles.forEach((file) => formData.append("images", file));
-
-      let productResponse;
-      if (dialogMode === "create") {
-        productResponse = await api.post("/products", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        showNotification("Tạo sản phẩm thành công", "success");
-      } else if (dialogMode === "edit" && selectedProduct) {
-        productResponse = await api.put(
-          `/products/${selectedProduct._id}`,
-          formData,
-          { headers: { "Content-Type": "multipart/form-data" } },
-        );
-        showNotification("Cập nhật sản phẩm thành công", "success");
-      }
-
-      await fetchProducts(true); // Always refresh from backend after create/update
-      if (productResponse?.data?.product) {
-        const returnedProduct = productResponse.data.product;
-        setProductFormData((prev) => ({
-          ...prev,
-          ...returnedProduct,
-          images: Array.isArray(returnedProduct.images)
-            ? returnedProduct.images
-            : [],
-        }));
-      }
-      setOpenProductDialog(false);
-      setProductImageFiles([]);
-    } catch (error: any) {
-      console.error("Error saving product:", error);
-      const message = error.response?.data?.message || "Không thể lưu sản phẩm";
-      showNotification(message, "error");
-    }
-  };
-
-  const handleSaveVariant = async () => {
-    console.log("🔧 Saving variant:", {
-      dialogMode,
-      selectedProduct,
-      selectedVariant,
+    // ảnh mới
+    productImageFiles.forEach((file) => {
+      formData.append("images", file);
     });
-    console.log("🔧 Form data:", variantFormData);
 
-    if (!variantFormData.name || !variantFormData.price) {
-      showNotification("Tên và giá biến thể là bắt buộc", "error");
-      return;
-    }
-
-    const payload = {
-      name: variantFormData.name,
-      sku: variantFormData.sku,
-      price: variantFormData.price,
-      original_price: variantFormData.original_price,
-      countInStock: variantFormData.countInStock,
-      color: variantFormData.color,
-      size: variantFormData.size,
-      storage: variantFormData.storage,
-      material: variantFormData.material,
-      attributes: {
-        color: variantFormData.color,
-        size: variantFormData.size,
-        storage: variantFormData.storage,
-        material: variantFormData.material,
-      },
-      images: variantFormData.images,
-      is_active: variantFormData.is_active,
-      is_default: variantFormData.is_default,
-    };
-
-    console.log("🚀 Payload final:", payload);
-
-    try {
-      const formData = new FormData();
-      Object.entries(payload).forEach(([key, value]) => {
-        if (value === undefined || value === null) return;
-        if (key === "images") {
-          // Skip images here, handle separately below
-          return;
-        }
-        if (typeof value === "object") {
-          formData.append(key, JSON.stringify(value));
-        } else {
-          formData.append(key, String(value));
-        }
+    if (dialogMode === "create") {
+      await api.post("/products", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
-
-      // Append existing images as JSON string (single field, not multiple)
-      if (Array.isArray(payload.images) && payload.images.length > 0) {
-        formData.append("existingImages", JSON.stringify(payload.images));
-      } else {
-        formData.append("existingImages", JSON.stringify([]));
-      }
-
-      // Append new file uploads
-      variantImageFiles.forEach((file) => formData.append("images", file));
-
-      let response;
-      console.log("🔍 Saving variant - dialogMode:", dialogMode, "selectedProduct:", selectedProduct, "productForVariantCreate:", productForVariantCreate);
-      
-      // Use productForVariantCreate if available (for create mode), otherwise fall back to selectedProduct
-      const productToUse = dialogMode === "create" ? (productForVariantCreate || selectedProduct) : selectedProduct;
-      
-      if (dialogMode === "create" && productToUse) {
-        formData.append("product", productToUse._id);
-        response = await api.post("/variants", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        console.log("✅ Create response:", response.data);
-        showNotification("Tạo biến thể thành công", "success");
-        setProductForVariantCreate(null); // Clear after successful create
-      } else if (dialogMode === "edit" && selectedVariant) {
-        response = await api.put(`/variants/${selectedVariant._id}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        console.log("✅ Update response:", response.data);
-        showNotification("Cập nhật biến thể thành công", "success");
-      } else {
-        console.error("❌ Lỗi: dialogMode=", dialogMode, "productToUse=", productToUse, "selectedVariant=", selectedVariant);
-        showNotification("Chưa chọn sản phẩm hoặc biến thể", "error");
-        return;
-      }
-
-      await fetchProducts(true); // Always refresh after create/update variant
-      setVariantImageFiles([]);
-      setOpenVariantDialog(false);
-    } catch (error: any) {
-      console.error("Error saving variant:", error);
-      const message = error.response?.data?.message || "Không thể lưu biến thể";
-      showNotification(message, "error");
+    } else {
+      await api.put(
+        `/products/${selectedProduct._id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
     }
-  };
+
+    fetchProducts();
+
+    setOpenProductDialog(false);
+
+    setNotification({
+      open: true,
+      message:
+        dialogMode === "create"
+          ? "Thêm sản phẩm thành công"
+          : "Cập nhật sản phẩm thành công",
+      severity: "success",
+    });
+  } catch (error) {
+    console.error(error);
+
+    setNotification({
+      open: true,
+      message: "Lưu sản phẩm thất bại",
+      severity: "error",
+    });
+  }
+};
+
+   const handleSaveVariant = async () => {
+  try {
+    const formData = new FormData();
+
+    formData.append("name", variantFormData.name);
+    formData.append("sku", variantFormData.sku);
+
+    formData.append("price", String(variantFormData.price));
+
+    formData.append(
+      "original_price",
+      String(variantFormData.original_price)
+    );
+
+    formData.append(
+      "countInStock",
+      String(variantFormData.countInStock)
+    );
+
+    formData.append("color", variantFormData.color);
+    formData.append("size", variantFormData.size);
+    formData.append("storage", variantFormData.storage);
+    formData.append("material", variantFormData.material);
+
+    formData.append(
+      "is_active",
+      String(variantFormData.is_active)
+    );
+
+    formData.append(
+      "existingImages",
+      JSON.stringify(variantFormData.images)
+    );
+
+    variantImageFiles.forEach((file) => {
+      formData.append("images", file);
+    });
+
+    if (dialogMode === "create") {
+      await api.post(
+        `/variants/product/${selectedProduct._id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+    } else {
+      await api.put(
+        `/variants/${selectedVariant._id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+    }
+
+    fetchProducts();
+
+    setOpenVariantDialog(false);
+
+    setNotification({
+      open: true,
+      message:
+        dialogMode === "create"
+          ? "Thêm biến thể thành công"
+          : "Cập nhật biến thể thành công",
+      severity: "success",
+    });
+  } catch (error) {
+    console.error(error);
+
+    setNotification({
+      open: true,
+      message: "Lưu biến thể thất bại",
+      severity: "error",
+    });
+  }
+};
 
   const handleSaveBulkVariants = async () => {
     if (!selectedProduct) return;
@@ -1049,22 +1036,55 @@ const ProductVariantManagement: React.FC = () => {
     }
   };
 
-  const getTotalStock = (product: Product) => {
-    if (!product.variants || product.variants.length === 0) {
-      return product.countInStock || 0;
-    }
-    return product.variants.reduce(
-      (total, variant) => total + variant.countInStock,
-      0,
-    );
-  };
+   const getTotalStock = (product: Product) => {
+  if (!product.variants || product.variants.length === 0) {
+    return Number(product.countInStock) || 0;
+  }
 
-  const getTotalSold = (product: Product) => {
-    return (product.variants || []).reduce(
-      (total, variant) => total + variant.sold,
-      0,
-    );
-  };
+  return product.variants.reduce(
+    (total, variant) =>
+      total + (Number(variant.countInStock) || 0),
+    0
+  );
+};
+
+   const getTotalSold = (product: Product) => {
+  let totalSold = 0;
+
+  orders.forEach((order: any) => {
+
+    // bỏ qua đơn đã hủy
+    if (order.order_status === "cancelled") {
+    //    // Chỉ tính đơn đã giao
+    // if (order.order_status !== "delivered") return;
+      return;
+    }
+
+    if (!order.order_items) return;
+
+    order.order_items.forEach((item: any) => {
+
+      if (!item || !item.product_id) return;
+
+      let itemProductId = "";
+
+      if (
+        typeof item.product_id === "object" &&
+        item.product_id !== null
+      ) {
+        itemProductId = item.product_id._id;
+      } else {
+        itemProductId = item.product_id;
+      }
+
+      if (String(itemProductId) === String(product._id)) {
+        totalSold += Number(item.quantity) || 0;
+      }
+    });
+  });
+
+  return totalSold;
+};
 
   const getMinPrice = (product: Product) => {
     const variants = product.variants || [];
@@ -1904,7 +1924,7 @@ const ProductVariantManagement: React.FC = () => {
                     sx={{ position: "relative" }}
                   >
                     <img
-                      src={img}
+                      src={`http://localhost:3000${img}`}
                       alt=""
                       width={80}
                       height={80}

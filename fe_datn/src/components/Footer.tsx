@@ -22,7 +22,7 @@ const Footer = () => {
       {/* ===== FOOTER TOP ===== */}
       <Box
         sx={{
-          backgroundColor: "#ffffff",
+          backgroundColor: "#f4f3f3",
           color: "#000000",
           mt: 6,
         }}
@@ -87,7 +87,7 @@ const Footer = () => {
                 Email: lienhe@phukiendienthoai.com
               </Typography>
 
-              <Typography color="#fff" fontWeight="bold" mt={2} mb={1}>
+              <Typography color="#101010" fontWeight="bold" mt={2} mb={1}>
                 CÓ THẮC MẮC?
               </Typography>
 
