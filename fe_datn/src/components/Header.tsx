@@ -17,6 +17,7 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
+
 import { getCartApi } from "../services/cartService";
 
 import logo3 from "../img/logo3.png";
@@ -26,15 +27,22 @@ const Header = () => {
   const navigate = useNavigate();
 
   const [user, setUser] = useState<any>(null);
+
   const [cartCount, setCartCount] = useState(0);
+
   const [search, setSearch] = useState("");
 
   const [categories, setCategories] = useState<any[]>([]);
+
   const [products, setProducts] = useState<any[]>([]);
-  const [activeCategory, setActiveCategory] = useState<any>(null);
+
+  const [activeCategory, setActiveCategory] =
+    useState<any>(null);
 
   const [openMega, setOpenMega] = useState(false);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  const [anchorEl, setAnchorEl] =
+    useState<null | HTMLElement>(null);
 
   const closeTimeout = useRef<any>(null);
 
@@ -50,7 +58,9 @@ const Header = () => {
   useEffect(() => {
     if (categories.length > 0) {
       const first = categories[0];
+
       setActiveCategory(first);
+
       loadProducts(first._id);
     }
   }, [categories]);
@@ -58,6 +68,7 @@ const Header = () => {
   // ================= LOAD USER =================
   useEffect(() => {
     const u = localStorage.getItem("user");
+
     if (u) setUser(JSON.parse(u));
   }, []);
 
@@ -65,7 +76,13 @@ const Header = () => {
   const loadCart = async () => {
     try {
       const data = await getCartApi();
-      setCartCount(data.reduce((s: number, i: any) => s + i.quantity, 0));
+
+      setCartCount(
+        data.reduce(
+          (s: number, i: any) => s + i.quantity,
+          0
+        )
+      );
     } catch {
       setCartCount(0);
     }
@@ -78,16 +95,24 @@ const Header = () => {
       if (user) loadCart();
     };
 
-    window.addEventListener("cartUpdated", handleCartUpdate);
+    window.addEventListener(
+      "cartUpdated",
+      handleCartUpdate
+    );
+
     return () => {
-      window.removeEventListener("cartUpdated", handleCartUpdate);
+      window.removeEventListener(
+        "cartUpdated",
+        handleCartUpdate
+      );
     };
   }, [user]);
 
   // ================= SEARCH =================
   const handleSearch = () => {
     if (!search.trim()) return;
-    navigate(`/products?search=${search}`);
+
+    navigate(`/products2?search=${search}`);
   };
 
   // ================= LOAD PRODUCTS =================
@@ -96,7 +121,9 @@ const Header = () => {
       const res = await fetch(
         `http://localhost:3000/api/products?category=${id}`
       );
+
       const data = await res.json();
+
       setProducts(data || []);
     } catch {
       setProducts([]);
@@ -106,55 +133,108 @@ const Header = () => {
   // ================= HOVER CONTROL =================
   const handleEnter = () => {
     clearTimeout(closeTimeout.current);
+
     setOpenMega(true);
   };
 
   const handleLeave = () => {
     closeTimeout.current = setTimeout(() => {
       setOpenMega(false);
+
       setActiveCategory(null);
     }, 150);
   };
 
   return (
-    <AppBar position="fixed" sx={{ background: "#fff" }}>
-
-      <Toolbar sx={{ justifyContent: "space-between" }}>
+    <AppBar
+      position="fixed"
+      sx={{
+        background: "#fff"
+      }}
+    >
+      <Toolbar
+        sx={{
+          justifyContent: "space-between"
+        }}
+      >
 
         {/* LOGO */}
-        <Box component={Link} to="/" sx={{ display: "flex", alignItems: "center" }}>
-          <img src={logo3} style={{ height: 48 }} />
+        <Box
+          component={Link}
+          to="/"
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}
+        >
+          <img
+            src={logo3}
+            style={{ height: 48 }}
+          />
         </Box>
 
         {/* SEARCH + MENU */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 3, flex: 1, mx: 4,paddingLeft:"15px"  }}>
-
-          {/* SEARCH */}
-          <Box sx={{
+        <Box
+          sx={{
             display: "flex",
             alignItems: "center",
-            border: "1px solid #ddd",
-            borderRadius: 3,
-            px: 2,
-            width: 350,
-            
-          }}>
+            gap: 3,
+            flex: 1,
+            mx: 4,
+            paddingLeft: "15px"
+          }}
+        >
+
+          {/* SEARCH */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              border: "1px solid #ddd",
+              borderRadius: 3,
+              px: 2,
+              width: 350
+            }}
+          >
             <InputBase
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
               placeholder="Search product..."
               sx={{ flex: 1 }}
             />
+
             <IconButton onClick={handleSearch}>
               <SearchIcon />
             </IconButton>
           </Box>
 
           {/* NAV */}
-          <Box sx={{ display: "flex", gap: 2, alignItems: "center",paddingLeft:"30px" }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 2,
+              alignItems: "center",
+              paddingLeft: "30px"
+            }}
+          >
 
-            <Button component={Link} to="/" sx={navStyle}>
+            <Button
+              component={Link}
+              to="/"
+              sx={navStyle}
+            >
               TRANG CHỦ
+            </Button>
+
+            {/* PRODUCTS */}
+            <Button
+              component={Link}
+              to="/products3"
+              sx={navStyle}
+            >
+              SẢN PHẨM
             </Button>
 
             {/* CATEGORY MEGA MENU */}
@@ -171,67 +251,101 @@ const Header = () => {
               <Box
                 sx={{
                   position: "absolute",
-                  marginTop:"10px",
+                  marginTop: "10px",
                   top: "100%",
                   left: -50,
                   width: "200px",
                   height: "auto",
                   bgcolor: "#f5f3f3",
-                  boxShadow: "0 20px 50px rgba(0,0,0,0.15)",
+                  boxShadow:
+                    "0 20px 50px rgba(0,0,0,0.15)",
                   display: "flex",
                   borderRadius: "10px",
                   zIndex: 9999,
+
                   opacity: openMega ? 1 : 0,
-                  visibility: openMega ? "visible" : "hidden",
-                  transform: openMega ? "translateY(0px)" : "translateY(10px)",
+
+                  visibility: openMega
+                    ? "visible"
+                    : "hidden",
+
+                  transform: openMega
+                    ? "translateY(0px)"
+                    : "translateY(10px)",
+
                   transition: "all 0.55s ease"
                 }}
               >
 
-                <Box sx={{ width: 240, borderRight: "1px solid #eee" }}>
-                {categories.map((cat) => (
-                  <Box
-                    key={cat._id}
-                    onMouseEnter={() => {
-                      setActiveCategory(cat);
-                      loadProducts(cat._id);
-                    }}
-                    onClick={() => navigate(`/products2?category=${cat._id}`)}
-                    sx={{
-                      px: 2,
-                      py: 1,
-                      fontSize: 16,
-                      color: "#000",
-                      cursor: "pointer",
-                      transition: "0.2s",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
+                <Box
+                  sx={{
+                    width: 240,
+                    borderRight:
+                      "1px solid #eee"
+                  }}
+                >
+                  {categories.map((cat) => (
+                    <Box
+                      key={cat._id}
+                      onMouseEnter={() => {
+                        setActiveCategory(cat);
 
-                      "&:hover": {
-                        background: "#f5f5f5",
-                        borderLeft: "3px solid #5bec6f"
+                        loadProducts(cat._id);
+                      }}
+                      onClick={() =>
+                        navigate(
+                          `/products2?category=${cat._id}`
+                        )
                       }
-                    }}
-                  >
-                    {cat.name}
-                  </Box>
-                ))}
-              </Box>
+                      sx={{
+                        px: 2,
+                        py: 1,
+                        fontSize: 16,
+                        color: "#000",
+                        cursor: "pointer",
+                        transition: "0.2s",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent:
+                          "space-between",
 
-               
+                        "&:hover": {
+                          background: "#f5f5f5",
+                          borderLeft:
+                            "3px solid #5bec6f"
+                        }
+                      }}
+                    >
+                      {cat.name}
+                    </Box>
+                  ))}
+                </Box>
 
               </Box>
             </Box>
 
-            <Button component={Link} to="/contact" sx={navStyle} >
+            <Button
+              component={Link}
+              to="/contact"
+              sx={navStyle}
+            >
               LIÊN HỆ
             </Button>
-           <Button component={Link} to="/news" sx={navStyle} >
+
+            <Button
+              component={Link}
+              to="/news"
+              sx={navStyle}
+            >
               TIN TỨC
             </Button>
+
             {!user && (
-              <Button component={Link} to="/login" sx={navStyle}>
+              <Button
+                component={Link}
+                to="/login"
+                sx={navStyle}
+              >
                 ĐĂNG NHẬP
               </Button>
             )}
@@ -241,37 +355,94 @@ const Header = () => {
         </Box>
 
         {/* RIGHT */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2,  }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2
+          }}
+        >
 
           {user && (
-            < >
-            <div style={{display:"flex",}}>
-            <p style={{
-              color: "black",
-              fontSize: 14,
-              marginTop: 14,
-              whiteSpace: "nowrap"
-            }} >Xin chào, {user.username}</p>
-              <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}
-                 sx={{ p: 0.5 }}
+            <>
+              <div
+                style={{
+                  display: "flex"
+                }}
+              >
+                <p
+                  style={{
+                    color: "black",
+                    fontSize: 14,
+                    marginTop: 14,
+                    whiteSpace: "nowrap"
+                  }}
                 >
-                <Avatar src={user.avatar}  />
-              </IconButton>
+                  Xin chào, {user.username}
+                </p>
 
-              <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
-                <MenuItem onClick={() => navigate("/my-account")}>Tài khoản</MenuItem>
-                <MenuItem onClick={() => navigate("/orders")}>Đơn hàng</MenuItem>
-                <MenuItem onClick={() => { localStorage.removeItem("user"); setUser(null); }}>
-                  Đăng xuất
-                </MenuItem>
-              </Menu>
+                <IconButton
+                  onClick={(e) =>
+                    setAnchorEl(
+                      e.currentTarget
+                    )
+                  }
+                  sx={{ p: 0.5 }}
+                >
+                  <Avatar src={user.avatar} />
+                </IconButton>
+
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={() =>
+                    setAnchorEl(null)
+                  }
+                >
+                  <MenuItem
+                    onClick={() =>
+                      navigate("/my-account")
+                    }
+                  >
+                    Tài khoản
+                  </MenuItem>
+
+                  <MenuItem
+                    onClick={() =>
+                      navigate("/orders")
+                    }
+                  >
+                    Đơn hàng
+                  </MenuItem>
+
+                  <MenuItem
+                    onClick={() => {
+                      localStorage.removeItem(
+                        "user"
+                      );
+
+                      setUser(null);
+                    }}
+                  >
+                    Đăng xuất
+                  </MenuItem>
+                </Menu>
               </div>
             </>
           )}
 
-          <IconButton component={Link} to="/cart">
-            <Badge badgeContent={cartCount} color="error" showZero>
-              <ShoppingCartIcon sx={{color:"#f1bd7e"}} />
+          <IconButton
+            component={Link}
+            to="/cart"
+          >
+            <Badge
+              badgeContent={cartCount}
+              color="error"
+              showZero
+            >
+              <ShoppingCartIcon
+                sx={{ color: "#f1bd7e" }}
+              />
             </Badge>
           </IconButton>
 
@@ -290,6 +461,7 @@ const navStyle = {
   width: "126px",
   textTransform: "none",
   position: "relative",
+
   "&::after": {
     content: '""',
     position: "absolute",
@@ -300,6 +472,7 @@ const navStyle = {
     backgroundColor: "#f19916",
     transition: "0.3s"
   },
+
   "&:hover::after": {
     width: "100%"
   }

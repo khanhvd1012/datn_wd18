@@ -59,6 +59,7 @@ import NotFound from "../pages/NotFound";
 import PrivateRoute from "./PrivateRoute";
 import AdminRoute from "./AdminRoute";
 import ProductList2 from "../pages/product/ProductList2.tsx";
+import ProductList3 from "../pages/product/ProductList3.tsx";
 
 const AppRouter = () => {
   return (
@@ -71,6 +72,7 @@ const AppRouter = () => {
         <Route index element={<Home />} />
         <Route path="products" element={<ProductList />} />
         <Route path="products2" element={<ProductList2 />} />
+        <Route path="products3" element={<ProductList3 />} />
         <Route path="product/:id" element={<ProductDetail />} />
         <Route path="news" element={<News />} />
         <Route path="news/:id" element={<NewsDetail />} />
