@@ -4,6 +4,7 @@ import { Route, Routes } from "react-router-dom";
 import Home from "../pages/home/Home";
 import ProductList from "../pages/product/ProductList";
 import ProductDetail from "../pages/product/ProductDetail";
+import ComparePage from "../pages/compare/ComparePage";
 
 import Cart from "../pages/cart/Cart";
 import Checkout from "../pages/Checkout";
@@ -70,6 +71,7 @@ const AppRouter = () => {
         <Route index element={<Home />} />
         <Route path="products" element={<ProductList />} />
         <Route path="product/:id" element={<ProductDetail />} />
+        <Route path="compare" element={<ComparePage />} />
         <Route path="news" element={<News />} />
         <Route path="news/:id" element={<NewsDetail />} />
         <Route path="about" element={<About />} />

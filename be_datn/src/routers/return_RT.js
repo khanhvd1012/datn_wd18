@@ -9,13 +9,14 @@ import {
 
 import { checkPermission, checkRole } from "../middleware/checkPermission.js";
 import { ROLES } from "../config/roles.js";
+import upload from "../middleware/upload_MID.js";
 
 const router = express.Router();
 
 router.use(checkPermission);
 
 // user
-router.post("/", createReturnRequest);
+router.post("/", upload.array("return_images", 5), createReturnRequest);
 
 // admin
 router.get("/", checkRole([ROLES.ADMIN]), getAllReturns);

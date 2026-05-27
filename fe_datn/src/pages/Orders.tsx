@@ -29,7 +29,7 @@ import {
 } from "@mui/icons-material";
 
 import { useNavigate } from "react-router-dom";
-import { getOrdersApi } from "../services/orderService";
+import { confirmOrderReceivedApi, getOrdersApi } from "../services/orderService";
 import type { Order } from "../services/orderService";
 import { createReturnRequest } from "../services/returnService";
 
@@ -54,8 +54,10 @@ const Orders = () => {
   const [returnOpen, setReturnOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [returnReason, setReturnReason] = useState("");
+  const [returnImages, setReturnImages] = useState<File[]>([]);
   const [returnLoading, setReturnLoading] = useState(false);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  const [confirmingOrderId, setConfirmingOrderId] = useState<string | null>(null);
   
   const handleOpenReturn = (order: Order) => {
 console.log(order);
@@ -74,6 +76,7 @@ console.log(order.order_items);
   setSelectedItems(items);
 
   setReturnReason("");
+  setReturnImages([]);
 
   setReturnOpen(true);
 };
@@ -81,20 +84,28 @@ console.log(order.order_items);
     const handleSubmitReturn = async () => {
 
   if (!selectedOrderId) return;
+  if (!returnReason.trim()) {
+    alert("Vui lòng nhập lý do hoàn hàng");
+    return;
+  }
+  if (!returnImages.length) {
+    alert("Vui lòng tải lên ít nhất 1 ảnh minh chứng");
+    return;
+  }
 
   try {
 
     setReturnLoading(true);
 console.log(selectedItems);
-    await createReturnRequest({
-
-      order_id: selectedOrderId,
-
-      reason: returnReason,
-
-      items: selectedItems
-
+    const formData = new FormData();
+    formData.append("order_id", selectedOrderId);
+    formData.append("reason", returnReason);
+    formData.append("items", JSON.stringify(selectedItems));
+    returnImages.forEach((file) => {
+      formData.append("return_images", file);
     });
+
+    await createReturnRequest(formData);
 
     alert("Gửi yêu cầu hoàn hàng thành công");
 
@@ -103,12 +114,14 @@ console.log(selectedItems);
     setReturnReason("");
 
     setSelectedItems([]);
+    setReturnImages([]);
 
     fetchOrders();
 
   } catch (err) {
 
     console.error(err);
+    alert("Gửi yêu cầu hoàn hàng thất bại. Vui lòng thử lại hoặc kiểm tra đăng nhập.");
 
   } finally {
 
@@ -183,7 +196,9 @@ console.log(selectedItems);
       case "shipping":
         return { label: "Đang giao", color: "secondary", icon: <LocalShippingOutlined fontSize="small" /> };
       case "delivered":
-        return { label: "Đã giao hàng", color: "success", icon: <CheckCircleOutline fontSize="small" /> };
+        return { label: "Đã giao hàng", color: "success", icon: <LocalShippingOutlined fontSize="small" /> };
+      case "received":
+        return { label: "Đã nhận hàng thành công", color: "success", icon: <CheckCircleOutline fontSize="small" /> };
       case "cancelled":
         return { label: "Đã hủy", color: "error", icon: <CancelOutlined fontSize="small" /> };
       default:
@@ -193,8 +208,24 @@ console.log(selectedItems);
 
   const filteredOrders = orders.filter((order) => {
     if (tabValue === "all") return true;
+    if (tabValue === "delivered") {
+      return order.order_status === "delivered" || order.order_status === "received";
+    }
     return order.order_status === tabValue;
   });
+
+  const handleConfirmReceived = async (orderId: string) => {
+    try {
+      setConfirmingOrderId(orderId);
+      await confirmOrderReceivedApi(orderId);
+      alert("Xác nhận đã nhận hàng thành công");
+      fetchOrders();
+    } catch (error: any) {
+      alert(error?.response?.data?.message || "Không thể xác nhận nhận hàng");
+    } finally {
+      setConfirmingOrderId(null);
+    }
+  };
 
   return (
     <Box sx={{ bgcolor: "#F8FAFC", minHeight: "100vh", pb: 10, textAlign: 'left' }}>
@@ -283,9 +314,19 @@ console.log(selectedItems);
                 <Divider sx={{ my: 2 }} />
 
                 <Box display="flex" justifyContent="flex-end" gap={2}>
+                  {order.order_status === "delivered" && (
+                    <Button
+                      variant="contained"
+                      color="success"
+                      disabled={confirmingOrderId === order._id}
+                      onClick={() => handleConfirmReceived(order._id)}
+                    >
+                      {confirmingOrderId === order._id ? "Đang xác nhận..." : "Đã nhận được hàng"}
+                    </Button>
+                  )}
 
                   {/*  RETURN BUTTON */}
-                  {order.order_status === "delivered"
+                  {order.order_status === "received"
                 && !order.return_requested && (
                     <Button
                       color="error"
@@ -325,6 +366,18 @@ console.log(selectedItems);
             onChange={(e) => setReturnReason(e.target.value)}
             sx={{ mt: 2 }}
           />
+          <TextField
+            type="file"
+            fullWidth
+            inputProps={{ multiple: true, accept: "image/*" }}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setReturnImages(Array.from(e.target.files || []))
+            }
+            sx={{ mt: 2 }}
+          />
+          <Typography variant="caption" color="text.secondary">
+            Bắt buộc tải lên ít nhất 1 ảnh minh chứng (tối đa 5 ảnh).
+          </Typography>
         </DialogContent>
 
         <DialogActions>
@@ -335,7 +388,7 @@ console.log(selectedItems);
           <Button
   color="error"
   variant="contained"
-  disabled={returnLoading}
+  disabled={returnLoading || !returnReason.trim() || returnImages.length === 0}
    onClick={handleSubmitReturn}
 >
             {returnLoading ? "Đang gửi..." : "Gửi yêu cầu"}

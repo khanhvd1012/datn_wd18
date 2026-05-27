@@ -98,3 +98,8 @@ export const restoreCartItemApi = async (
   const res = await api.patch(`/cart/restore/${cartItemId}`);
   return res.data;
 };
+
+export const validateCartForCheckoutApi = async (selectedCartItemIds: string[]) => {
+  const res = await api.post("/cart/validate", { selectedCartItemIds });
+  return res.data;
+};

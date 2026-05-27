@@ -26,10 +26,11 @@ import {
   Dialog,
 } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
-import { getCartApi, clearCartApi } from "../services/cartService";
+import { getCartApi, validateCartForCheckoutApi } from "../services/cartService";
 import { createOrderApi } from "../services/orderService";
 import { createVNPayPaymentApi } from "../services/paymentService";
 import type { CartItem } from "../services/cartService";
+import { sendOrderSuccessEmail } from "../services/emailService";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import PaymentIcon from "@mui/icons-material/Payment";
 import AssignmentIcon from "@mui/icons-material/Assignment";
@@ -229,6 +230,17 @@ const validatePhoneVN = (phone: string) => {
   return;
 }
 
+    try {
+      await validateCartForCheckoutApi(selectedItems);
+    } catch (e: any) {
+      setNotif({
+        open: true,
+        message: e.response?.data?.message || "Giỏ hàng đã thay đổi, vui lòng kiểm tra lại",
+        severity: "error",
+      });
+      return;
+    }
+
     if (formData.paymentMethod === "COD") {
       setConfirmDialogOpen(true);
       return;
@@ -240,6 +252,8 @@ const validatePhoneVN = (phone: string) => {
   const executeOrder = async () => {
     setLoading(true);
     try {
+      await validateCartForCheckoutApi(selectedItems);
+
       const orderData = {
         shipping_info: {
           name: formData.customerName,
@@ -255,6 +269,11 @@ const validatePhoneVN = (phone: string) => {
 
       const order = await createOrderApi(orderData);
       window.dispatchEvent(new Event("cartUpdated"));
+
+      // Gửi email xác nhận (không block luồng UI)
+      sendOrderSuccessEmail(order).catch((err) => {
+        console.error("EmailJS send failed:", err);
+      });
       
       setNotif({
         open: true,

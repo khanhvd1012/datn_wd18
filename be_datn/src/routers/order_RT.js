@@ -7,6 +7,7 @@ import {
     getAllOrders,
     updateOrder,
     cancelOrder,
+    confirmOrderReceived,
     deleteOrder,
     requestReturnOrder,
     approveReturn,
@@ -19,6 +20,7 @@ import {
 } from "../middleware/checkPermission.js";
 
 import { ROLES } from "../config/roles.js";
+import upload from "../middleware/upload_MID.js";
 
 const orderRouter = express.Router();
 
@@ -47,6 +49,7 @@ orderRouter.get("/:id", getOrderById);
 orderRouter.put(
     "/:id",
     checkRole([ROLES.ADMIN]),
+    upload.array("delivery_proofs", 5),
     updateOrder
 );
 
@@ -54,6 +57,12 @@ orderRouter.put(
 orderRouter.patch(
     "/:id/cancel",
     cancelOrder
+);
+
+// User xác nhận đã nhận hàng
+orderRouter.patch(
+    "/:id/confirm-received",
+    confirmOrderReceived
 );
 
 // Xóa đơn

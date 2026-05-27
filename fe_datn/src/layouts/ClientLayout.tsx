@@ -2,7 +2,8 @@ import { Outlet } from "react-router-dom";
  import Header from "../components/Header"; 
  import Footer from "../components/Footer"; 
  import { Box, Toolbar } from "@mui/material";
-  import AiChatWidget from "../components/AiChatWidget"; 
+  import AiChatWidget from "../components/AiChatWidget";
+ import CompareBar from "../components/compare/CompareBar";
   const ClientLayout = () => { 
     return ( 
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", backgroundColor: "#fff", }} >
@@ -14,6 +15,7 @@ import { Outlet } from "react-router-dom";
              <Outlet /> 
              </Box> {/* AI CHAT */} 
              <AiChatWidget />
+             <CompareBar />
               {/* FOOTER */} 
               <Footer />
                </Box> ); };

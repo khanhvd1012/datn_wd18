@@ -39,6 +39,10 @@
   },
   "scripts": {
     "dev": "nodemon index.js",
-    "migrate:roles": "node scripts/migrate-user-roles.js"
+    "migrate:roles": "node scripts/migrate-user-roles.js",
+    "fix:prices": "node scripts/fix-product-prices.js",
+    "fix:prices:force": "node scripts/fix-product-prices.js --force",
+    "fix:descriptions": "node scripts/fix-product-descriptions.js",
+    "fix:descriptions:force": "node scripts/fix-product-descriptions.js --force"
   }
 }

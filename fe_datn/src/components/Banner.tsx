@@ -53,54 +53,76 @@ const Banner = () => {
     setIndex((prev) => (prev === 0 ? apiBanners.length - 1 : prev - 1));
   };
 
+  const slides =
+    apiBanners.length > 0
+      ? apiBanners
+      : [{ image: mainBanner4, _id: "fallback", title: "" }];
+
+  const slideCount = slides.length;
+
   return (
-    <Box sx={{ mt: 3, display: "flex", justifyContent: "center" }}>
-      
-      {/* BANNER CONTAINER */}
+    <Box
+      sx={{
+        mt: 3,
+        px: 2,
+        width: "100%",
+        maxWidth: 1300,
+        mx: "auto",
+        boxSizing: "border-box",
+      }}
+    >
+      {/* Viewport: chiều cao theo tỉ lệ, không scale tùy ý theo viewport full-width */}
       <Box
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
         sx={{
           width: "100%",
-          height: "450px",
+          aspectRatio: { xs: "16 / 10", sm: "16 / 8", md: "16 / 6" },
+          minHeight: { xs: 200, sm: 260, md: 320 },
+          maxHeight: { xs: 320, sm: 400, md: 480 },
           borderRadius: 2,
           overflow: "hidden",
           position: "relative",
           boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+          bgcolor: "#000",
         }}
       >
-        {/* SLIDER WRAPPER */}
         <Box
           sx={{
             display: "flex",
-            transform: `translateX(-${index * 100}%)`,
+            height: "100%",
+            width: `${slideCount * 100}%`,
+            transform:
+              slideCount > 0
+                ? `translateX(-${(index * 100) / slideCount}%)`
+                : "none",
             transition: "transform 0.6s ease",
           }}
         >
-          {(apiBanners.length > 0 ? apiBanners : [{ image: mainBanner4, _id: "fallback" }]).map(
-            (banner, i) => (
+          {slides.map((banner, i) => (
+            <Box
+              key={banner._id || i}
+              sx={{
+                flex: `0 0 ${100 / slideCount}%`,
+                width: `${100 / slideCount}%`,
+                height: "100%",
+                position: "relative",
+              }}
+            >
               <Box
-                key={banner._id || i}
+                component="img"
+                src={banner.image}
+                alt={banner.title || "banner"}
                 sx={{
-                  minWidth: "100%",
-                  aspectRatio: "16 / 6", //  FIXED PROPORTION (no distortion)
-                  position: "relative",
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  objectPosition: "center",
+                  display: "block",
                 }}
-              >
-                <Box
-                  component="img"
-                  src={banner.image}
-                  alt={banner.title || "banner"}
-                  sx={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover", // keep crop but no stretching
-                    display: "block",
-                  }}
-                />
-              </Box>
-            ),
-          )}
+              />
+            </Box>
+          ))}
         </Box>
 
         {/* NAV BUTTONS */}

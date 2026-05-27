@@ -10,13 +10,15 @@ import { ROLES } from "../config/roles.js";
 import { deductOrderStock, restoreOrderStock } from "../utils/orderStockUtils.js";
 
 const ONLINE_PAYMENT_METHODS = ["vnpay", "momo", "bank"];
+const DELIVERY_CONFIRM_WINDOW_DAYS = 3;
 
 const ALLOWED_TRANSITIONS = {
     pending: ["confirmed", "cancelled"],
     confirmed: ["processing", "cancelled"],
     processing: ["shipping", "cancelled"],
     shipping: ["delivered", "cancelled"],
-    delivered: [],
+    delivered: ["received"],
+    received: [],
     cancelled: []
 };
 
@@ -34,6 +36,26 @@ const canTransition = (fromStatus, toStatus, isAdmin) => {
     }
 
     return true;
+};
+
+const performAutoConfirmOverdueOrders = async () => {
+    const now = new Date();
+
+    await Order.updateMany(
+        {
+            order_status: "delivered",
+            customer_confirmed_received: false,
+            confirmation_deadline_at: { $ne: null, $lte: now }
+        },
+        {
+            $set: {
+                order_status: "received",
+                customer_confirmed_received: true,
+                confirmed_received_at: now,
+                confirmed_received_by: "auto"
+            }
+        }
+    );
 };
 
 // ================= REQUEST RETURN =================
@@ -61,9 +83,9 @@ export const requestReturnOrder = async (req, res) => {
         }
 
         // Chỉ cho trả hàng khi đã giao
-        if (order.order_status !== "delivered") {
+        if (order.order_status !== "received") {
             return res.status(400).json({
-                message: "Chỉ được yêu cầu trả hàng khi đơn đã giao"
+                message: "Chỉ được yêu cầu trả hàng sau khi đã xác nhận nhận hàng"
             });
         }
 
@@ -431,6 +453,7 @@ export const createOrder = async (req, res) => {
 
 export const getUserOrders = async (req, res) => {
     try {
+        await performAutoConfirmOverdueOrders();
 
         const userId = req.user._id;
 
@@ -462,6 +485,7 @@ export const getUserOrders = async (req, res) => {
 
 export const getOrderById = async (req, res) => {
     try {
+        await performAutoConfirmOverdueOrders();
 
         const { id } = req.params;
 
@@ -515,6 +539,7 @@ export const getOrderById = async (req, res) => {
 
 export const getAllOrders = async (req, res) => {
     try {
+        await performAutoConfirmOverdueOrders();
 
         const orders = await Order.find()
             .populate(
@@ -566,6 +591,9 @@ export const updateOrder = async (req, res) => {
         }
 
         const updateData = {};
+        const uploadedProofs = Array.isArray(req.files)
+            ? req.files.map((file) => `uploads/${file.filename}`)
+            : [];
 
         if (
             order_status &&
@@ -594,6 +622,35 @@ export const updateOrder = async (req, res) => {
                 updateData.cancel_reason =
                     cancel_reason ||
                     "Đơn hàng bị hủy";
+            }
+
+            if (
+                order.order_status === "shipping" &&
+                order_status === "delivered"
+            ) {
+                if (!uploadedProofs.length) {
+                    return res.status(400).json({
+                        message: "Vui lòng upload ảnh minh chứng khi xác nhận giao hàng thành công"
+                    });
+                }
+
+                updateData.delivery_proof_images = uploadedProofs;
+                updateData.delivered_at = new Date();
+                const confirmationDeadline = new Date();
+                confirmationDeadline.setDate(
+                    confirmationDeadline.getDate() + DELIVERY_CONFIRM_WINDOW_DAYS
+                );
+                updateData.confirmation_deadline_at = confirmationDeadline;
+                updateData.customer_confirmed_received = false;
+                updateData.confirmed_received_at = null;
+                updateData.confirmed_received_by = null;
+                updateData.delivery_rating = null;
+                updateData.delivery_feedback = "";
+
+                // COD được xem là đã thu tiền khi giao thành công
+                if (order.payment_method === "cod" && order.payment_status !== "paid") {
+                    updateData.payment_status = "paid";
+                }
             }
 
             updateData.order_status =
@@ -715,6 +772,67 @@ export const cancelOrder = async (req, res) => {
 
     } catch (error) {
 
+        res.status(500).json({
+            message: "Lỗi server",
+            error: error.message
+        });
+    }
+};
+
+// ================= CONFIRM RECEIVED BY USER =================
+export const confirmOrderReceived = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = req.user;
+        const { delivery_rating, delivery_feedback } = req.body || {};
+
+        const order = await Order.findOne({
+            _id: id,
+            user_id: user._id
+        });
+
+        if (!order) {
+            return res.status(404).json({
+                message: "Đơn hàng không tồn tại"
+            });
+        }
+
+        if (order.order_status === "received") {
+            return res.status(200).json({
+                message: "Đơn hàng đã được xác nhận trước đó",
+                order
+            });
+        }
+
+        if (order.order_status !== "delivered") {
+            return res.status(400).json({
+                message: "Chỉ xác nhận nhận hàng khi đơn ở trạng thái đã giao"
+            });
+        }
+
+        order.order_status = "received";
+        order.customer_confirmed_received = true;
+        order.confirmed_received_at = new Date();
+        order.confirmed_received_by = "user";
+        if (delivery_rating !== undefined) {
+            const parsedRating = Number(delivery_rating);
+            if (!Number.isInteger(parsedRating) || parsedRating < 1 || parsedRating > 5) {
+                return res.status(400).json({
+                    message: "Đánh giá giao hàng phải từ 1 đến 5 sao"
+                });
+            }
+            order.delivery_rating = parsedRating;
+        }
+        if (typeof delivery_feedback === "string") {
+            order.delivery_feedback = delivery_feedback.trim();
+        }
+        await order.save();
+
+        res.status(200).json({
+            message: "Xác nhận đã nhận hàng thành công",
+            order
+        });
+    } catch (error) {
         res.status(500).json({
             message: "Lỗi server",
             error: error.message

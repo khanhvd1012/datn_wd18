@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getOrderByIdApi, cancelOrderApi, isOnlinePaymentMethod } from "../services/orderService";
+import { getOrderByIdApi, cancelOrderApi, confirmOrderReceivedApi, isOnlinePaymentMethod } from "../services/orderService";
 import type { Order } from "../services/orderService";
 import { createReviewApi } from "../services/reviewService";
+import { createReturnRequest } from "../services/returnService";
 import {
   Container,
   Typography,
@@ -20,6 +21,10 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
   Rating,
   Snackbar,
   Alert,
@@ -43,6 +48,13 @@ const getImageUrl = (imagePath: string) => {
   return `http://localhost:3000/uploads/products/${imagePath}`;
 };
 
+const getDeliveryProofUrl = (imagePath?: string) => {
+  if (!imagePath) return "";
+  if (imagePath.startsWith("http")) return imagePath;
+  // Backend lưu dạng: uploads/<filename>
+  return `http://localhost:3000/${imagePath.startsWith("uploads/") ? imagePath : `uploads/${imagePath}`}`;
+};
+
 const OrderDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -57,6 +69,15 @@ const OrderDetail = () => {
   const [cancelling, setCancelling] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [returnDialogOpen, setReturnDialogOpen] = useState(false);
+  const [returnReason, setReturnReason] = useState("");
+  const [customReturnReason, setCustomReturnReason] = useState("");
+  const [returnImages, setReturnImages] = useState<File[]>([]);
+  const [returnLoading, setReturnLoading] = useState(false);
+  const [confirmingReceived, setConfirmingReceived] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [deliveryRating, setDeliveryRating] = useState(5);
+  const [deliveryFeedback, setDeliveryFeedback] = useState("");
   const [notification, setNotification] = useState({ open: false, message: "", severity: "success" as "success" | "error" });
 
   useEffect(() => {
@@ -108,6 +129,7 @@ const OrderDetail = () => {
       case "processing": return { label: "Đang xử lý", color: "info" };
       case "shipping": return { label: "Đang giao", color: "secondary" };
       case "delivered": return { label: "Đã giao hàng", color: "success" };
+      case "received": return { label: "Đã nhận hàng thành công", color: "success" };
       case "cancelled": return { label: "Đã hủy", color: "error" };
       default: return { label: status || "Không xác định", color: "default" };
     }
@@ -120,12 +142,17 @@ const OrderDetail = () => {
       case "processing": return 2;
       case "shipping": return 3;
       case "delivered": return 4;
+      case "received": return 5;
       case "cancelled": return -1;
       default: return 0;
     }
   };
 
   const canCustomerCancel = ["pending", "confirmed", "processing"].includes(order.order_status);
+  const canRequestReturn =
+    order.order_status === "received" &&
+    !(order as any).return_requested &&
+    ((order as any).return_status === undefined || (order as any).return_status === "none");
 
   const handleOpenCancelDialog = () => {
     if (!id) return;
@@ -156,9 +183,99 @@ const OrderDetail = () => {
     }
   };
 
+  const handleConfirmReceived = async () => {
+    if (!id) return;
+    setConfirmingReceived(true);
+    try {
+      const updated = await confirmOrderReceivedApi(id, {
+        delivery_rating: deliveryRating,
+        delivery_feedback: deliveryFeedback,
+      });
+      setOrder(updated);
+      setConfirmDialogOpen(false);
+      setNotification({ open: true, message: "Đã xác nhận nhận hàng thành công", severity: "success" });
+    } catch (error: any) {
+      setNotification({
+        open: true,
+        message: error.response?.data?.message || "Không thể xác nhận nhận hàng",
+        severity: "error",
+      });
+    } finally {
+      setConfirmingReceived(false);
+    }
+  };
+
+  const handleOpenReturnDialog = () => {
+    setReturnReason("");
+    setCustomReturnReason("");
+    setReturnImages([]);
+    setReturnDialogOpen(true);
+  };
+
+  const handleSubmitReturn = async () => {
+    const finalReturnReason =
+      returnReason === "other"
+        ? customReturnReason.trim()
+        : returnReason.trim();
+
+    if (!id || !finalReturnReason) {
+      setNotification({
+        open: true,
+        message: "Vui lòng chọn lý do hoàn hàng",
+        severity: "error",
+      });
+      return;
+    }
+    if (!returnImages.length) {
+      setNotification({
+        open: true,
+        message: "Vui lòng tải lên ít nhất 1 ảnh minh chứng",
+        severity: "error",
+      });
+      return;
+    }
+
+    try {
+      setReturnLoading(true);
+      const items = (order.order_items || []).map((item: any) => ({
+        product_id: typeof item.product_id === "object" ? item.product_id?._id : item.product_id,
+        variant_id: item.variant_id || null,
+        quantity: item.quantity,
+      }));
+
+      const formData = new FormData();
+      formData.append("order_id", id);
+      formData.append("reason", finalReturnReason);
+      formData.append("items", JSON.stringify(items));
+      returnImages.forEach((file) => {
+        formData.append("return_images", file);
+      });
+
+      await createReturnRequest(formData);
+
+      setReturnDialogOpen(false);
+      setNotification({
+        open: true,
+        message: "Gửi yêu cầu hoàn hàng thành công",
+        severity: "success",
+      });
+
+      const latest = await getOrderByIdApi(id);
+      setOrder(latest);
+    } catch (error: any) {
+      setNotification({
+        open: true,
+        message: error.response?.data?.message || "Không thể gửi yêu cầu hoàn hàng",
+        severity: "error",
+      });
+    } finally {
+      setReturnLoading(false);
+    }
+  };
+
   const statusInfo = getStatusInfo(order.order_status);
   const activeStep = getStepIndex(order.order_status);
-  const steps = ['Chờ xác nhận', 'Đã xác nhận', 'Đang xử lý', 'Đang giao hàng', 'Đã giao hàng'];
+  const steps = ['Chờ xác nhận', 'Đã xác nhận', 'Đang xử lý', 'Đang giao hàng', 'Đã nhận hàng thành công', 'Đã xác nhận'];
 
   return (
     <Box sx={{ bgcolor: "#F8FAFC", minHeight: "100vh", pb: 10, textAlign: 'left' }}>
@@ -203,6 +320,29 @@ const OrderDetail = () => {
                 {cancelling ? 'Đang hủy...' : 'Hủy đơn'}
               </Button>
             )}
+            {order.order_status === "delivered" && (
+              <Button
+                variant="contained"
+                color="success"
+                size="small"
+                disabled={confirmingReceived}
+                onClick={() => setConfirmDialogOpen(true)}
+                sx={{ ml: 1, textTransform: 'none', fontWeight: 600 }}
+              >
+                {confirmingReceived ? "Đang xác nhận..." : "Đã nhận được hàng"}
+              </Button>
+            )}
+            {canRequestReturn && (
+              <Button
+                variant="outlined"
+                color="error"
+                size="small"
+                onClick={handleOpenReturnDialog}
+                sx={{ ml: 1, textTransform: "none", fontWeight: 600 }}
+              >
+                Hoàn hàng
+              </Button>
+            )}
           </Box>
         </Container>
       </Box>
@@ -235,6 +375,17 @@ const OrderDetail = () => {
                     </Step>
                   ))}
                 </Stepper>
+                {order.order_status === "delivered" && (
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 2, textAlign: "center" }}>
+                    Hạn xác nhận đơn:{" "}
+                    <b>
+                      {order.confirmation_deadline_at
+                        ? new Date(order.confirmation_deadline_at).toLocaleDateString("vi-VN")
+                        : "N/A"}
+                    </b>
+                    . Nếu quá hạn, hệ thống sẽ tự xác nhận đơn không có vấn đề.
+                  </Typography>
+                )}
               </Paper>
             ) : (
               <Alert severity="error" sx={{ mb: 4, borderRadius: 2, alignItems: 'center' }}>
@@ -294,7 +445,7 @@ const OrderDetail = () => {
                           </Typography>
                         </Box>
 
-                        {order.order_status === 'delivered' && (
+                        {order.order_status === 'received' && (
                           <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
                             <Button 
                               variant="outlined" 
@@ -313,6 +464,51 @@ const OrderDetail = () => {
                 })}
               </Stack>
             </Paper>
+
+            {/* Ảnh minh chứng giao hàng */}
+            {(order.order_status === "delivered" || order.order_status === "received") && (
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 4,
+                  mt: 4,
+                  borderRadius: 3,
+                  border: `1px solid ${theme.palette.divider}`,
+                }}
+              >
+                <Typography variant="h6" fontWeight={700} mb={3} display="flex" alignItems="center" gap={1}>
+                  <CheckCircle /> Ảnh minh chứng giao hàng
+                </Typography>
+
+                {order.delivery_proof_images && order.delivery_proof_images.length > 0 ? (
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+                    {order.delivery_proof_images.map((img, idx) => (
+                      <Box
+                        key={`${img}-${idx}`}
+                        sx={{
+                          width: 160,
+                          height: 110,
+                          borderRadius: 2,
+                          border: `1px solid ${theme.palette.divider}`,
+                          overflow: "hidden",
+                          bgcolor: "#fff",
+                        }}
+                      >
+                        <img
+                          src={getDeliveryProofUrl(img)}
+                          alt={`Delivery proof ${idx + 1}`}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      </Box>
+                    ))}
+                  </Box>
+                ) : (
+                  <Typography color="text.secondary" fontWeight={600}>
+                    Chưa có ảnh minh chứng
+                  </Typography>
+                )}
+              </Paper>
+            )}
           </Box>
 
           <Box sx={{ width: { xs: '100%', md: '33.333%' }, pl: { md: 2 } }}>
@@ -503,6 +699,132 @@ const OrderDetail = () => {
             sx={{ borderRadius: 2, px: 3, textTransform: "none", fontWeight: 600 }}
           >
             {cancelling ? 'Đang xử lý...' : 'Xác nhận hủy'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={returnDialogOpen}
+        onClose={() => setReturnDialogOpen(false)}
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{ sx: { borderRadius: 3 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, pb: 1, color: "error.main" }}>
+          Yêu cầu hoàn hàng
+        </DialogTitle>
+        <DialogContent>
+          <Box display="flex" flexDirection="column" gap={2} mt={1}>
+            <Typography variant="body2" color="text.secondary">
+              Vui lòng chọn lý do hoàn hàng để gửi yêu cầu đến cửa hàng.
+            </Typography>
+            <FormControl fullWidth>
+              <InputLabel id="return-reason-label">Lý do hoàn hàng</InputLabel>
+              <Select
+                labelId="return-reason-label"
+              value={returnReason}
+                label="Lý do hoàn hàng"
+                onChange={(e) => setReturnReason(e.target.value)}
+                sx={{ borderRadius: 2 }}
+              >
+                <MenuItem value="Sản phẩm bị lỗi/hư hỏng">Sản phẩm bị lỗi/hư hỏng</MenuItem>
+                <MenuItem value="Sản phẩm không đúng mô tả">Sản phẩm không đúng mô tả</MenuItem>
+                <MenuItem value="Giao sai sản phẩm/màu/size">Giao sai sản phẩm/màu/size</MenuItem>
+                <MenuItem value="Thiếu phụ kiện hoặc quà tặng">Thiếu phụ kiện hoặc quà tặng</MenuItem>
+                <MenuItem value="other">Lý do khác</MenuItem>
+              </Select>
+            </FormControl>
+            {returnReason === "other" && (
+              <TextField
+                label="Nhập lý do khác"
+                multiline
+                rows={3}
+                fullWidth
+                value={customReturnReason}
+                onChange={(e) => setCustomReturnReason(e.target.value)}
+                placeholder="Nhập chi tiết lý do hoàn hàng..."
+                InputProps={{ sx: { borderRadius: 2 } }}
+              />
+            )}
+            <TextField
+              type="file"
+              fullWidth
+              inputProps={{ multiple: true, accept: "image/*" }}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setReturnImages(Array.from(e.target.files || []))
+              }
+            />
+            <Typography variant="caption" color="text.secondary">
+              Bắt buộc tải lên ít nhất 1 ảnh minh chứng (tối đa 5 ảnh).
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button onClick={() => setReturnDialogOpen(false)} sx={{ textTransform: "none", fontWeight: 600 }}>
+            Hủy
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleSubmitReturn}
+            disabled={
+              returnLoading ||
+              !(returnReason && (returnReason !== "other" || customReturnReason.trim())) ||
+              returnImages.length === 0
+            }
+            sx={{ borderRadius: 2, px: 3, textTransform: "none", fontWeight: 600 }}
+          >
+            {returnLoading ? "Đang gửi..." : "Gửi yêu cầu"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={confirmDialogOpen}
+        onClose={() => setConfirmDialogOpen(false)}
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{ sx: { borderRadius: 3 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, pb: 1, color: "success.main" }}>
+          Xác nhận đã nhận hàng
+        </DialogTitle>
+        <DialogContent>
+          <Box display="flex" flexDirection="column" gap={2} mt={1}>
+            <Typography variant="body2" color="text.secondary">
+              Vui lòng đánh giá trải nghiệm giao hàng để hoàn tất xác nhận.
+            </Typography>
+            <Box display="flex" alignItems="center" gap={2}>
+              <Typography fontWeight={600}>Đánh giá giao hàng:</Typography>
+              <Rating
+                value={deliveryRating}
+                onChange={(_, value) => setDeliveryRating(value || 5)}
+              />
+            </Box>
+            <TextField
+              label="Nhận xét (tuỳ chọn)"
+              multiline
+              rows={3}
+              fullWidth
+              value={deliveryFeedback}
+              onChange={(e) => setDeliveryFeedback(e.target.value)}
+              placeholder="Ví dụ: ship nhanh, đóng gói cẩn thận..."
+              InputProps={{ sx: { borderRadius: 2 } }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button onClick={() => setConfirmDialogOpen(false)} sx={{ textTransform: 'none', fontWeight: 600 }}>
+            Đóng
+          </Button>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={handleConfirmReceived}
+            disabled={confirmingReceived}
+            sx={{ borderRadius: 2, px: 3, textTransform: "none", fontWeight: 600 }}
+          >
+            {confirmingReceived ? "Đang xác nhận..." : "Xác nhận"}
           </Button>
         </DialogActions>
       </Dialog>

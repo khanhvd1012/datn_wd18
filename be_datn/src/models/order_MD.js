@@ -97,6 +97,7 @@ const orderSchema = new mongoose.Schema({
             'processing',
             'shipping',
             'delivered',
+            'received',
             'cancelled'
         ],
         default: 'pending'
@@ -164,6 +165,48 @@ return_status: {
     },
 
     cancel_reason: {
+        type: String,
+        default: ""
+    },
+
+    delivery_proof_images: [{
+        type: String
+    }],
+
+    delivered_at: {
+        type: Date,
+        default: null
+    },
+
+    confirmation_deadline_at: {
+        type: Date,
+        default: null
+    },
+
+    customer_confirmed_received: {
+        type: Boolean,
+        default: false
+    },
+
+    confirmed_received_at: {
+        type: Date,
+        default: null
+    },
+
+    confirmed_received_by: {
+        type: String,
+        enum: ["user", "auto", null],
+        default: null
+    },
+
+    delivery_rating: {
+        type: Number,
+        min: 1,
+        max: 5,
+        default: null
+    },
+
+    delivery_feedback: {
         type: String,
         default: ""
     }

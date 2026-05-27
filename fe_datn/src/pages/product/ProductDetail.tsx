@@ -32,6 +32,9 @@ import { getProductDetailApi } from "../../services/productService";
 import { addToCartApi } from "../../services/cartService";
 import { getReviewsByProductApi } from "../../services/reviewService";
 import { getFavoritesApi, toggleFavoriteApi } from "../../services/userService";
+import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
+import { useCompare } from "../../context/CompareContext";
+import { productToCompareItem } from "../../utils/compareProduct";
 
 interface Variant {
   _id: string;
@@ -70,6 +73,8 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [reviews, setReviews] = useState<any[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
+  const { addItem, isInCompare } = useCompare();
+
   const [notification, setNotification] = useState({
     open: false,
     message: "",
@@ -412,6 +417,26 @@ const ProductDetail = () => {
                 </Box>
 
                 <Stack direction="row" spacing={2} sx={{ pt: 2 }}>
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    startIcon={<CompareArrowsIcon />}
+                    onClick={() => {
+                      if (!product) return;
+                      const result = addItem(productToCompareItem(product));
+                      setNotification({
+                        open: true,
+                        message: result.message,
+                        severity: result.ok ? "success" : "warning",
+                      });
+                    }}
+                    disabled={product ? isInCompare((product._id || product.id) as string) : false}
+                    sx={{ py: 2, borderRadius: 3, textTransform: "none", fontWeight: "bold", minWidth: 160 }}
+                  >
+                    {product && isInCompare((product._id || product.id) as string)
+                      ? "Đã thêm so sánh"
+                      : "So sánh"}
+                  </Button>
                   <Button
                     fullWidth
                     variant="outlined"

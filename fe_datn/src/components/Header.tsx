@@ -65,7 +65,8 @@ const Header = () => {
   const loadCart = async () => {
     try {
       const data = await getCartApi();
-      setCartCount(data.reduce((s: number, i: any) => s + i.quantity, 0));
+      // Hiển thị số dòng sản phẩm trong giỏ (không cộng dồn quantity)
+      setCartCount(data.length);
     } catch {
       setCartCount(0);
     }

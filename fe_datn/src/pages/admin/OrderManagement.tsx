@@ -61,6 +61,7 @@ Replay,
 } from '@mui/icons-material';
 import api from '../../services/api';
 import { isOnlinePaymentMethod } from '../../services/orderService';
+import { sendOrderDeliveredEmail } from '../../services/emailService';
 
 interface OrderItem {
   product_id: string;
@@ -91,6 +92,7 @@ interface Order {
   total: number;
   coupon_code: string;
   notes: string;
+  delivery_proof_images?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -156,6 +158,7 @@ const [selectedReturn, setSelectedReturn] =
 
 const [returnUpdating, setReturnUpdating] =
   useState(false);
+const [deliveryProofFiles, setDeliveryProofFiles] = useState<File[]>([]);
   const showNotification = (message: string, severity: 'success' | 'error' | 'warning' | 'info') => {
     setNotification({ open: true, message, severity });
   };
@@ -217,7 +220,7 @@ setTotalOrders(ordersData.length);
             .filter((o: Order) => o.order_status !== 'cancelled')
             .reduce((acc: number, o: Order) => acc + (o.total || 0), 0),
           pendingCount: list.filter((o: Order) => o.order_status === 'pending').length,
-          deliveredCount: list.filter((o: Order) => o.order_status === 'delivered').length,
+          deliveredCount: list.filter((o: Order) => ['delivered', 'received'].includes(o.order_status)).length,
           cancelledCount: list.filter((o: Order) => o.order_status === 'cancelled').length,
         });
       }
@@ -247,6 +250,7 @@ console.log(res.data);
   } catch (err) {
 
     console.error(err);
+    showNotification('Không thể tải danh sách hoàn hàng (kiểm tra quyền admin hoặc backend)', 'error');
   }
 };
 
@@ -269,11 +273,12 @@ console.log(res.data);
 
   const handleChangeStatus = (order: Order) => {
     setSelectedOrder(order);
+    setDeliveryProofFiles([]);
     setOpenStatusDialog(true);
     setAnchorEl(null);
   };
 
-  const ORDER_FLOW = ['pending', 'confirmed', 'processing', 'shipping', 'delivered'] as const;
+  const ORDER_FLOW = ['pending', 'confirmed', 'processing', 'shipping', 'delivered', 'received'] as const;
 const RETURN_FLOW = [
   'requested',
   'approved',
@@ -329,10 +334,32 @@ const getAllowedNextReturnStatuses = (
     }
     try {
       setStatusUpdating(true);
-      await api.put(`/orders/${orderId}`, { order_status: nextStatus });
+      if (nextStatus === 'delivered') {
+        if (deliveryProofFiles.length === 0) {
+          showNotification('Vui lòng upload ảnh minh chứng giao hàng', 'warning');
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('order_status', nextStatus);
+        deliveryProofFiles.forEach((file) => {
+          formData.append('delivery_proofs', file);
+        });
+
+        await api.put(`/orders/${orderId}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      } else {
+        await api.put(`/orders/${orderId}`, { order_status: nextStatus });
+      }
       showNotification('Cập nhật đơn hàng thành công', 'success');
       const updated = (await api.get(`/orders/${orderId}`)).data.order;
       setSelectedOrder(updated);
+      if (nextStatus === 'delivered') {
+        sendOrderDeliveredEmail(updated).catch((err) => {
+          console.error('Send delivered email failed:', err);
+        });
+      }
       fetchOrders();
     } catch (error: any) {
       showNotification(error.response?.data?.message || 'Không thể cập nhật đơn hàng', 'error');
@@ -349,7 +376,7 @@ const getAllowedNextReturnStatuses = (
 
     setReturnUpdating(true);
 
-    await api.put(
+    const res = await api.put(
       `/returns/${returnId}/status`,
       { status }
     );
@@ -358,6 +385,13 @@ const getAllowedNextReturnStatuses = (
       'Cập nhật trạng thái hoàn hàng thành công',
       'success'
     );
+
+    // Cập nhật dialog ngay lập tức (tránh tình trạng nút bị disable vì state cũ)
+    const updatedRequest =
+      res.data?.request || res.data?.data || res.data;
+    if (updatedRequest && updatedRequest._id) {
+      setSelectedReturn(updatedRequest);
+    }
 
     fetchReturns();
     fetchOrders();
@@ -404,7 +438,7 @@ const getAllowedNextReturnStatuses = (
 
     setReturnUpdating(true);
 
-    await api.put(
+    const res = await api.put(
       `/returns/${returnId}/approve`
     );
 
@@ -412,6 +446,12 @@ const getAllowedNextReturnStatuses = (
       'Duyệt hoàn hàng thành công',
       'success'
     );
+
+    const updatedRequest =
+      res.data?.request || res.data?.data || res.data;
+    if (updatedRequest && updatedRequest._id) {
+      setSelectedReturn(updatedRequest);
+    }
 
     fetchReturns();
     fetchOrders();
@@ -440,7 +480,7 @@ const handleRejectReturn = async (
 
     setReturnUpdating(true);
 
-    await api.put(
+    const res = await api.put(
       `/returns/${returnId}/reject`
     );
 
@@ -448,6 +488,12 @@ const handleRejectReturn = async (
       'Đã từ chối yêu cầu hoàn',
       'success'
     );
+
+    const updatedRequest =
+      res.data?.request || res.data?.data || res.data;
+    if (updatedRequest && updatedRequest._id) {
+      setSelectedReturn(updatedRequest);
+    }
 
     fetchReturns();
 
@@ -483,6 +529,7 @@ const handleRejectReturn = async (
       case 'processing': return 'primary';
       case 'shipping': return 'secondary';
       case 'delivered': return 'success';
+      case 'received': return 'success';
       case 'cancelled': return 'error';
       default: return 'default';
     }
@@ -495,6 +542,7 @@ const handleRejectReturn = async (
       case 'processing': return 'Đang xử lý';
       case 'shipping': return 'Đang giao hàng';
       case 'delivered': return 'Đã giao hàng';
+      case 'received': return 'Đã nhận hàng';
       case 'cancelled': return 'Đã hủy';
       default: return status;
     }
@@ -543,6 +591,7 @@ const handleRejectReturn = async (
     { value: 'processing', label: 'Đang xử lý' },
     { value: 'shipping', label: 'Đang giao hàng' },
     { value: 'delivered', label: 'Đã giao hàng' },
+    { value: 'received', label: 'Đã nhận hàng' },
     { value: 'cancelled', label: 'Đã hủy' },
   ];
 
@@ -1254,6 +1303,42 @@ const getReturnStatusColor = (status: string) => {
                     </Box>
                   ))}
                 </Box>
+
+                {(selectedOrder.order_status === 'delivered' || selectedOrder.order_status === 'received') && (
+                  <Box sx={{ mt: 3 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <CheckCircle fontSize="small" color="success" /> Ảnh minh chứng giao hàng
+                    </Typography>
+
+                    {selectedOrder.delivery_proof_images && selectedOrder.delivery_proof_images.length > 0 ? (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+                        {selectedOrder.delivery_proof_images.map((img, idx) => (
+                          <Box
+                            key={`${img}-${idx}`}
+                            sx={{
+                              width: 140,
+                              height: 100,
+                              borderRadius: 2,
+                              border: '1px solid #eee',
+                              overflow: 'hidden',
+                              bgcolor: '#fff',
+                            }}
+                          >
+                            <img
+                              src={img.startsWith('http') ? img : `http://localhost:3000/${img}`}
+                              alt={`Delivery proof ${idx + 1}`}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          </Box>
+                        ))}
+                      </Box>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                        Chưa có ảnh minh chứng
+                      </Typography>
+                    )}
+                  </Box>
+                )}
               </Grid>
 
               {/* Right Column: Payment & Summary */}
@@ -1379,6 +1464,7 @@ const getReturnStatusColor = (status: string) => {
                         statusUpdating ||
                         isCancelled ||
                         selectedOrder.order_status === 'delivered' ||
+                        selectedOrder.order_status === 'received' ||
                         isPast ||
                         isCurrent ||
                         !isNext
@@ -1406,6 +1492,24 @@ const getReturnStatusColor = (status: string) => {
                   );
                 })}
               </Box>
+              {selectedOrder.order_status === 'shipping' && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+                    Ảnh minh chứng giao hàng
+                  </Typography>
+                  <TextField
+                    type="file"
+                    fullWidth
+                    inputProps={{ multiple: true, accept: 'image/*' }}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setDeliveryProofFiles(Array.from(e.target.files || []))
+                    }
+                  />
+                  <Typography variant="caption" color="text.secondary">
+                    Bắt buộc upload ít nhất 1 ảnh khi cập nhật sang "Đã giao hàng".
+                  </Typography>
+                </Box>
+              )}
 
               {selectedOrder.order_status !== 'cancelled' &&
                 selectedOrder.order_status !== 'delivered' &&

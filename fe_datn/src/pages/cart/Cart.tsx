@@ -29,6 +29,7 @@ import {
   updateCartItemApi,
   removeCartItemApi,
   clearCartApi,
+  validateCartForCheckoutApi,
 } from "../../services/cartService";
 import type { CartItem } from "../../services/cartService";
 
@@ -449,7 +450,7 @@ const Cart = () => {
                   variant="contained"
                   size="large"
                   fullWidth
-                  onClick={() => {
+                  onClick={async () => {
                     if (selectedItems.length === 0) {
                       setNotification({
                         open: true,
@@ -458,7 +459,18 @@ const Cart = () => {
                       });
                       return;
                     }
-                    navigate("/checkout", { state: { selectedItems } });
+                    try {
+                      await validateCartForCheckoutApi(selectedItems);
+                      navigate("/checkout", { state: { selectedItems } });
+                    } catch (error: any) {
+                      setNotification({
+                        open: true,
+                        message:
+                          error.response?.data?.message ||
+                          "Sản phẩm trong giỏ đã thay đổi, vui lòng kiểm tra lại",
+                        severity: "error",
+                      });
+                    }
                   }}
                   sx={{ 
                     mt: 3, 

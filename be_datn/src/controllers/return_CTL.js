@@ -8,12 +8,48 @@ export const createReturnRequest = async (req, res) => {
     try {
         const userId = req.user._id;
 
-        const {
-            order_id,
-            items,
-            reason,
-            images
-        } = req.body;
+        const { order_id } = req.body;
+        const reason = (req.body.reason || "").trim();
+
+        let parsedItems = req.body.items;
+        if (typeof parsedItems === "string") {
+            try {
+                parsedItems = JSON.parse(parsedItems);
+            } catch {
+                return res.status(400).json({
+                    message: "Dữ liệu sản phẩm hoàn hàng không hợp lệ"
+                });
+            }
+        }
+
+        let parsedBodyImages = req.body.images || [];
+        if (typeof parsedBodyImages === "string") {
+            try {
+                parsedBodyImages = JSON.parse(parsedBodyImages);
+            } catch {
+                parsedBodyImages = [];
+            }
+        }
+
+        const uploadedImages = Array.isArray(req.files)
+            ? req.files.map((file) => `uploads/${file.filename}`)
+            : [];
+        const finalImages = [
+            ...(Array.isArray(parsedBodyImages) ? parsedBodyImages : []),
+            ...uploadedImages
+        ].filter(Boolean);
+
+        if (!reason) {
+            return res.status(400).json({
+                message: "Vui lòng nhập lý do hoàn hàng"
+            });
+        }
+
+        if (!finalImages.length) {
+            return res.status(400).json({
+                message: "Vui lòng tải lên ít nhất 1 ảnh minh chứng"
+            });
+        }
 
         // tìm đơn
         const order = await Order.findById(order_id);
@@ -31,10 +67,10 @@ export const createReturnRequest = async (req, res) => {
             });
         }
 
-        // chỉ hoàn đơn delivered
-        if (order.order_status !== "delivered") {
+        // chỉ hoàn đơn đã được user xác nhận nhận hàng
+        if (order.order_status !== "received") {
             return res.status(400).json({
-                message: "Chỉ đơn đã giao mới được hoàn"
+                message: "Chỉ đơn đã nhận hàng mới được hoàn"
             });
         }
 
@@ -70,7 +106,7 @@ export const createReturnRequest = async (req, res) => {
             });
         }
 
-        if (!items || items.length === 0) {
+        if (!parsedItems || parsedItems.length === 0) {
             return res.status(400).json({
                 message: "Chọn sản phẩm cần hoàn"
             });
@@ -79,7 +115,7 @@ export const createReturnRequest = async (req, res) => {
         let refundAmount = 0;
 
         // validate item
-        for (const item of items) {
+        for (const item of parsedItems) {
 
             const orderItem = order.order_items.find(
                 p =>
@@ -112,9 +148,9 @@ await order.save();
         const returnReq = await ReturnRequest.create({
             order_id,
             user_id: userId,
-            items,
+            items: parsedItems,
             reason,
-            images: images || [],
+            images: finalImages,
             refund_amount: refundAmount
         });
 

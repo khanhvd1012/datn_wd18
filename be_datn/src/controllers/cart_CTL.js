@@ -225,3 +225,85 @@ export const clearCart = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// Kiểm tra danh sách sản phẩm trước khi thanh toán
+export const validateCartItemsForCheckout = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const { selectedCartItemIds } = req.body || {};
+
+        const cart = await Cart.findOne({ user_id: userId });
+        if (!cart) {
+            return res.status(400).json({
+                valid: false,
+                message: "Giỏ hàng trống"
+            });
+        }
+
+        const query = {
+            cart_id: cart._id,
+            deletedAt: null
+        };
+
+        if (Array.isArray(selectedCartItemIds) && selectedCartItemIds.length > 0) {
+            query._id = { $in: selectedCartItemIds };
+        }
+
+        const cartItems = await CartItem.find(query)
+            .populate("product_id", "name countInStock")
+            .populate("variant_id", "name stock");
+
+        if (!cartItems.length) {
+            return res.status(400).json({
+                valid: false,
+                message: "Không có sản phẩm hợp lệ để thanh toán"
+            });
+        }
+
+        const invalidItems = [];
+
+        for (const item of cartItems) {
+            const product = item.product_id;
+            const variant = item.variant_id;
+
+            if (!product) {
+                invalidItems.push({
+                    cartItemId: item._id,
+                    reason: "Sản phẩm không còn tồn tại"
+                });
+                continue;
+            }
+
+            const stock = variant ? (variant.stock || 0) : (product.countInStock || 0);
+
+            if (stock < item.quantity) {
+                invalidItems.push({
+                    cartItemId: item._id,
+                    productName: product.name,
+                    variantName: variant?.name || null,
+                    currentStock: stock,
+                    requestedQuantity: item.quantity,
+                    reason: "Số lượng tồn kho không đủ"
+                });
+            }
+        }
+
+        if (invalidItems.length > 0) {
+            return res.status(400).json({
+                valid: false,
+                message: "Một số sản phẩm trong giỏ không còn đủ điều kiện thanh toán",
+                invalidItems
+            });
+        }
+
+        return res.status(200).json({
+            valid: true,
+            message: "Giỏ hàng hợp lệ để thanh toán"
+        });
+    } catch (error) {
+        return res.status(500).json({
+            valid: false,
+            message: error.message
+        });
+    }
+};

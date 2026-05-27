@@ -30,8 +30,11 @@ import { getFavoritesApi, toggleFavoriteApi } from "../../services/userService";
 import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
 import SearchIcon from "@mui/icons-material/Search";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { useCompare } from "../../context/CompareContext";
+import { productToCompareItem } from "../../utils/compareProduct";
 import { getAllProductsApi } from "../../services/productService";
 import { addToCartApi } from "../../services/cartService";
 import api from "../../services/api";
@@ -132,6 +135,19 @@ const ProductList = () => {
         .catch(err => console.error(err));
     }
   }, []);
+
+  const { addItem, isInCompare } = useCompare();
+
+  const handleAddToCompare = (e: { preventDefault: () => void; stopPropagation: () => void }, product: Product) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const result = addItem(productToCompareItem(product));
+    setNotification({
+      open: true,
+      message: result.message,
+      severity: result.ok ? "success" : "warning",
+    });
+  };
 
   const handleToggleFavorite = async (e: any, productId: string) => {
     e.preventDefault();
@@ -496,6 +512,22 @@ const ProductList = () => {
                         ) : (
                           <FavoriteBorderIcon />
                         )}
+                      </IconButton>
+                      <IconButton
+                        onClick={(e) => handleAddToCompare(e, product)}
+                        sx={{
+                          position: "absolute",
+                          top: 8,
+                          left: 8,
+                          bgcolor: isInCompare(product._id)
+                            ? "primary.main"
+                            : "rgba(255,255,255,0.8)",
+                          color: isInCompare(product._id) ? "#fff" : "inherit",
+                          zIndex: 1,
+                        }}
+                        title="So sánh"
+                      >
+                        <CompareArrowsIcon fontSize="small" />
                       </IconButton>
 
                       <Link to={`/product/${product._id}`} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

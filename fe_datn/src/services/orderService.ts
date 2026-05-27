@@ -35,6 +35,14 @@ export interface Order {
   total: number;
   coupon_code?: string;
   notes?: string;
+  delivery_proof_images?: string[];
+  delivered_at?: string;
+  confirmation_deadline_at?: string | null;
+  customer_confirmed_received?: boolean;
+  confirmed_received_at?: string | null;
+  confirmed_received_by?: "user" | "auto" | null;
+  delivery_rating?: number | null;
+  delivery_feedback?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -84,6 +92,14 @@ export const updateOrderStatusApi = async (
 
 export const cancelOrderApi = async (orderId: string, cancelReason?: string): Promise<Order> => {
   const response = await api.patch(`/orders/${orderId}/cancel`, { cancel_reason: cancelReason });
+  return response.data.order;
+};
+
+export const confirmOrderReceivedApi = async (
+  orderId: string,
+  payload?: { delivery_rating?: number; delivery_feedback?: string },
+): Promise<Order> => {
+  const response = await api.patch(`/orders/${orderId}/confirm-received`, payload || {});
   return response.data.order;
 };
 

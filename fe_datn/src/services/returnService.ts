@@ -3,10 +3,13 @@ import api from "./api";
 export const createReturnRequest = async (
   data: any
 ) => {
-
+  const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
   const res = await api.post(
     "/returns",
-    data
+    data,
+    isFormData
+      ? { headers: { "Content-Type": "multipart/form-data" } }
+      : undefined
   );
 
   return res.data;

@@ -5,7 +5,8 @@ import {
     removeCartItem,
     updateCartItem,
     clearCart,
-    restoreCartItem // Import tính năng restore
+    restoreCartItem, // Import tính năng restore
+    validateCartItemsForCheckout
 } from "../controllers/cart_CTL.js";
 import { checkPermission } from "../middleware/checkPermission.js";
 
@@ -20,5 +21,6 @@ cartRouter.put("/update/:id", updateCartItem);
 cartRouter.delete("/remove/:id", removeCartItem);
 cartRouter.delete("/clear", clearCart);
 cartRouter.patch("/restore/:id", restoreCartItem); // API khôi phục
+cartRouter.post("/validate", validateCartItemsForCheckout);
 
 export default cartRouter;

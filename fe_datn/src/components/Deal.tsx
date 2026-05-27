@@ -143,9 +143,12 @@ const Deal = () => {
             <Box
               sx={{
                 display: "flex",
-                width: "100%",
-                height: "100%",
-                transform: `translateX(-${index * 100}%)`,
+                height: 300,
+                width: `${Math.max(banners.length, 1) * 100}%`,
+                transform:
+                  banners.length > 0
+                    ? `translateX(-${(index * 100) / banners.length}%)`
+                    : "none",
                 transition: "transform 0.5s ease",
               }}
             >
@@ -156,10 +159,11 @@ const Deal = () => {
                     component="img"
                     src={item.image}
                     sx={{
-                      flex: "0 0 100%",
-                      width: "100%",
+                      flex: `0 0 ${100 / banners.length}%`,
+                      width: `${100 / banners.length}%`,
                       height: 300,
                       objectFit: "cover",
+                      objectPosition: "center",
                     }}
                   />
                 ))
