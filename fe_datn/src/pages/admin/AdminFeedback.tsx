@@ -20,9 +20,8 @@ import {
   DialogActions,
   TextField,
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { getAllContactsApi, deleteContactApi } from '../../services/contactService';
+import { getAllContactsApi } from '../../services/contactService';
 
 interface ContactItem {
   _id: string;
@@ -40,7 +39,11 @@ const AdminFeedback: React.FC = () => {
   const [error, setError] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<ContactItem | null>(null);
-  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+  const [notification, setNotification] = useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error',
+  });
 
   const showNotification = (message: string, severity: 'success' | 'error') => {
     setNotification({ open: true, message, severity });
@@ -63,18 +66,6 @@ const AdminFeedback: React.FC = () => {
     fetchContacts();
   }, []);
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Bạn có chắc muốn xoá phản hồi này?')) return;
-    try {
-      await deleteContactApi(id);
-      showNotification('Xoá phản hồi thành công', 'success');
-      fetchContacts();
-    } catch (err: any) {
-      console.error(err);
-      showNotification(err.response?.data?.message || 'Không thể xoá phản hồi', 'error');
-    }
-  };
-
   const openDetail = (contact: ContactItem) => {
     setSelectedContact(contact);
     setDialogOpen(true);
@@ -88,7 +79,9 @@ const AdminFeedback: React.FC = () => {
       </Box>
 
       {loading ? (
-        <Box display="flex" justifyContent="center" my={4}><CircularProgress /></Box>
+        <Box display="flex" justifyContent="center" my={4}>
+          <CircularProgress />
+        </Box>
       ) : error ? (
         <Alert severity="error">{error}</Alert>
       ) : (
@@ -105,6 +98,7 @@ const AdminFeedback: React.FC = () => {
                   <TableCell align="right">Hành động</TableCell>
                 </TableRow>
               </TableHead>
+
               <TableBody>
                 {contacts.map((contact) => (
                   <TableRow key={contact._id}>
@@ -112,13 +106,12 @@ const AdminFeedback: React.FC = () => {
                     <TableCell>{contact.email}</TableCell>
                     <TableCell>{contact.phone}</TableCell>
                     <TableCell>{contact.address}</TableCell>
-                    <TableCell>{new Date(contact.createdAt).toLocaleString('vi-VN')}</TableCell>
+                    <TableCell>
+                      {new Date(contact.createdAt).toLocaleString('vi-VN')}
+                    </TableCell>
                     <TableCell align="right">
                       <IconButton onClick={() => openDetail(contact)}>
                         <VisibilityIcon />
-                      </IconButton>
-                      <IconButton color="error" onClick={() => handleDelete(contact._id)}>
-                        <DeleteIcon />
                       </IconButton>
                     </TableCell>
                   </TableRow>
@@ -132,7 +125,7 @@ const AdminFeedback: React.FC = () => {
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Chi tiết phản hồi</DialogTitle>
         <DialogContent>
-          {selectedContact ? (
+          {selectedContact && (
             <Box display="flex" flexDirection="column" gap={1}>
               <TextField label="Người gửi" fullWidth value={selectedContact.username} InputProps={{ readOnly: true }} />
               <TextField label="Email" fullWidth value={selectedContact.email} InputProps={{ readOnly: true }} />
@@ -140,15 +133,22 @@ const AdminFeedback: React.FC = () => {
               <TextField label="Địa chỉ" fullWidth value={selectedContact.address} InputProps={{ readOnly: true }} />
               <TextField label="Nội dung" fullWidth multiline minRows={4} value={selectedContact.message} InputProps={{ readOnly: true }} />
             </Box>
-          ) : null}
+          )}
         </DialogContent>
+
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Đóng</Button>
         </DialogActions>
       </Dialog>
 
-      <Snackbar open={notification.open} autoHideDuration={4000} onClose={() => setNotification({ ...notification, open: false })}>
-        <Alert severity={notification.severity}>{notification.message}</Alert>
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={4000}
+        onClose={() => setNotification({ ...notification, open: false })}
+      >
+        <Alert severity={notification.severity}>
+          {notification.message}
+        </Alert>
       </Snackbar>
     </Box>
   );

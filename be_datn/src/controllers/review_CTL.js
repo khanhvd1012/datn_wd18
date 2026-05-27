@@ -116,23 +116,23 @@ export const replyReview = async (req, res) => {
     }
 };
 
-// Xoá đánh giá
-export const deleteReview = async (req, res) => {
-    try {
-        const { reviewId } = req.params;
-        const deletedReview = await Review.findByIdAndDelete(reviewId);
+// // Xoá đánh giá
+// export const deleteReview = async (req, res) => {
+//     try {
+//         const { reviewId } = req.params;
+//         const deletedReview = await Review.findByIdAndDelete(reviewId);
 
-        if (!deletedReview) {
-            return res.status(404).json({ message: "Không tìm thấy đánh giá" });
-        }
+//         if (!deletedReview) {
+//             return res.status(404).json({ message: "Không tìm thấy đánh giá" });
+//         }
 
-        return res.status(200).json({
-            message: "Xoá đánh giá thành công",
-            data: deletedReview,
-        });
-    } catch (error) {
-        return res.status(500).json({
-            message: "Lỗi xoá đánh giá: " + error.message,
-        });
-    }
-};
+//         return res.status(200).json({
+//             message: "Xoá đánh giá thành công",
+//             data: deletedReview,
+//         });
+//     } catch (error) {
+//         return res.status(500).json({
+//             message: "Lỗi xoá đánh giá: " + error.message,
+//         });
+//     }
+// };
